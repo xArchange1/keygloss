@@ -1,8 +1,11 @@
 // Commands and events shared with Rust. Mirror: src-tauri/src/ipc.rs and
 // crates/keygloss-core/src/{settings,platform}.rs (kept in sync by hand).
 
-import { invoke } from "@tauri-apps/api/core";
+import { invoke as tauriInvoke, isTauri } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+
+/** False in a plain browser (`pnpm dev` without Tauri): commands then fail soft, see below. */
+export const inTauri = isTauri();
 
 // ---- Core types (keygloss_core) ----
 
@@ -144,6 +147,43 @@ export interface SnippetPickerOpen {
   snippets: [string, string][];
 }
 
+// ---- Browser fallback (dev only: no Tauri, settings live in memory) ----
+
+const NO_MODS: Modifiers = { ctrl: false, alt: false, shift: false, meta: false };
+let memSettings: Settings = {
+  autoEnabled: true, liveFixEnabled: true, inlineLiveFix: true, triggerSpace: true,
+  triggerEnter: true, triggerTab: false, enterPreConvert: true, arrowsCancel: true,
+  developerMode: false, dedupeChatter: false, groupConvert: true, learnOnUndoEnabled: true,
+  typoFix: false, twoCapsFix: false, soundEnabled: true, soundVolume: 0.6, silentMode: false,
+  hotkey: { mode: "key", key: "Pause", mods: NO_MODS }, caseChangeHotkey: null, plainPaste: false,
+  plainPasteHotkey: { mode: "key", key: "KeyV", mods: { ...NO_MODS, ctrl: true, shift: true } },
+  snippetPickHotkey: null, pauseMinutes: 15, pausedUntil: 0, ignoredWords: ["вк", "тг", "vk"],
+  forceSwapWords: [], learnedWords: [], appExceptionModes: {}, appForcedLayouts: {},
+  seededDefaultApps: [], snippetsOrdered: [], snippetExpandSpace: true, snippetExpandEnter: true,
+  snippetExpandTab: true, textSnippets: [], undoDeclinedWords: [], undoStrikeCount: {},
+  undoStrikeTime: {}, typoPersonalWords: {}, lastLayoutCyr: "", lastLayoutLat: "",
+  language: "auto", appTheme: "system", didInitialSetup: false, didShowWelcome: false, rescuedCount: 0,
+};
+
+function browserInvoke(cmd: string, args?: Record<string, unknown>): unknown {
+  switch (cmd) {
+    case "get_settings": return memSettings;
+    case "update_settings": return (memSettings = { ...memSettings, ...(args!.patch as object) });
+    case "get_engine_status":
+      return { running: false, pausedUntil: null, autoEnabled: memSettings.autoEnabled, layout: null, hookHealthy: false };
+    case "check_hotkey": return { verdict: "ok", reason: null, conflictsWith: null };
+    case "list_apps": return [{ id: "notepad.exe", name: "Notepad" }];
+    case "get_ambiguous_pairs": return [{ en: "yt", ru: "не" }, { en: "vs", ru: "мы" }];
+    case "get_launch_at_login": return false;
+    case "set_launch_at_login": return args!.enabled;
+    case "app_version": return "dev";
+  }
+}
+
+function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
+  return inTauri ? tauriInvoke<T>(cmd, args) : Promise.resolve(browserInvoke(cmd, args) as T);
+}
+
 // ---- Commands ----
 
 export const getSettings = () => invoke<Settings>("get_settings");
@@ -170,6 +210,14 @@ export const setLaunchAtLogin = (enabled: boolean) =>
   invoke<boolean>("set_launch_at_login", { enabled });
 export const appVersion = () => invoke<string>("app_version");
 
+// Added by the frontend phase; the Rust side must implement these (see the phase report).
+/** Shows (creating if needed) and focuses the settings window. */
+export const openSettings = () => invoke<void>("open_settings");
+/** Shows (creating if needed) and focuses the welcome window. */
+export const openWelcome = () => invoke<void>("open_welcome");
+/** The learn banner timed out unanswered: reset the strike count, do not decline the word. */
+export const dismissLearnBanner = (word: string) => invoke<void>("dismiss_learn_banner", { word });
+
 // ---- Events ----
 
 interface EventPayloads {
@@ -184,9 +232,21 @@ interface EventPayloads {
 
 export type EventName = keyof EventPayloads;
 
+const browserListeners = new Map<string, Set<(p: unknown) => void>>();
+
 export function on<E extends EventName>(
   event: E,
   handler: (payload: EventPayloads[E]) => void,
 ): Promise<UnlistenFn> {
-  return listen<EventPayloads[E]>(event, (e) => handler(e.payload));
+  if (inTauri) return listen<EventPayloads[E]>(event, (e) => handler(e.payload));
+  const set = browserListeners.get(event) ?? new Set();
+  browserListeners.set(event, set);
+  set.add(handler as (p: unknown) => void);
+  return Promise.resolve(() => set.delete(handler as (p: unknown) => void));
+}
+
+// Dev only: `__kgEmit("toast", {...})` in the browser console fakes a backend event.
+if (!inTauri && import.meta.env.DEV) {
+  (window as unknown as Record<string, unknown>).__kgEmit = (event: string, payload: unknown) =>
+    browserListeners.get(event)?.forEach((h) => h(payload));
 }

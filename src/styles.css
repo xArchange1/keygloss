@@ -3,6 +3,7 @@
 /*
  * Theme tokens (docs/PLAN.md, Design). Light is the base; dark applies when the system is dark,
  * unless overridden with data-theme="light" | "dark" on <html> (the appTheme setting).
+ * --kg-on-accent: text/knob drawn on the accent. --kg-raised: popovers, panels, selected segments.
  */
 :root {
   color-scheme: light;
@@ -11,6 +12,8 @@
   --kg-text: #171819;
   --kg-accent: #8a6500;
   --kg-detail: #3d48b8;
+  --kg-on-accent: #fffdf8;
+  --kg-raised: #fbf9f5;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,6 +24,8 @@
     --kg-text: #f3eee7;
     --kg-accent: #f5c84c;
     --kg-detail: #8e9bff;
+    --kg-on-accent: #171819;
+    --kg-raised: #34363a;
   }
 }
 
@@ -31,13 +36,18 @@
   --kg-text: #f3eee7;
   --kg-accent: #f5c84c;
   --kg-detail: #8e9bff;
+  --kg-on-accent: #171819;
+  --kg-raised: #34363a;
 }
 
-/* Tailwind utilities: text-fg, text-accent, bg-accent, ring-detail, ... */
+/* Tailwind utilities: text-fg, text-accent, bg-accent, ring-detail, bg-raised, ... */
 @theme inline {
   --color-fg: var(--kg-text);
   --color-accent: var(--kg-accent);
   --color-detail: var(--kg-detail);
+  --color-on-accent: var(--kg-on-accent);
+  --color-raised: var(--kg-raised);
+  --color-bg: var(--kg-bg-from);
 }
 
 html,
@@ -50,5 +60,57 @@ body {
   margin: 0;
   color: var(--kg-text);
   background: linear-gradient(180deg, var(--kg-bg-from), var(--kg-bg-to)) fixed;
-  font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  font-family: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* Floating panels (banner, picker) draw their own surface on a transparent window. */
+html[data-view="banner"] body,
+html[data-view="picker"] body {
+  background: transparent;
+}
+
+input,
+textarea {
+  user-select: text;
+}
+
+:focus-visible {
+  outline: 2px solid var(--kg-detail);
+  outline-offset: 2px;
+}
+
+input[type="range"] {
+  accent-color: var(--kg-accent);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--kg-text) 18%, transparent);
+  border-radius: 5px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+@keyframes kg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes kg-out {
+  to {
+    opacity: 0;
+  }
+}
+.kg-in {
+  animation: kg-in 0.22s ease-out both;
+}
+.kg-out {
+  animation: kg-out 0.18s ease-in both;
 }

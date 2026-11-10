@@ -122,6 +122,6 @@ Implementers are Opus 5.5 subagents at medium effort. The orchestrator (Fable 5.
 ## Status
 
 - [x] Phase 1: scaffold
-- [ ] Phase 2: core, windows, frontend
+- [x] Phase 2: core, windows, frontend
 - [ ] Phase 3: integration
 - [ ] Phase 4: verification
