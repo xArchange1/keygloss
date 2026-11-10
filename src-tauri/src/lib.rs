@@ -12,7 +12,7 @@ use keygloss_core::settings::Settings;
 use keygloss_windows::{
     WindowsClipboard, WindowsFocusedText, WindowsForegroundApp, WindowsHook, WindowsLayouts, WindowsOutput,
 };
-use tauri::{AppHandle, Emitter, Manager, WindowEvent, Wry};
+use tauri::{AppHandle, DeviceEventFilter, Emitter, Manager, WindowEvent, Wry};
 use tauri_plugin_store::Store;
 
 use state::{AppState, idle_status};
@@ -148,6 +148,9 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // No raw input: while a process registers it, Windows skips that process's own
+        // low-level keyboard hook whenever one of its windows has focus (the welcome sandbox).
+        .device_event_filter(DeviceEventFilter::Always)
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| windows::open_settings(app)))
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_autostart::Builder::new().build())

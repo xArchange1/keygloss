@@ -5,7 +5,7 @@ use keygloss_core::engine::EngineStatus;
 use keygloss_core::settings::UiLanguage;
 use tauri::image::Image;
 use tauri::menu::{CheckMenuItem, IsMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
-use tauri::tray::{TrayIcon, TrayIconBuilder};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Manager, Wry};
 
 use crate::state::AppState;
@@ -152,7 +152,12 @@ fn dimmed(icon: &Image<'_>) -> Image<'static> {
 pub fn create(app: &AppHandle) -> tauri::Result<TrayIcon> {
     let mut builder = TrayIconBuilder::with_id(TRAY_ID)
         .tooltip("Keygloss")
-        .show_menu_on_left_click(true)
+        .show_menu_on_left_click(false)
+        .on_tray_icon_event(|tray, event| {
+            if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
+                crate::windows::open_settings(tray.app_handle());
+            }
+        })
         .on_menu_event(|app, event| crate::on_tray_menu(app, event.id().as_ref()));
     if let Some(icon) = app.default_window_icon() {
         builder = builder.icon(icon.clone());
