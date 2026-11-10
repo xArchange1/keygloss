@@ -19,7 +19,7 @@ export function WelcomeView() {
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="mx-auto flex h-full w-full max-w-[480px] flex-col">
       <div className="kg-in flex-1 overflow-y-auto px-8 pt-9 pb-4">
         <Brand size={56} />
         <h1 className="mt-5 text-[26px] font-semibold tracking-tight">{t("wel.hi")}</h1>
