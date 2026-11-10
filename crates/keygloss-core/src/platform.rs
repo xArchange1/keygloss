@@ -159,9 +159,11 @@ pub type KeyTable = HashMap<(KeyCode, bool), char>;
 
 /// Keyboard layout query, switching and key tables.
 pub trait Layouts: Send + Sync {
-    /// Layout of the foreground window's input thread.
+    /// Layout of the foreground window's input thread. Cheap; may be called from
+    /// [`InputHandler::on_key`].
     fn current_layout(&self) -> Option<LayoutId>;
-    /// Switches the foreground window to `id`.
+    /// Switches the foreground window to `id`. Cheap (asynchronous request); may be called from
+    /// [`InputHandler::on_key`].
     fn switch_layout(&self, id: &LayoutId) -> Result<(), PlatformError>;
     /// Installed layouts in the OS switching order.
     fn installed_layouts(&self) -> Vec<LayoutInfo>;
@@ -212,6 +214,7 @@ pub enum SelectionRead {
 }
 
 /// Focused-element text access (Windows: UI Automation).
+/// Must not be called from [`InputHandler::on_key`]: calls can block for up to ~0.5 s.
 pub trait FocusedText: Send + Sync {
     /// Reads the selected text of the focused element.
     fn selected_text(&self) -> SelectionRead;

@@ -16,6 +16,7 @@
 //! - [`snippets`]: snippet trigger matching, expansion and picker mapping.
 //! - [`text_case`]: the case toggle rule.
 //! - [`cue`]: the synthesized conversion sound.
+//! - [`engine`]: the engine state machine, its worker runtime and [`engine::EngineHandle`].
 
 pub mod apps;
 pub mod buffer;
@@ -23,6 +24,7 @@ pub mod cue;
 pub mod data;
 pub mod detector;
 pub mod double_space;
+pub mod engine;
 pub mod exceptions;
 pub mod keymap;
 pub mod pair;
