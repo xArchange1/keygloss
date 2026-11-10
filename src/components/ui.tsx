@@ -15,7 +15,7 @@ export function PageTitle({ title, sub }: { title: string; sub?: string }) {
 
 /** Small caps heading above a group of cards. */
 export function SectionTitle({ children }: { children: ReactNode }) {
-  return <h2 className="mt-[18px] mb-2 px-1 text-[11px] font-semibold tracking-[0.08em] text-fg/65 uppercase">{children}</h2>;
+  return <h2 className="mt-[18px] mb-2 px-1 text-[11px] font-semibold tracking-[0.08em] text-detail uppercase">{children}</h2>;
 }
 
 export function BlockTitle({ title, sub }: { title: string; sub?: string }) {
@@ -111,7 +111,7 @@ export function Select<T extends string>({ value, options, onChange, label, titl
   return (
     <span className={cx("relative inline-flex", className)}>
       <select value={value} aria-label={label} title={title} onChange={(e) => onChange(e.target.value as T)}
-        className="h-7 w-full cursor-pointer appearance-none rounded-md border border-fg/15 bg-raised pr-7 pl-2.5 text-[12px] hover:border-fg/30">
+        className="h-7 w-full cursor-pointer appearance-none rounded-md border border-fg/15 bg-raised pr-7 pl-2.5 text-[12px] hover:border-fg/30 focus:border-detail">
         {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
       <ChevronDown size={14} className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-fg/60" />
@@ -163,7 +163,7 @@ export function KeyCaps({ parts, muted }: { parts: string[]; muted?: boolean }) 
         <span key={i} className="inline-flex items-center gap-1">
           {i > 0 && <span className="text-[11px] text-fg/45">+</span>}
           <kbd className={cx(
-            "inline-flex h-[22px] min-w-[22px] items-center justify-center rounded-[5px] border border-b-2 border-fg/20 bg-raised px-1.5 font-sans text-[11.5px] font-semibold",
+            "inline-flex h-[22px] min-w-[22px] items-center justify-center rounded-[5px] border border-b-2 border-fg/20 bg-raised px-1.5 font-sans text-[11.5px] font-semibold text-detail",
             muted && "opacity-50",
           )}>{p}</kbd>
         </span>
@@ -194,6 +194,6 @@ export function Chips({ words, onRemove, empty }: { words: string[]; onRemove: (
 export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input {...props}
-      className={cx("h-7 min-w-0 rounded-md border border-fg/15 bg-raised px-2.5 text-[12.5px] placeholder:text-fg/45 hover:border-fg/30", props.className)} />
+      className={cx("h-7 min-w-0 rounded-md border border-fg/15 bg-raised px-2.5 text-[12.5px] placeholder:text-fg/45 hover:border-fg/30 focus:border-detail", props.className)} />
   );
 }

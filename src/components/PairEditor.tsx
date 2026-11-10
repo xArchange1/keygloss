@@ -46,7 +46,7 @@ export function PairEditor({ pairs, onChange, cols, placeholders }: {
     apply(n);
   };
 
-  const cell = "h-8 min-w-0 rounded-md border border-transparent bg-transparent px-2 text-[12.5px] placeholder:text-fg/45 hover:border-fg/15 focus:border-fg/25 focus:bg-raised";
+  const cell = "h-8 min-w-0 rounded-md border border-transparent bg-transparent px-2 text-[12.5px] placeholder:text-fg/45 hover:border-fg/15 focus:border-detail focus:bg-raised";
   return (
     <div className="rounded-xl border border-fg/10 bg-fg/[0.035] p-1.5">
       <div className="grid grid-cols-[22px_minmax(0,2fr)_minmax(0,3fr)_28px] gap-1.5 px-0.5 pt-1 pb-1.5 text-[11px] font-semibold tracking-[0.06em] text-fg/65 uppercase">

@@ -163,8 +163,8 @@ impl Default for Settings {
             group_convert: true,
             learn_on_undo_enabled: true,
 
-            typo_fix: false,
-            two_caps_fix: false,
+            typo_fix: true,
+            two_caps_fix: true,
 
             sound_enabled: true,
             sound_volume: 0.6,

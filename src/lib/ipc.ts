@@ -154,7 +154,7 @@ let memSettings: Settings = {
   autoEnabled: true, liveFixEnabled: true, inlineLiveFix: true, triggerSpace: true,
   triggerEnter: true, triggerTab: false, enterPreConvert: true, arrowsCancel: true,
   developerMode: false, dedupeChatter: false, groupConvert: true, learnOnUndoEnabled: true,
-  typoFix: false, twoCapsFix: false, soundEnabled: true, soundVolume: 0.6, silentMode: false,
+  typoFix: true, twoCapsFix: true, soundEnabled: true, soundVolume: 0.6, silentMode: false,
   hotkey: { mode: "key", key: "Pause", mods: NO_MODS }, caseChangeHotkey: null, plainPaste: false,
   plainPasteHotkey: { mode: "key", key: "KeyV", mods: { ...NO_MODS, ctrl: true, shift: true } },
   snippetPickHotkey: null, pauseMinutes: 15, pausedUntil: 0, ignoredWords: ["вк", "тг", "vk"],

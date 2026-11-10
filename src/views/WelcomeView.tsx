@@ -46,7 +46,7 @@ export function WelcomeView() {
 
         <SectionTitle>{t("wel.practiceTitle")}</SectionTitle>
         <textarea rows={3} spellCheck={false} placeholder={t("wel.practicePh")} aria-label={t("wel.practiceTitle")}
-          className="w-full resize-none rounded-xl border border-fg/15 bg-raised px-3 py-2.5 text-[14px] placeholder:text-fg/45 focus:border-fg/30" />
+          className="w-full resize-none rounded-xl border border-fg/15 bg-raised px-3 py-2.5 text-[14px] placeholder:text-fg/45 focus:border-detail" />
         <p className="mt-1.5 px-1 text-[12px] text-fg/65">{t("wel.practiceHint")}</p>
       </div>
       <footer className="flex justify-end gap-2 border-t border-fg/[0.08] px-8 py-4">

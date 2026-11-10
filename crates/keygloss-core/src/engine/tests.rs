@@ -1129,17 +1129,18 @@ fn snippet_picker_digits_escape_and_other_keys() {
 
 #[test]
 fn typo_fix_and_its_undo() {
-    let mut h = H::with(|s| {
-        s.live_fix_enabled = false;
-        s.typo_fix = true;
-    });
+    // On by default.
+    let mut h = H::boundary();
     h.keys("adress ");
     h.advance(100);
     assert_eq!(h.text(), "address ");
     h.manual();
     assert_eq!(h.text(), "adress ");
     // Off: left alone.
-    let mut h = H::boundary();
+    let mut h = H::with(|s| {
+        s.live_fix_enabled = false;
+        s.typo_fix = false;
+    });
     h.keys("adress ");
     h.advance(100);
     assert_eq!(h.text(), "adress ");
@@ -1147,14 +1148,15 @@ fn typo_fix_and_its_undo() {
 
 #[test]
 fn two_caps_fix() {
-    let mut h = H::with(|s| {
-        s.live_fix_enabled = false;
-        s.two_caps_fix = true;
-    });
+    // On by default.
+    let mut h = H::boundary();
     h.keys("WHen ");
     h.advance(100);
     assert_eq!(h.text(), "When ");
-    let mut h = H::boundary();
+    let mut h = H::with(|s| {
+        s.live_fix_enabled = false;
+        s.two_caps_fix = false;
+    });
     h.keys("WHen ");
     h.advance(100);
     assert_eq!(h.text(), "WHen ");

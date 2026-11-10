@@ -25,8 +25,24 @@ fn builder<'a>(app: &'a AppHandle, label: &'a str) -> WebviewWindowBuilder<'a, t
     WebviewWindowBuilder::new(app, label, WebviewUrl::default()).title("Keygloss")
 }
 
+/// Turns off WebView2's browser shortcuts (reload, print, find, back/forward, ...), its zoom
+/// keys and its default context menu. Editing shortcuts (copy, paste, undo) keep working.
+fn lock_down(w: WebviewWindow) -> tauri::Result<WebviewWindow> {
+    w.with_webview(|wv| unsafe {
+        use webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2Settings3;
+        use windows_core::Interface;
+        let Ok(settings) = wv.controller().CoreWebView2().and_then(|c| c.Settings()) else { return };
+        let _ = settings.SetAreDefaultContextMenusEnabled(false);
+        let _ = settings.SetIsZoomControlEnabled(false);
+        if let Ok(settings) = settings.cast::<ICoreWebView2Settings3>() {
+            let _ = settings.SetAreBrowserAcceleratorKeysEnabled(false);
+        }
+    })?;
+    Ok(w)
+}
+
 pub fn create_settings(app: &AppHandle) -> tauri::Result<WebviewWindow> {
-    builder(app, SETTINGS).inner_size(872.0, 640.0).min_inner_size(872.0, 480.0).visible(false).center().build()
+    builder(app, SETTINGS).inner_size(872.0, 640.0).min_inner_size(872.0, 480.0).visible(false).center().build().and_then(lock_down)
 }
 
 /// A transparent, undecorated, topmost, non-activating, hidden window.
@@ -43,6 +59,7 @@ fn create_floating(app: &AppHandle, label: &str, (w, h): (f64, f64)) -> tauri::R
         .focusable(false)
         .visible(false)
         .build()
+        .and_then(lock_down)
 }
 
 pub fn create_banner(app: &AppHandle) -> tauri::Result<WebviewWindow> {
@@ -80,7 +97,8 @@ pub fn open_welcome(app: &AppHandle) {
         .max_inner_size(480.0, 1200.0)
         .maximizable(false)
         .center()
-        .build();
+        .build()
+        .and_then(lock_down);
     if let Err(e) = built {
         eprintln!("welcome window: {e}");
     }
