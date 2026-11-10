@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Theme tokens (docs/PLAN.md, Design). Light is the base; dark applies when the system is dark,
+ * Theme tokens. Light is the base; dark applies when the system is dark,
  * unless overridden with data-theme="light" | "dark" on <html> (the appTheme setting).
  * --kg-on-accent: text/knob drawn on the accent. --kg-raised: popovers, panels, selected segments.
  */
