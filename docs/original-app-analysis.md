@@ -1,28 +1,5 @@
 # Keyboop (`reference/original-app`): inventory for the Tauri rewrite
 
-## 0. The app is not a keyboard-sound app
-
-**The premise of "key → sound mapping, sound packs, pitch/volume randomization, audio engine" does not apply to this app.** I read the whole non-voice code path and none of that exists:
-
-- There is no per-keystroke sound, no sound packs or themes, no manifests, no sound-asset directory, and no custom-pack import.
-- The only sounds are three short feedback cues and some system beeps (section 3.8). The bundled "sounds" are WAV bytes synthesized in code, not files.
-- Keyboop is a **RU↔EN keyboard-layout auto-corrector** (a Punto Switcher alternative), plus a local voice-dictation feature that you are excluding.
-- If you wanted a keyboard-click app, the wrong repo may have been cloned. Everything below describes what Keyboop actually does.
-
-**Coverage and caveats:**
-- I read the core behavior files in full, with comment-only lines stripped.
-- I skimmed the voice, call-recording, UI-skeleton and hardware-helper files, because they are excluded or low value.
-- Not read line-by-line:
-  - `SettingsWindow.swift` (5391 lines, mostly AppKit layout). I used `L10n.swift` English strings for labels instead.
-  - `GlobeKey.swift`, `PersistentResourceGuard.swift` and `GlobeGuard.swift`. I read their doc headers and grepped for the system calls they make.
-  - The `Slap*` files.
-  - The large word lists inside `ExtraWords.swift`.
-- Line numbers are given only where I grepped them (original-file numbers). Elsewhere I cite file and function.
-- There are no tests in the repo. `Package.swift` and the comments reference a `stands/` harness and `Tools/`, but neither is included. There is no CI config (only `.github/FUNDING.yml`).
-- All source comments and most strings are Russian. UI strings are bilingual (ru/en) in `L10n.swift`, and I quote English.
-
----
-
 ## 1. Purpose and overview
 
 **Purpose.** Keyboop watches what you type. When a word was obviously typed in the wrong layout (`ghbdtn` instead of `привет`), it deletes and retypes the word in the right layout and switches the OS input source. It works both ways (RU↔EN).
@@ -688,29 +665,27 @@ All in `UserDefaults.standard` (bundle domain `ru.keyboop.app`, or `ru.keyboop.a
 
 1. **Global key capture and swallow.**
    - Uses CGEventTap (active, session level) with event swallow and keyUp pairing.
-   - Windows: `WH_KEYBOARD_LL` hook (swallow by returning non-zero). Linux: evdev/uinput on Wayland, or X11 XGrabKey / XInput2 and XRecord.
-   - The Wayland case is the hard one (no global capture or injection without privileges or compositor support).
-2. **Key injection.** `CGEvent.post` of backspaces and Unicode strings (12 UTF-16 units per event) with source markers. Windows: `SendInput` with `KEYEVENTF_UNICODE`. Linux: uinput/xdotool-like (XTest), or `wtype`/libei. The synthetic-marker scheme needs an equivalent (Windows `dwExtraInfo`).
+   - Windows: `WH_KEYBOARD_LL` hook (swallow by returning non-zero).
+2. **Key injection.** `CGEvent.post` of backspaces and Unicode strings (12 UTF-16 units per event) with source markers. Windows: `SendInput` with `KEYEVENTF_UNICODE`. The synthetic-marker scheme needs an equivalent (Windows `dwExtraInfo`).
 3. **Layout detection and switching.**
    - TIS (`TISSelectInputSource`, `TISCopyCurrentKeyboardInputSource`, `UCKeyTranslate`) plus `com.apple.HIToolbox` prefs.
    - Windows: `GetKeyboardLayout`/`ActivateKeyboardLayout`, `ToUnicodeEx` and `MapVirtualKeyEx` per HKL.
-   - Linux: IBus/Fcitx/XKB (`setxkbmap`, `xkb-switch`), or GNOME/KDE D-Bus.
    - The dynamic key table is built from live layouts and cannot be hard-coded, but the JCUKEN fallback table is fine to ship.
-4. **Accessibility text APIs** (focused element, selected text, selected range, string-for-range, write selected text, secure-text-field subrole, messaging timeouts). Windows: UI Automation (`TextPattern`) with fallback. Linux: AT-SPI. Many apps expose nothing; the clipboard fallback exists for that.
+4. **Accessibility text APIs** (focused element, selected text, selected range, string-for-range, write selected text, secure-text-field subrole, messaging timeouts). Windows: UI Automation (`TextPattern`) with fallback. Many apps expose nothing; the clipboard fallback exists for that.
 5. **Secure Input detection** (`IsSecureEventInputEnabled`, `ioreg` holder lookup). No clean equivalent; Windows password fields are detectable only via UIA `IsPassword`.
 6. **Frontmost-app identity** (`NSWorkspace` bundle ID, `didActivateApplicationNotification`, `Electron Framework.framework` detection, `XUL` Gecko detection). Replace with process or executable names.
 7. **Spotlight/overlay detection** (CGWindowList). Only relevant if you want a Spotlight-like exclusion on other OSes.
-8. **Pasteboard** (`NSPasteboard` changeCount polling, snapshot and restore of all types, transient-type markers). Windows: `GetClipboardSequenceNumber`, clipboard format listener, and `ExcludeClipboardContentFromMonitorProcessing` / `CF_CLIPBOARD_VIEWER_IGNORE`. Linux: X11 selections or `wl-clipboard`.
-9. **Menu-bar status item with template icons, SF Symbols and emoji flags.** Tauri tray: icon, menu, tooltip. Dimming and badges need separate assets. Dark/light template tinting is not automatic on Windows/Linux.
+8. **Pasteboard** (`NSPasteboard` changeCount polling, snapshot and restore of all types, transient-type markers). Windows: `GetClipboardSequenceNumber`, clipboard format listener, and `ExcludeClipboardContentFromMonitorProcessing` / `CF_CLIPBOARD_VIEWER_IGNORE`.
+9. **Menu-bar status item with template icons, SF Symbols and emoji flags.** Tauri tray: icon, menu, tooltip. Dimming and badges need separate assets. Dark/light template tinting is not automatic on Windows.
 10. **Window chrome**: sidebar with vibrancy (`NSVisualEffectView`), transparent titlebar, non-activating floating panels (`NSPanel`, `.nonactivatingPanel`, `.statusBar` level) that never steal focus. The snippet picker and banner depend on not stealing focus. Tauri needs per-OS "no-focus always-on-top" window flags.
 11. **Dock-icon toggling** by activation policy. Not applicable on Windows; macOS-only polish.
-12. **Launch at login** (`SMAppService`). Windows: Run key or Startup folder. Linux: autostart `.desktop`.
+12. **Launch at login** (`SMAppService`). Windows: Run key or Startup folder.
 13. **Single-instance** (`flock` + distributed notification). The Tauri single-instance plugin covers it.
 14. **Auto-update** (Sparkle with EdDSA). Tauri updater plugin (minisign).
 15. **System shortcut conflict list** (`com.apple.symbolichotkeys`). No generic equivalent; drop or write per-OS lists.
 16. **Modifier-only gestures and left/right modifier distinction, Fn/Globe, Caps-as-key.**
     - Right/left modifier keycodes: 54/55 (⌘), 56/60 (⇧), 58/61 (⌥), 59/62 (⌃), 63 (fn), 57 (caps).
-    - Caps-as-hotkey uses `hidutil` remap to LANG1 (HID usage 0x700000039 to 0x700000090); Caps LED uses `IOHIDManager` (usage page 0x08, usage 0x02). Windows and Linux need different remapping/LED mechanisms, or a decision to drop these.
+    - Caps-as-hotkey uses `hidutil` remap to LANG1 (HID usage 0x700000039 to 0x700000090); Caps LED uses `IOHIDManager` (usage page 0x08, usage 0x02). Windows needs different remapping/LED mechanisms, or a decision to drop these.
 17. **Globe-key system setting** (`AppleFnUsageType` in HIToolbox prefs, with a crash-safe guard helper). Mac-only; drop.
 18. **Translation** (Apple on-device Translation, macOS 15+). Replace with an offline engine (for example Argos or Bergamot) or cloud, or drop. Note the current design depends on a system language-pack download dialog.
 19. **Keychain** (history encryption key), `CFPreferences`, `UserDefaults`. Replace with the OS credential store plus a config file. These only matter if you keep clipboard history.
@@ -752,56 +727,3 @@ All in `UserDefaults.standard` (bundle domain `ru.keyboop.app`, or `ru.keyboop.a
   - I did not verify the `settings.simpleMode` root-screen contents beyond the `root.*` strings.
   - I could not read the ordering and visual layout of every Settings row.
 - **Platform-assumption traps.** The whole word list and trigram model are RU/EN only. A cross-platform rewrite that wants more language pairs will need the pair-specific pieces generalized: the base keymap, `isImpossibleRussianSpelling`, the Russian single-letter set, the numeric `ю` rule, `ExtraWords` and the ambiguous-pair list.
-
----
-
-## 13. Excluded voice features (names only)
-
-**Voice-only files:**
-- `VoiceController.swift`
-- `VoiceIndicator.swift`
-- `VoiceHistory.swift`
-- `VoiceHistoryWindow.swift`
-- `VoiceClips.swift`
-- `VoiceClipPlayer.swift`
-- `VoiceDictionary.swift`
-- `VoiceOutputCase.swift`
-- `VoiceGate.swift`
-- `WhisperBridge.swift`
-- `WhisperPrompt.swift`
-- `WhisperGhosts.swift`
-- `whisper-bridging.h`
-- `ParakeetEngine.swift`
-- `StreamingEouEngine.swift`
-- `LiveDraftEngine.swift`
-- `ModelDownloader.swift`
-- `TarballDownloader.swift`
-- `AudioRecorder.swift`
-- `AudioDevices.swift`
-- `MicVolume.swift`
-- `SystemVolume.swift`
-- `AudioImporter.swift`
-- `AudioImportCore.swift`
-- `CallRecorder.swift`
-- `CallRecordingCore.swift`
-- `NotchIsland.swift` (the dictation HUD)
-
-**Places where non-voice code depends on voice code, to cut around:**
-- **`EventTap.swift`.** The voice hotkey modes (`combo`, `modkey`, `key`, hold/toggle, 0.3 s toggle debounce, `voiceActive`, `voiceModArmed`, `voiceComboArmed`, `voiceKeyArmed`), Esc-cancel dictation, and `VoiceGate`. It is also in the mutual-exclusion logic that decides whether a modifier belongs to the conversion hotkey or the voice hotkey.
-- **`Engine.swift`.**
-  - `handleVoiceBegin/End`, `toggleVoiceFromMenu`.
-  - A `.keyboopVoiceInserted` observer that clears or invalidates the word buffer after a dictation insert.
-  - `pasteLastDictation` and `handlePasteDictationHotkey`.
-  - `VoiceIndicator.shared.showToast` (22 call sites repo-wide): non-voice paths such as Pause and the menu also use this toast, so a replacement toast is needed.
-- **`AppSettings.swift`.** 30 or more `voice*` keys. `silentMode` also gates voice sounds. `voiceHistoryEnabled` is a prerequisite for clipboard history.
-- **`MenuBarController.swift`.** The microphone submenu, the waveform animation, `setVoiceState`, `copyLastDictation`, and the ⌥-click call-recording.
-- **`AppDelegate.swift`.** `VoiceController.preload`, `AudioRecorder.requestAccess`, `CallRecorder.recoverUnfinishedSessions`, `VoiceHistory.migrateKeyIfNeeded`, and `VoiceDictionary.configureFuzzyLanguageGuard`, which borrows `LayoutData`.
-- **`ClipboardHistoryCore.swift`, `ClipboardWatcher.swift`, `HistoryGate.swift`.** The clipboard history feature stores its entries in the voice history file, and it needs `voiceHistoryEnabled` on. `HistoryKind` also includes dictation, imported-file and call entries. The `HistoryGate` password protects the voice-history window. If you keep clipboard history, it must be given its own store.
-- **`SnippetPicker.swift`.** The "zeroth row" for the last dictation (hotkey `0`) and `showsLastDictation`.
-- **`UpdaterController.swift`.** Silent install waits for "no dictation running, no model downloading".
-- **`WelcomeWindow.swift`, `SettingsWindow.swift`, `L10n.swift`.** Voice sections and strings (`voice.*`, `hist.*`, `call.*`, `model.*`, `audio.*`, about 400 of the 800 keys). The Settings voice section is the longest.
-- **`SecureInputPolicy.swift`.** Cross-references voice.
-- **Info.plist and entitlements.** `NSMicrophoneUsageDescription`, `NSAudioCaptureUsageDescription`, and the audio-input and microphone entitlements.
-- **Build.** The whisper, ggml and FluidAudio libraries, the Metal and CoreML frameworks, and `main.swift`'s `GGML_METAL_NO_RESIDENCY` env var.
-
-**Key paths:** everything is under `C:\dev\keygloss\reference\original-app\`, mostly in `Sources\Keyboop\`.

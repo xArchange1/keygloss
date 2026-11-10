@@ -1,6 +1,6 @@
 # Keygloss
 
-Windows-only Tauri 2 rewrite of Keyboop (macOS, Swift, MIT): a RU↔EN wrong-layout auto-corrector (`ghbdtn` → `привет`). The MVP is built and verified. `docs/original-app-analysis.md` inventories the original's features.
+Windows-only Tauri 2 rewrite of Keyboop (macOS, Swift, MIT): a RU↔EN wrong-layout auto-corrector (`ghbdtn` → `привет`). The MVP is built and verified. `docs/original-app-analysis.md` (68 KB) is a reference for the original's behaviour: do not read it whole, grep its section headings only when porting or checking parity with an original feature.
 
 ## Rules
 
