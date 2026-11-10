@@ -111,6 +111,7 @@ struct Os {
     on_foreground: Option<Box<dyn Fn(AppId) + Send + Sync>>,
     outputs: Vec<(usize, String)>,
     chords: Vec<(KeyCode, Modifiers)>,
+    masks: usize,
     selection_reads: usize,
 }
 
@@ -133,6 +134,7 @@ impl FakeOs {
             on_foreground: None,
             outputs: Vec::new(),
             chords: Vec::new(),
+            masks: 0,
             selection_reads: 0,
         })))
     }
@@ -219,6 +221,10 @@ impl TextOutput for FakeOs {
         } else if mods.ctrl && key == KeyCode::KeyV {
             Self::paste(&mut os);
         }
+        Ok(())
+    }
+    fn send_mask_key(&self) -> Result<(), PlatformError> {
+        self.os().masks += 1;
         Ok(())
     }
 }
@@ -871,6 +877,49 @@ fn modkey_is_side_specific_and_solo() {
     h.tap(KeyCode::AltRight);
     h.advance(10);
     assert!(fired(&h, "en"));
+}
+
+#[test]
+fn alt_and_win_modifier_taps_send_a_mask_key() {
+    use KeyCode::*;
+    let masks = |h: &H| h.os.os().masks;
+    let mut h = H::with(|s| s.hotkey = Hotkey::ModKey { key: AltRight });
+    h.tap(AltRight);
+    assert_eq!(masks(&h), 1, "Alt modkey");
+    h.tap(AltLeft);
+    assert_eq!(masks(&h), 1, "did not fire");
+
+    let mut h = H::with(|s| s.hotkey = Hotkey::DoubleTap { key: MetaLeft });
+    h.tap(MetaLeft);
+    h.advance(100);
+    h.ev(MetaLeft, true);
+    assert_eq!(masks(&h), 1, "Win double tap: masked while the key is still down");
+    h.ev(MetaLeft, false);
+
+    let mut h = H::with(|s| s.hotkey = Hotkey::Combo { mods: CTRL_ALT });
+    h.ev(ControlLeft, true);
+    h.ev(AltLeft, true);
+    h.ev(AltLeft, false);
+    assert_eq!(masks(&h), 1, "Alt released while the chord is armed");
+    h.ev(ControlLeft, false);
+    assert_eq!(masks(&h), 2, "the chord fired");
+
+    for hk in [
+        Hotkey::ModKey { key: ShiftLeft },
+        Hotkey::DoubleTap { key: ControlLeft },
+        Hotkey::Combo { mods: Modifiers { ctrl: true, shift: true, ..Modifiers::NONE } },
+    ] {
+        let mut h = H::with(|s| s.hotkey = hk);
+        h.ev(ControlLeft, true);
+        h.ev(ShiftLeft, true);
+        h.ev(ShiftLeft, false);
+        h.ev(ControlLeft, false);
+        h.tap(ShiftLeft);
+        h.tap(ControlLeft);
+        h.advance(50);
+        h.tap(ControlLeft);
+        assert_eq!(masks(&h), 0, "{hk:?}");
+    }
 }
 
 #[test]

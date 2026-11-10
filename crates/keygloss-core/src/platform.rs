@@ -137,6 +137,9 @@ pub trait TextOutput: Send + Sync {
     fn replace_text(&self, backspaces: usize, text: &str) -> Result<(), PlatformError>;
     /// Presses and releases `key` with `mods` held, e.g. Ctrl+C, Ctrl+V, Enter.
     fn send_chord(&self, key: KeyCode, mods: Modifiers) -> Result<(), PlatformError>;
+    /// Taps a key that does nothing (Windows: unassigned vk 0xE8), so that releasing Alt or Win
+    /// after a modifier-tap hotkey does not open the window menu or the Start menu.
+    fn send_mask_key(&self) -> Result<(), PlatformError>;
 }
 
 /// Opaque OS identifier of an installed keyboard layout (Windows: the HKL as hex, e.g. `"04190419"`).

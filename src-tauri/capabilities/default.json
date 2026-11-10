@@ -1,11 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Capability for the app windows",
-  "windows": ["settings"],
-  "permissions": [
-    "core:default",
-    "store:default",
-    "autostart:default"
-  ]
+  "description": "All windows: app commands, events (listen) and getCurrentWindow().label.",
+  "windows": ["settings", "welcome", "banner", "picker"],
+  "permissions": ["core:default"]
 }

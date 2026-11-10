@@ -124,6 +124,17 @@ pub(crate) fn key_matches(hk: &Hotkey, ev: &KeyEvent) -> bool {
     }
 }
 
+/// A modifier-only hotkey that involves Alt or Win: releasing those after it fires would open the
+/// window menu or the Start menu unless a mask key is sent first.
+pub(crate) fn needs_mask(hk: &Hotkey) -> bool {
+    let alt_win = |m: Modifiers| m.alt || m.meta;
+    match *hk {
+        Hotkey::Combo { mods } => alt_win(mods),
+        Hotkey::ModKey { key } | Hotkey::DoubleTap { key } => modifier_of(key).is_some_and(alt_win),
+        Hotkey::Key { .. } => false,
+    }
+}
+
 /// Modifier-gesture state of one hotkey (`comboArmed`, `modkeyArmed`, `lastModTap`, ...).
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Gesture {
@@ -135,6 +146,11 @@ pub(crate) struct Gesture {
 }
 
 impl Gesture {
+    /// A modifier-only chord is held and may still fire.
+    pub fn combo_armed(&self) -> bool {
+        self.combo_armed
+    }
+
     /// A non-modifier key went down.
     pub fn other_key(&mut self) {
         if self.combo_armed {

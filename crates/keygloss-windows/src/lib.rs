@@ -16,6 +16,7 @@ mod hook;
 mod keymap;
 mod layouts;
 mod output;
+pub mod shell;
 mod uia;
 
 pub use apps::WindowsForegroundApp;

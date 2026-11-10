@@ -49,7 +49,7 @@ use crate::text_case::{self, CaseToggleError};
 use crate::typo::{self, TypoFixer};
 use crate::undo::{UndoEvent, UndoLearner};
 
-use hotkeys::{Gesture, Recorder, held_after, key_matches};
+use hotkeys::{Gesture, Recorder, held_after, key_matches, needs_mask};
 
 /// The language pair the engine corrects.
 const PAIR: &LanguagePair = &RU_EN;
@@ -754,13 +754,27 @@ impl Engine {
         self.key_down(ev, now)
     }
 
+    /// Runs the modifier gestures. Called before the event is passed on, so a mask key sent here
+    /// reaches the app before the Alt/Win key-up: when a gesture on Alt/Win fires, and when Alt/Win
+    /// is released while such a chord is armed (it may fire on a later release).
     fn modifier_gestures(&mut self, key: KeyCode, down: bool, held: Modifiers, now: Instant) {
+        let alt_win_up = !down && hotkeys::modifier_of(key).is_some_and(|m| m.alt || m.meta);
+        let mut mask = false;
+        let mut fired = Vec::new();
         for (i, target) in HotkeyTarget::ALL.into_iter().enumerate() {
-            if let Some(hk) = target.hotkey(&self.settings)
-                && self.gestures[i].modifier(&hk, key, down, held, now)
-            {
-                self.fire(target, now);
+            let Some(hk) = target.hotkey(&self.settings) else { continue };
+            let armed = self.gestures[i].combo_armed();
+            let fire = self.gestures[i].modifier(&hk, key, down, held, now);
+            mask |= needs_mask(&hk) && (fire || (armed && alt_win_up));
+            if fire {
+                fired.push(target);
             }
+        }
+        if mask {
+            let _ = self.output.send_mask_key();
+        }
+        for target in fired {
+            self.fire(target, now);
         }
     }
 

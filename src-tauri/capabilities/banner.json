@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "banner",
+  "description": "The banner hides its own window after the fade-out.",
+  "windows": ["banner"],
+  "permissions": ["core:window:allow-hide"]
+}

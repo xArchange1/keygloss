@@ -10,16 +10,7 @@
     "frontendDist": "../dist"
   },
   "app": {
-    "windows": [
-      {
-        "label": "settings",
-        "title": "Keygloss",
-        "width": 872,
-        "height": 640,
-        "minWidth": 872,
-        "minHeight": 480
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": null
     }

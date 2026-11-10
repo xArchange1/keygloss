@@ -152,6 +152,14 @@ impl TextOutput for WindowsOutput {
         }
         send_clean(body)
     }
+
+    /// Taps the unassigned vk 0xE8 (as AutoHotkey's menu mask does), without touching held keys.
+    fn send_mask_key(&self) -> Result<(), PlatformError> {
+        let mut inputs = Vec::with_capacity(2);
+        press(&mut inputs, VIRTUAL_KEY(0xE8), 0);
+        let sent = unsafe { SendInput(&inputs, size_of::<INPUT>() as i32) } as usize;
+        if sent == inputs.len() { Ok(()) } else { Err(PlatformError(format!("SendInput sent {sent} of 2 events"))) }
+    }
 }
 
 #[cfg(test)]

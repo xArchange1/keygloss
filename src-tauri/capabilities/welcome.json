@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "welcome",
+  "description": "The welcome window closes itself.",
+  "windows": ["welcome"],
+  "permissions": ["core:window:allow-close"]
+}
