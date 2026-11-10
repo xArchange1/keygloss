@@ -1,0 +1,24 @@
+[package]
+name = "keygloss"
+description = "Keygloss: RU/EN wrong-layout auto-corrector"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+# Distinct lib name avoids a bin/lib name clash on Windows (cargo#8519).
+name = "keygloss_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.4", features = [] }
+
+[dependencies]
+keygloss-core.workspace = true
+keygloss-windows.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tauri = { version = "2.12.5", features = [] }
+tauri-plugin-store = "2.5.0"
+tauri-plugin-autostart = "2.7.0"
+tauri-plugin-single-instance = "2.5.5"

@@ -1,0 +1,12 @@
+[package]
+name = "keygloss-windows"
+description = "Windows implementation of the keygloss-core platform traits."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+keygloss-core.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows = "0.62.2"

@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+/*
+ * Theme tokens (docs/PLAN.md, Design). Light is the base; dark applies when the system is dark,
+ * unless overridden with data-theme="light" | "dark" on <html> (the appTheme setting).
+ */
+:root {
+  color-scheme: light;
+  --kg-bg-from: #f3eee7;
+  --kg-bg-to: #e4e5e3;
+  --kg-text: #171819;
+  --kg-accent: #8a6500;
+  --kg-detail: #3d48b8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --kg-bg-from: #2b2d30;
+    --kg-bg-to: #0b0c0d;
+    --kg-text: #f3eee7;
+    --kg-accent: #f5c84c;
+    --kg-detail: #8e9bff;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --kg-bg-from: #2b2d30;
+  --kg-bg-to: #0b0c0d;
+  --kg-text: #f3eee7;
+  --kg-accent: #f5c84c;
+  --kg-detail: #8e9bff;
+}
+
+/* Tailwind utilities: text-fg, text-accent, bg-accent, ring-detail, ... */
+@theme inline {
+  --color-fg: var(--kg-text);
+  --color-accent: var(--kg-accent);
+  --color-detail: var(--kg-detail);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--kg-text);
+  background: linear-gradient(180deg, var(--kg-bg-from), var(--kg-bg-to)) fixed;
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+}

@@ -1,1 +1,13 @@
 reference/
+
+# Rust
+/target/
+
+# Frontend
+node_modules/
+dist/
+*.local
+*.log
+
+# Tauri generated schemas
+/src-tauri/gen/schemas

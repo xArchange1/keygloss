@@ -1,0 +1,21 @@
+[workspace]
+resolver = "3"
+members = ["crates/keygloss-core", "crates/keygloss-windows", "src-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[workspace.dependencies]
+keygloss-core = { path = "crates/keygloss-core" }
+keygloss-windows = { path = "crates/keygloss-windows" }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true
