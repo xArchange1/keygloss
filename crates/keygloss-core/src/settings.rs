@@ -68,6 +68,15 @@ pub enum UiLanguage {
     En,
 }
 
+/// Which GitHub releases the updater offers (`updateChannel`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum UpdateChannel {
+    Stable,
+    /// Pre-releases too.
+    Beta,
+}
+
 /// Every persisted setting and engine-learned list. Missing keys load as defaults.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
@@ -153,6 +162,12 @@ pub struct Settings {
     pub language: UiLanguage,
     pub app_theme: Theme,
 
+    // Updates
+    pub update_check_on_startup: bool,
+    /// Install what the startup check finds without asking.
+    pub auto_update: bool,
+    pub update_channel: UpdateChannel,
+
     // App state
     pub did_initial_setup: bool,
     pub did_show_welcome: bool,
@@ -219,6 +234,10 @@ impl Default for Settings {
 
             language: UiLanguage::Auto,
             app_theme: Theme::System,
+
+            update_check_on_startup: true,
+            auto_update: false,
+            update_channel: UpdateChannel::Stable,
 
             did_initial_setup: false,
             did_show_welcome: false,

@@ -26,3 +26,7 @@ webview2-com = "0.39.1"
 windows-core = "0.62.2"
 rodio = { version = "0.23", default-features = false, features = ["playback", "wav", "mp3"] }
 rfd = { version = "0.18.0", default-features = false }
+tauri-plugin-updater = "2.14.1"
+# The client and TLS provider the updater plugin uses (for the beta channel's GitHub API call).
+reqwest = { version = "0.13", default-features = false, features = ["json"] }
+rustls = { version = "0.23", default-features = false, features = ["ring"] }

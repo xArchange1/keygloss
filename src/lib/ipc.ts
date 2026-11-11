@@ -34,6 +34,8 @@ export type AppMode = "off" | "soft";
 export type Theme = "system" | "light" | "dark";
 export type UiLanguage = "auto" | "ru" | "en";
 export type Sound = "off" | "beep" | "whoosh" | "custom";
+/** "beta" also gets pre-releases. */
+export type UpdateChannel = "stable" | "beta";
 
 export interface Settings {
   // Layout switching
@@ -97,6 +99,11 @@ export interface Settings {
   // General
   language: UiLanguage;
   appTheme: Theme;
+  // Updates
+  updateCheckOnStartup: boolean;
+  /** Install what the startup check finds without asking. */
+  autoUpdate: boolean;
+  updateChannel: UpdateChannel;
   // App state
   didInitialSetup: boolean;
   didShowWelcome: boolean;
@@ -167,6 +174,7 @@ let memSettings: Settings = {
   snippetExpandTab: true, textSnippets: [], undoDeclinedWords: [], undoStrikeCount: {},
   undoStrikeTime: {}, typoPersonalWords: {}, lastLayoutCyr: "", lastLayoutLat: "",
   language: "auto", appTheme: "system", didInitialSetup: false, didShowWelcome: false, rescuedCount: 0,
+  updateCheckOnStartup: true, autoUpdate: false, updateChannel: "stable",
 };
 
 function browserInvoke(cmd: string, args?: Record<string, unknown>): unknown {
@@ -181,6 +189,7 @@ function browserInvoke(cmd: string, args?: Record<string, unknown>): unknown {
     case "get_launch_at_login": return false;
     case "set_launch_at_login": return args!.enabled;
     case "app_version": return "dev";
+    case "check_for_update": case "pending_update": return null;
   }
 }
 
@@ -217,6 +226,12 @@ export const previewSound = (sound: Sound, volume: number) =>
 /** Opens a file dialog; a picked file becomes the custom sound. False = cancelled; rejects on a file that is not audio. */
 export const chooseSoundFile = () => invoke<boolean>("choose_sound_file");
 export const appVersion = () => invoke<string>("app_version");
+/** Asks GitHub for a newer release on the chosen channel: its version, or null. */
+export const checkForUpdate = () => invoke<string | null>("check_for_update");
+/** Version found by the last check (the startup one too), or null. */
+export const pendingUpdate = () => invoke<string | null>("pending_update");
+/** Downloads and installs the update found by the last check; the app restarts. */
+export const installUpdate = () => invoke<void>("install_update");
 
 // Added by the frontend phase; the Rust side must implement these (see the phase report).
 /** Shows (creating if needed) and focuses the settings window. */
