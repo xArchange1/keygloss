@@ -11,8 +11,6 @@ export const PRESETS: Record<HotkeyTarget, Hotkey[]> = {
     key("ScrollLock"),
     { mode: "modkey", key: "ControlRight" },
     { mode: "modkey", key: "AltRight" },
-    { mode: "doubletap", key: "ShiftLeft" },
-    { mode: "doubletap", key: "ControlLeft" },
     { mode: "combo", mods: mods({ ctrl: true, alt: true }) },
   ],
   caseChange: [

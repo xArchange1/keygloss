@@ -191,6 +191,7 @@ const ru: Resources = {
     basedOn: "Переписанный для Windows Keyboop — лицензия MIT, Copyright (c) 2026 Keyboop contributors.",
     data: "Языковые данные из keyswitcher — лицензия MIT, Copyright (c) 2026 Ilya Granin.",
     welcome: "Знакомство",
+    support: "Поддержать разработку",
     feedback: "Обратная связь",
     reportBug: "Сообщить о проблеме",
     requestFeature: "Предложить идею",

@@ -215,8 +215,12 @@ export const updateSettings = (patch: Partial<Settings>) =>
 export const getEngineStatus = () => invoke<EngineStatus>("get_engine_status");
 export const pause = (minutes: number) => invoke<EngineStatus>("pause", { minutes });
 export const resume = () => invoke<EngineStatus>("resume");
-export const startHotkeyRecording = () => invoke<void>("start_hotkey_recording");
-export const stopHotkeyRecording = () => invoke<void>("stop_hotkey_recording");
+/** Start/stop run one after another: concurrent invokes can arrive out of order (StrictMode's
+ * start, stop, start once came in as start, start, stop and left recording off). */
+let recording = Promise.resolve();
+const queueRecording = (cmd: string) => (recording = recording.catch(() => {}).then(() => invoke<void>(cmd)));
+export const startHotkeyRecording = () => queueRecording("start_hotkey_recording");
+export const stopHotkeyRecording = () => queueRecording("stop_hotkey_recording");
 export const checkHotkey = (target: HotkeyTarget, hotkey: Hotkey) =>
   invoke<HotkeyCheck>("check_hotkey", { target, hotkey });
 export const listApps = () => invoke<AppInfo[]>("list_apps");
