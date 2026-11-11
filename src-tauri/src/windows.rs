@@ -92,9 +92,8 @@ pub fn open_welcome(app: &AppHandle) {
         return;
     }
     let built = builder(app, WELCOME)
-        .inner_size(480.0, 640.0)
-        .min_inner_size(480.0, 430.0)
-        .max_inner_size(480.0, 1200.0)
+        .inner_size(820.0, 460.0)
+        .min_inner_size(720.0, 380.0)
         .maximizable(false)
         .center()
         .build()

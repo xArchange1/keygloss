@@ -214,8 +214,9 @@ pub fn open_settings(app: AppHandle) {
     windows::open_settings(&app);
 }
 
+/// Async on purpose: building a window inside a synchronous command deadlocks WebView2.
 #[tauri::command]
-pub fn open_welcome(app: AppHandle) {
+pub async fn open_welcome(app: AppHandle) {
     windows::open_welcome(&app);
 }
 
