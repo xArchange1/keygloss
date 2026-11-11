@@ -1,5 +1,6 @@
-//! The conversion ("switch") sound, synthesized in code (`CueSynth.switchData`): two dry 34 ms
-//! bursts of 440 Hz with 22 ms of silence between, as a mono 16-bit 44.1 kHz WAV.
+//! The conversion ("switch") sounds, synthesized in code as mono 16-bit 44.1 kHz WAVs. The beep
+//! is the original's `CueSynth.switchData`: two dry 34 ms bursts of 440 Hz with 22 ms of silence
+//! between. The whoosh is Keygloss's own.
 
 const SAMPLE_RATE: u32 = 44_100;
 const AMP: f64 = 0.38;
@@ -53,6 +54,30 @@ pub fn switch_cue_wav() -> Vec<u8> {
     wav(&s)
 }
 
+/// A whoosh as WAV bytes (260 ms): noise through a band-pass sweeping up from 300 Hz to
+/// 2.4 kHz, fading in and out.
+pub fn whoosh_wav() -> Vec<u8> {
+    let sr = f64::from(SAMPLE_RATE);
+    let n = (sr * 0.26) as usize;
+    let (mut low, mut band, mut seed) = (0.0, 0.0, 0x2545_F491_u32);
+    let mut out = Vec::with_capacity(n);
+    for i in 0..n {
+        let p = i as f64 / n as f64;
+        // xorshift32 noise in -1..1: the same samples every time.
+        seed ^= seed << 13;
+        seed ^= seed >> 17;
+        seed ^= seed << 5;
+        let noise = f64::from(seed) / f64::from(u32::MAX) * 2.0 - 1.0;
+        let f = 2.0 * (std::f64::consts::PI * 300.0 * 8f64.powf(p) / sr).sin();
+        low += f * band;
+        band += f * (noise - low - 0.5 * band);
+        out.push(band * (std::f64::consts::PI * p).sin().powi(2));
+    }
+    let peak = out.iter().fold(0.0, |m: f64, v| m.max(v.abs()));
+    let samples: Vec<i16> = out.iter().map(|v| (v / peak * AMP * 32_767.0) as i16).collect();
+    wav(&samples)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -86,5 +111,17 @@ mod tests {
         assert!(samples[1499..1499 + 970].iter().all(|&s| s == 0));
         let peak = samples.iter().map(|s| s.unsigned_abs()).max().unwrap();
         assert!(peak > 5000 && peak < (0.38 * 32_767.0) as u16 + 1);
+    }
+
+    #[test]
+    fn whoosh_fades_in_and_out_at_the_cue_level() {
+        let d = whoosh_wav();
+        assert_eq!(u32_at(&d, 4) as usize, d.len() - 8);
+        assert_eq!(d.len(), 44 + 11_466 * 2);
+        let samples: Vec<i16> = d[44..].chunks(2).map(|c| i16::from_le_bytes([c[0], c[1]])).collect();
+        let peak = |s: &[i16]| s.iter().map(|s| s.unsigned_abs()).max().unwrap();
+        assert_eq!(peak(&samples), (0.38 * 32_767.0) as u16);
+        assert!(peak(&samples[..200]) < 300 && peak(&samples[samples.len() - 200..]) < 300);
+        assert_eq!(d, whoosh_wav());
     }
 }

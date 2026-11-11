@@ -1,44 +1,108 @@
-//! The conversion cue at a volume.
+//! Plays the conversion sound (a synthesized one or the user's file) at a volume.
 
-/// Size of the canonical PCM WAV header `cue::switch_cue_wav` writes.
-const HEADER: usize = 44;
+use std::fs::File;
+use std::io::{BufReader, Cursor};
+use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
+use std::sync::mpsc::{Receiver, RecvError, RecvTimeoutError, Sender, channel};
+use std::time::Duration;
 
-/// Scales the 16-bit samples of a canonical mono PCM WAV by `volume` (clamped to 0..=1).
-pub fn scaled(wav: &[u8], volume: f64) -> Vec<u8> {
-    let v = volume.clamp(0.0, 1.0);
-    let mut out = wav.to_vec();
-    let start = HEADER.min(out.len());
-    for s in out[start..].chunks_exact_mut(2) {
-        let x = (f64::from(i16::from_le_bytes([s[0], s[1]])) * v).round() as i16;
-        s.copy_from_slice(&x.to_le_bytes());
-    }
-    out
+use keygloss_core::cue;
+use keygloss_core::settings::Sound;
+use rodio::{Decoder, DeviceSinkBuilder, Player, Source};
+use tauri::{AppHandle, Manager};
+
+/// The app's copy of the custom sound, in the config dir. No extension: the format is read
+/// from the content.
+const CUSTOM_FILE: &str = "custom-sound";
+/// A custom sound is cut off after this long.
+const CUSTOM_LIMIT: Duration = Duration::from_secs(5);
+
+struct Cue {
+    sound: Sound,
+    volume: f64,
+    custom: PathBuf,
 }
 
-/// Plays the cue without blocking the caller.
-pub fn play_cue(volume: f64) {
-    keygloss_windows::shell::play_wav(scaled(&keygloss_core::cue::switch_cue_wav(), volume));
+pub fn custom_file(app: &AppHandle) -> Option<PathBuf> {
+    app.path().app_config_dir().ok().map(|dir| dir.join(CUSTOM_FILE))
+}
+
+/// The file as audio; `None` if it is missing or not WAV or MP3.
+pub fn decode(path: &Path) -> Option<Decoder<BufReader<File>>> {
+    Decoder::try_from(File::open(path).ok()?).ok()
+}
+
+/// Queues what `cue` plays; `None` plays nothing.
+fn append(player: &Player, cue: &Cue) -> Option<()> {
+    match cue.sound {
+        Sound::Off => return None,
+        Sound::Beep => player.append(Decoder::try_from(Cursor::new(cue::switch_cue_wav())).ok()?),
+        Sound::Whoosh => player.append(Decoder::try_from(Cursor::new(cue::whoosh_wav())).ok()?),
+        Sound::Custom => player.append(decode(&cue.custom)?.take_duration(CUSTOM_LIMIT)),
+    }
+    Some(())
+}
+
+/// Plays one cue to its end, or until a newer one arrives. Returns the next cue.
+fn run(cue: &Cue, next: &Receiver<Cue>) -> Result<Cue, RecvError> {
+    if let Ok(mut out) = DeviceSinkBuilder::open_default_sink() {
+        out.log_on_drop(false);
+        let player = Player::connect_new(out.mixer());
+        player.set_volume(cue.volume.clamp(0.0, 1.0) as f32);
+        if append(&player, cue).is_some() {
+            // One more round after the queue empties lets the device play out its buffer.
+            let mut done = false;
+            while !done {
+                done = player.empty();
+                match next.recv_timeout(Duration::from_millis(100)) {
+                    Ok(cue) => return Ok(cue),
+                    Err(RecvTimeoutError::Timeout) => {}
+                    Err(RecvTimeoutError::Disconnected) => return Err(RecvError),
+                }
+            }
+        }
+    }
+    next.recv()
+}
+
+/// Plays `sound` without blocking the caller; a newer sound cuts an older one off. A missing
+/// or unreadable custom file plays nothing.
+pub fn play(app: &AppHandle, sound: Sound, volume: f64) {
+    static CUES: OnceLock<Sender<Cue>> = OnceLock::new();
+    let Some(custom) = custom_file(app) else { return };
+    if sound == Sound::Off || volume <= 0.0 {
+        return;
+    }
+    let cues = CUES.get_or_init(|| {
+        let (tx, rx) = channel::<Cue>();
+        let _ = std::thread::Builder::new().name("keygloss-sound".into()).spawn(move || {
+            let mut cue = rx.recv();
+            while let Ok(c) = cue {
+                cue = run(&c, &rx);
+            }
+        });
+        tx
+    });
+    let _ = cues.send(Cue { sound, volume, custom });
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn samples(wav: &[u8]) -> Vec<i16> {
-        wav[HEADER..].chunks(2).map(|c| i16::from_le_bytes([c[0], c[1]])).collect()
-    }
-
     #[test]
-    fn scales_samples_and_keeps_the_header() {
-        let wav = keygloss_core::cue::switch_cue_wav();
-        let half = scaled(&wav, 0.5);
-        assert_eq!(half.len(), wav.len());
-        assert_eq!(half[..HEADER], wav[..HEADER]);
-        for (a, b) in samples(&wav).iter().zip(samples(&half)) {
-            assert!((f64::from(*a) * 0.5 - f64::from(b)).abs() <= 0.5);
-        }
-        assert_eq!(scaled(&wav, 1.0), wav);
-        assert_eq!(scaled(&wav, 3.0), wav, "clamped");
-        assert!(samples(&scaled(&wav, 0.0)).iter().all(|&s| s == 0));
+    fn decodes_the_built_in_sounds_and_refuses_other_files() {
+        let dir = std::env::temp_dir().join(format!("keygloss-sound-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let (wav, text) = (dir.join("a"), dir.join("b"));
+        std::fs::write(&wav, cue::whoosh_wav()).unwrap();
+        std::fs::write(&text, "not audio").unwrap();
+        let samples = decode(&wav).unwrap();
+        assert_eq!((samples.channels().get(), samples.sample_rate().get()), (1, 44_100));
+        assert_eq!(samples.count(), 11_466);
+        assert!(decode(&text).is_none());
+        assert!(decode(&dir.join("missing")).is_none());
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

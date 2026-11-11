@@ -43,7 +43,7 @@ use crate::platform::{
     TextOutput,
 };
 use crate::resonance::AntiResonanceGuard;
-use crate::settings::{AppMode, Hotkey, Settings};
+use crate::settings::{AppMode, Hotkey, Settings, Sound};
 use crate::snippets::{self, SnippetIndex};
 use crate::text_case::{self, CaseToggleError};
 use crate::typo::{self, TypoFixer};
@@ -131,8 +131,8 @@ pub enum EngineEvent {
     SnippetPickerClose,
     /// While recording: a hotkey was pressed (plain Esc arrives as `Key { Escape, no mods }`).
     HotkeyCaptured(Hotkey),
-    /// Play the conversion cue at this volume (0..=1).
-    PlaySound { volume: f64 },
+    /// Play this conversion sound (never `Off`) at this volume (0..=1).
+    PlaySound { sound: Sound, volume: f64 },
 }
 
 /// Slow work for the worker thread.
@@ -425,9 +425,9 @@ impl Engine {
 
     fn play_sound(&mut self) {
         let s = &self.settings;
-        if s.sound_enabled && !s.silent_mode && s.sound_volume > 0.0 {
-            let volume = s.sound_volume.min(1.0);
-            self.emit(EngineEvent::PlaySound { volume });
+        if s.sound != Sound::Off && s.sound_volume > 0.0 {
+            let (sound, volume) = (s.sound, s.sound_volume.min(1.0));
+            self.emit(EngineEvent::PlaySound { sound, volume });
         }
     }
 

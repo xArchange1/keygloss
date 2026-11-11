@@ -582,12 +582,30 @@ fn converts_wrong_layout_word_at_space() {
     assert_eq!(h.text(), "привет ");
     assert_eq!(h.lang(), "ru");
     let events = h.take_events();
-    assert!(events.iter().any(|e| matches!(e, EngineEvent::PlaySound { volume } if (*volume - 0.6).abs() < 1e-9)));
+    assert!(events.iter().any(|e| matches!(e, EngineEvent::PlaySound { sound: Sound::Beep, volume } if (*volume - 0.6).abs() < 1e-9)));
     assert!(events.iter().any(|e| matches!(e, EngineEvent::SettingsChanged(s) if s.rescued_count == 1)));
     // Typing continues in Russian.
     h.keys("vbh ");
     h.advance(100);
     assert_eq!(h.text(), "привет мир ");
+}
+
+#[test]
+fn sound_off_plays_nothing_and_another_sound_is_passed_on() {
+    let convert_with = |sound| {
+        let mut h = H::boundary();
+        h.shared.with(|e| {
+            let mut s = e.settings().clone();
+            s.sound = sound;
+            e.set_settings(s, Instant::now());
+        });
+        h.keys("ghbdtn ");
+        h.advance(100);
+        assert_eq!(h.text(), "привет ");
+        h.take_events()
+    };
+    assert!(!convert_with(Sound::Off).iter().any(|e| matches!(e, EngineEvent::PlaySound { .. })));
+    assert!(convert_with(Sound::Custom).iter().any(|e| matches!(e, EngineEvent::PlaySound { sound: Sound::Custom, .. })));
 }
 
 #[test]

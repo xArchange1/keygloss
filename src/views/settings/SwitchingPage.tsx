@@ -1,10 +1,11 @@
-import { useId } from "react";
+import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Hotkey, HotkeyTarget, Settings } from "../../lib/ipc";
+import * as ipc from "../../lib/ipc";
+import type { Hotkey, HotkeyTarget, Settings, Sound } from "../../lib/ipc";
 import { PRESETS } from "../../lib/hotkeys";
 import { useSettings, useUpdate } from "../../store";
 import { HotkeyPicker } from "../../components/HotkeyPicker";
-import { Card, CheckPill, Hint, PageTitle, Row, SectionTitle, SwitchRow } from "../../components/ui";
+import { Button, Card, CheckPill, Hint, PageTitle, Row, SectionTitle, Select, SwitchRow } from "../../components/ui";
 
 /** Toggle row for an optional hotkey (null = off) plus its picker row while on. */
 export function OptionalHotkey({ title, sub, target, field }: {
@@ -32,6 +33,21 @@ export function SwitchingPage() {
   const s = useSettings();
   const update = useUpdate();
   const volId = useId();
+  const [badFile, setBadFile] = useState(false);
+  // The volume moved since its last preview: played once the pointer or key lets go.
+  const volumeMoved = useRef(false);
+  const previewVolume = () => {
+    if (volumeMoved.current) preview(s.sound, s.soundVolume);
+    volumeMoved.current = false;
+  };
+  const preview = (sound: Sound, volume: number) => ipc.previewSound(sound, volume).catch(console.error);
+  // The backend selects and plays a picked file itself.
+  const chooseFile = () => ipc.chooseSoundFile().then(() => setBadFile(false), () => setBadFile(true));
+  const setSound = (sound: Sound) => {
+    if (sound === "custom" && !s.soundFile) return chooseFile();
+    update({ sound });
+    preview(sound, s.soundVolume);
+  };
 
   return (
     <>
@@ -90,18 +106,30 @@ export function SwitchingPage() {
 
       <SectionTitle>{t("switch.soundSection")}</SectionTitle>
       <Card>
-        <SwitchRow title={t("switch.soundOn")} checked={s.soundEnabled} disabled={s.silentMode}
-          onChange={(v) => update({ soundEnabled: v })} />
-        <Row id={volId} title={t("switch.volume")} disabled={s.silentMode || !s.soundEnabled} control={
+        <Row title={t("switch.soundOn")} control={
+          <Select<Sound> value={s.sound} label={t("switch.soundOn")} className="w-[170px]" onChange={setSound}
+            options={[
+              { value: "off", label: t("switch.soundOff") },
+              { value: "beep", label: t("switch.soundBeep") },
+              { value: "whoosh", label: t("switch.soundWhoosh") },
+              { value: "custom", label: t("switch.soundCustom") },
+            ]} />
+        } />
+        {s.sound === "custom" && (
+          <Row title={s.soundFile || t("switch.soundNoFile")} sub={t("switch.soundFileSub")}
+            control={<Button onClick={chooseFile}>{t("switch.soundChoose")}</Button>} />
+        )}
+        <Row id={volId} title={t("switch.volume")} disabled={s.sound === "off"} control={
           <div className="flex items-center gap-3">
             <input type="range" min={0} max={1} step={0.05} value={s.soundVolume} aria-labelledby={volId}
-              disabled={s.silentMode || !s.soundEnabled} className="w-44 cursor-pointer"
-              onChange={(e) => update({ soundVolume: Number(e.target.value) })} />
+              disabled={s.sound === "off"} className="w-44 cursor-pointer"
+              onChange={(e) => { volumeMoved.current = true; update({ soundVolume: Number(e.target.value) }); }}
+              onPointerUp={previewVolume} onKeyUp={previewVolume} />
             <span className="w-9 text-right text-[12px] text-fg/70 tabular-nums">{Math.round(s.soundVolume * 100)}%</span>
           </div>
         } />
       </Card>
-      {s.silentMode && <Hint>{t("switch.mutedHint")}</Hint>}
+      {badFile && <Hint tone="warn">{t("switch.soundBadFile")}</Hint>}
     </>
   );
 }

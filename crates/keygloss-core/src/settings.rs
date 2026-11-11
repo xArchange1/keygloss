@@ -5,8 +5,8 @@
 //!   `*Mode` / `*KeyCode` / `*Mods` / `*KeyLabel` keys (those hold macOS keycodes and flags).
 //!   Labels are derived from [`KeyCode`] by the UI.
 //! - Ignored words are seeded through the default value instead of `didSeedExc*` flags.
-//! - `soundName` is gone: the only cue is the synthesized one, so `soundEnabled` covers
-//!   "No sound" vs the cue.
+//! - `soundName`, `soundEnabled` and `silentMode` are one [`Sound`] choice (`sound`): off, a
+//!   synthesized sound or the user's own file.
 //! - Launch at login is not stored here (the autostart plugin owns it).
 
 use std::collections::BTreeMap;
@@ -37,6 +37,17 @@ pub enum AppMode {
     Off,
     /// Only obvious words are corrected.
     Soft,
+}
+
+/// What a correction plays (`sound`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Sound {
+    Off,
+    Beep,
+    Whoosh,
+    /// The user's own audio file.
+    Custom,
 }
 
 /// Interface theme (`appTheme`).
@@ -82,11 +93,11 @@ pub struct Settings {
     pub two_caps_fix: bool,
 
     // Sound
-    pub sound_enabled: bool,
+    pub sound: Sound,
     /// 0.0..=1.0; 0 means do not play.
     pub sound_volume: f64,
-    /// Master mute for every sound.
-    pub silent_mode: bool,
+    /// Name of the file picked for [`Sound::Custom`] (the app keeps its own copy); empty = none.
+    pub sound_file: String,
 
     // Hotkeys
     /// Manual convert / undo. Default: Pause/Break.
@@ -166,9 +177,9 @@ impl Default for Settings {
             typo_fix: true,
             two_caps_fix: true,
 
-            sound_enabled: true,
+            sound: Sound::Beep,
             sound_volume: 0.6,
-            silent_mode: false,
+            sound_file: String::new(),
 
             hotkey: Hotkey::Key { key: KeyCode::Pause, mods: Modifiers::NONE },
             case_change_hotkey: None,
@@ -239,6 +250,7 @@ mod tests {
         let v = serde_json::to_value(&s).unwrap();
         assert_eq!(v["autoEnabled"], true);
         assert_eq!(v["triggerTab"], false);
+        assert_eq!(v["sound"], "beep");
         assert_eq!(v["soundVolume"], 0.6);
         assert_eq!(v["snippetsOrdered"][0], serde_json::json!(["br", "Best regards"]));
         assert_eq!(v["appExceptionModes"]["code.exe"], "soft");
