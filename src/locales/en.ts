@@ -181,6 +181,7 @@ const en = {
     basedOn: "A Windows rewrite of Keyboop — MIT License, Copyright (c) 2026 Keyboop contributors.",
     data: "Language data from keyswitcher — MIT License, Copyright (c) 2026 Ilya Granin.",
     welcome: "Welcome tour",
+    support: "Support development",
     feedback: "Feedback",
     reportBug: "Report a problem",
     requestFeature: "Suggest a feature",
