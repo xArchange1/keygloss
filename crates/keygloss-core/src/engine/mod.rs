@@ -133,6 +133,8 @@ pub enum EngineEvent {
     HotkeyCaptured(Hotkey),
     /// Play this conversion sound (never `Off`) at this volume (0..=1).
     PlaySound { sound: Sound, volume: f64 },
+    /// One line for the log file. Never contains typed text, only lengths.
+    Log(String),
 }
 
 /// Slow work for the worker thread.
@@ -413,7 +415,29 @@ impl Engine {
         self.wake = true;
     }
 
+    fn log(&mut self, line: String) {
+        self.emit(EngineEvent::Log(line));
+    }
+
+    /// Logs one replacement of text on screen: what did it, the lengths before and after, the
+    /// layout switched to and the foreground app.
+    fn log_fix(&mut self, kind: &str, from: usize, to: usize, lang: Option<Side>) {
+        let lang = match lang {
+            Some(Side::Latin) => PAIR.latin_lang,
+            Some(Side::Alt) => PAIR.alt_lang,
+            None => "-",
+        };
+        let app = self.app.as_ref().map_or("?", |a| a.0.as_str());
+        self.log(format!("fix kind={kind} len={from}->{to} to={lang} app={app}"));
+    }
+
+    /// The anti-resonance guard refused a fix (it would flip a word back and forth).
+    fn log_guard(&mut self, kind: &str, n: usize) {
+        self.log(format!("skip kind={kind} len={n} reason=resonance"));
+    }
+
     fn toast(&mut self, key: &str, params: &[(&str, String)]) {
+        self.log(format!("toast {key}"));
         let params = params.iter().map(|(k, v)| (k.to_string(), v.clone())).collect();
         self.emit(EngineEvent::Toast(Toast { key: key.to_string(), params }));
     }
@@ -577,7 +601,7 @@ impl Engine {
 
     fn on_layouts(&mut self, list: Vec<(LayoutInfo, KeyTable)>) {
         self.layouts_requested = false;
-        self.layouts.clear();
+        let before = (std::mem::take(&mut self.layouts), self.pair.clone());
         self.tables.clear();
         self.sides.clear();
         for (info, table) in list {
@@ -591,6 +615,11 @@ impl Engine {
             self.belief = self.layouts_api.current_layout();
         }
         self.rebuild_keymap();
+        if before != (self.layouts.clone(), self.pair.clone()) {
+            let list: Vec<String> = self.layouts.iter().map(|l| format!("{}:{}", l.id.0, l.lang)).collect();
+            let pair = self.pair.as_ref().map(|(l, a)| format!("{}+{}", l.0, a.0));
+            self.log(format!("layouts [{}] pair={}", list.join(" "), pair.as_deref().unwrap_or("none")));
+        }
         self.wake = true;
     }
 
@@ -645,6 +674,7 @@ impl Engine {
         if self.layouts_api.switch_layout(&next).is_err() {
             return false;
         }
+        self.log(format!("layout cycle to={}", next.0));
         if let Some(&side) = self.sides.get(&next) {
             self.remember(&next, side);
         }
@@ -828,6 +858,7 @@ impl Engine {
     }
 
     fn fire(&mut self, target: HotkeyTarget, now: Instant) {
+        self.log(format!("hotkey {}", target.name()));
         match target {
             HotkeyTarget::Manual => self.push_job(Job::CheckPassword(Then::Manual)),
             HotkeyTarget::CaseChange => {
@@ -997,6 +1028,7 @@ impl Engine {
             return false;
         }
         self.buffer.commit_snippet(expansion, ws, now);
+        self.log_fix("snippet", len(trigger), len(expansion), None);
         self.play_sound();
         true
     }
@@ -1031,6 +1063,7 @@ impl Engine {
 
     fn on_undo_event(&mut self, ev: UndoEvent) {
         if let Some(word) = ev.ask {
+            self.log(format!("learn ask len={}", len(&word)));
             self.emit(EngineEvent::LearnBanner { word });
         }
         self.undo.write_to(&mut self.settings);
@@ -1087,6 +1120,7 @@ impl Engine {
             return false;
         }
         if !self.guard.allow(&candidate, &converted, now) {
+            self.log_guard("live", n);
             self.live_fix_last.clear();
             self.buffer.clear();
             return false;
@@ -1101,6 +1135,7 @@ impl Engine {
         self.buffer.append(&ch.to_string(), now);
         self.buffer.apply_conversion(&converted);
         self.live_fix_last = converted.clone();
+        self.log_fix("live", n, len(&converted), Some(to));
         self.select_layout(to, now);
         self.undo.note_conversion(&candidate, &converted, unix, &self.exceptions.learned);
         self.count_rescued(1);
@@ -1126,10 +1161,12 @@ impl Engine {
     /// raw Latin tail of a word we fixed earlier.
     fn pause_fix(&mut self, now: Instant) {
         let Some(word) = self.pause_fix_word(now) else { return };
+        let n = len(&word);
         let Some(det) = self.detector() else { return };
         if is_mixed(&word) {
             let Some(heal) = det.live_heal(&word, &self.live_fix_last) else { return };
             if !self.guard.allow(&word, &heal.word, now) {
+                self.log_guard("heal", n);
                 self.live_fix_last.clear();
                 self.buffer.clear();
                 return;
@@ -1138,6 +1175,7 @@ impl Engine {
                 return;
             }
             self.buffer.apply_conversion(&heal.word);
+            self.log_fix("heal", n, len(&heal.word), Some(Side::Alt));
             self.live_fix_last = heal.word;
             self.select_layout(Side::Alt, now);
             self.mute(now, MUTE_DRAIN);
@@ -1150,6 +1188,7 @@ impl Engine {
             return;
         }
         if !self.guard.allow(&word, &converted, now) {
+            self.log_guard("pause", n);
             self.live_fix_last.clear();
             self.buffer.clear();
             return;
@@ -1158,9 +1197,10 @@ impl Engine {
         if self.undo.should_suppress(&word, unix) || self.undo.is_session_protected(&word) {
             return;
         }
-        if self.output.replace_text(len(&word), &converted).is_err() {
+        if self.output.replace_text(n, &converted).is_err() {
             return;
         }
+        self.log_fix("pause", n, len(&converted), Some(to));
         self.buffer.apply_conversion(&converted);
         self.live_fix_last = converted.clone();
         self.select_layout(to, now);
@@ -1225,6 +1265,7 @@ impl Engine {
             return;
         }
         if !self.guard.allow(&word, &converted, now) {
+            self.log_guard("auto", len(&word));
             self.live_fix_last.clear();
             self.buffer.clear();
             return;
@@ -1238,6 +1279,7 @@ impl Engine {
         if self.output.replace_text(item.delete_count, &format!("{converted}{tail}")).is_err() {
             return;
         }
+        self.log_fix("auto", len(&word), len(&converted), Some(prop.to));
         self.buffer.apply_completed_conversion(&converted);
         if tail != item.tail {
             self.buffer.apply_completed_tail(&completed_tail);
@@ -1260,6 +1302,7 @@ impl Engine {
             && self.output.replace_text(item.delete_count, &format!("{fixed}{}", item.tail)).is_ok()
         {
             self.buffer.apply_completed_conversion(&fixed);
+            self.log_fix("twoCaps", len(word), len(&fixed), None);
             self.mute(now, MUTE_DRAIN);
         }
         if self.settings.typo_fix
@@ -1290,6 +1333,7 @@ impl Engine {
         let unix = self.unix(now);
         self.undo.note_conversion(word, fixed, unix, &self.exceptions.learned);
         self.last_text_fix = Some((word.to_string(), fixed.to_string()));
+        self.log_fix("typo", len(word), len(fixed), None);
         self.buffer.apply_completed_conversion(fixed);
         self.mute(now, MUTE_DRAIN);
     }
@@ -1339,6 +1383,7 @@ impl Engine {
         }
         let Some(prop) = prop else { return false };
         if !self.guard.allow(&word, &prop.text, now) {
+            self.log_guard("enter", len(&word));
             self.live_fix_last.clear();
             self.buffer.clear();
             return false;
@@ -1346,6 +1391,7 @@ impl Engine {
         if self.output.replace_text(len(&word), &format!("{}\n", prop.text)).is_err() {
             return false;
         }
+        self.log_fix("enter", len(&word), len(&prop.text), Some(prop.to));
         self.buffer.apply_conversion(&prop.text);
         self.buffer.boundary("\n", now);
         if !prop.rescue {
@@ -1364,6 +1410,7 @@ impl Engine {
             return false;
         }
         self.last_text_fix = None;
+        self.log_fix("typoEnter", len(word), len(fixed), None);
         self.buffer.apply_conversion(fixed);
         self.buffer.boundary("\n", now);
         self.request_password_check();
@@ -1406,6 +1453,7 @@ impl Engine {
     fn convert_selection(&mut self, sel: Selection, now: Instant) -> bool {
         let Selection::Text { text, via_clipboard } = sel else { return false };
         if via_clipboard && clipboard_selection_refused(&text) {
+            self.log(format!("skip kind=selection len={} reason=refused", len(&text)));
             self.selection_refused = true;
             return false;
         }
@@ -1426,6 +1474,7 @@ impl Engine {
         if self.output.replace_text(0, &converted).is_err() {
             return true;
         }
+        self.log_fix("selection", len(&text), len(&converted), Some(to));
         self.select_layout(to, now);
         self.count_rescued(text.split(' ').filter(|w| !w.is_empty()).count().max(1) as u64);
         self.buffer.clear();
@@ -1467,6 +1516,7 @@ impl Engine {
         if self.output.replace_text(item.delete_count, &format!("{converted}{}", item.tail)).is_err() {
             return;
         }
+        self.log_fix("manual", len(&word), len(&converted), Some(to));
         self.buffer.apply_conversion(&converted);
         let unix = self.unix(now);
         if let Some(ev) = self.undo.note_manual_convert(&word, &converted, unix, &self.exceptions.learned) {
@@ -1486,6 +1536,7 @@ impl Engine {
         if self.output.replace_text(group.delete_count, &plan.text).is_err() {
             return true;
         }
+        self.log_fix("group", group.delete_count, len(&plan.text), Some(plan.last_to));
         self.count_rescued(plan.converted as u64);
         self.buffer.clear();
         self.select_layout(plan.last_to, now);
@@ -1511,6 +1562,7 @@ impl Engine {
         }
         self.undo.protect(&original);
         self.last_text_fix = None;
+        self.log_fix("undoFix", len(&fixed), len(&original), None);
         self.buffer.apply_conversion(&original);
         self.mute(now, MUTE_DRAIN);
         self.play_sound();
@@ -1530,6 +1582,7 @@ impl Engine {
             Err(CaseToggleError::NoLetters) => self.toast("toast.nothingToConvert", &[]),
             Ok(changed) => {
                 if self.output.replace_text(0, &changed).is_ok() {
+                    self.log_fix("case", len(&text), len(&changed), None);
                     self.buffer.clear();
                     self.mute(now, SELECTION_MUTE);
                     self.play_sound();
@@ -1569,7 +1622,9 @@ impl Engine {
         }
         self.buffer.clear();
         self.live_fix_last.clear();
-        let _ = self.output.replace_text(0, &text);
+        if self.output.replace_text(0, &text).is_ok() {
+            self.log_fix("pickerSnippet", 0, len(&text), None);
+        }
     }
 
     // ---- Timers and jobs ----
@@ -1625,6 +1680,7 @@ impl Engine {
             Timer::LayoutVerify(id) => {
                 if self.belief.as_ref() == Some(&id) && self.layouts_api.current_layout().as_ref() != Some(&id) {
                     let _ = self.layouts_api.switch_layout(&id);
+                    self.log(format!("layout verify: switch to {} sent again", id.0));
                 }
             }
             Timer::RestoreClipboard(snapshot, ours) => self.push_job(Job::RestoreClipboard(snapshot, ours)),
@@ -1661,6 +1717,7 @@ impl Engine {
                 self.job_in_flight = false;
                 // Keys typed while we read the selection replaced it: do not write over them.
                 if std::mem::take(&mut self.in_flight_real_keys) > 0 {
+                    self.log("skip kind=selection reason=keysTyped".into());
                     return;
                 }
                 self.run_deferred(Deferred::Selection(purpose, sel), now);
@@ -1742,6 +1799,7 @@ impl Engine {
     }
 
     pub(crate) fn answer_learn(&mut self, word: &str, keep: bool) {
+        self.log(format!("learn answer keep={keep}"));
         if keep {
             if self.undo.confirm_learn(word, &mut self.exceptions) {
                 self.exceptions.write_to(&mut self.settings);

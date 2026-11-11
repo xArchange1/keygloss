@@ -99,7 +99,7 @@ pub fn open_welcome(app: &AppHandle) {
         .build()
         .and_then(lock_down);
     if let Err(e) = built {
-        eprintln!("welcome window: {e}");
+        crate::log::write(&format!("error welcome window: {e}"));
     }
 }
 

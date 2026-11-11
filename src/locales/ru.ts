@@ -183,6 +183,11 @@ const ru: Resources = {
     basedOn: "Переписанный для Windows Keyboop — лицензия MIT, Copyright (c) 2026 Keyboop contributors.",
     data: "Языковые данные из keyswitcher — лицензия MIT, Copyright (c) 2026 Ilya Granin.",
     welcome: "Знакомство",
+    feedback: "Обратная связь",
+    reportBug: "Сообщить о проблеме",
+    requestFeature: "Предложить идею",
+    openLogs: "Открыть папку журнала",
+    feedbackHint: "Открывает в браузере форму GitHub, где уже указаны версия программы, версия Windows и последние строки журнала. Ничего не отправляется, пока вы сами не отправите форму. В журнале нет набранного текста: только длины, названия программ и раскладки.",
   },
   hkrec: {
     title: "Новая комбинация",

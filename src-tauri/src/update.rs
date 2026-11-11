@@ -83,7 +83,7 @@ pub fn on_startup(app: &AppHandle) {
         match check(&app).await {
             Ok(Some(_)) if settings.auto_update => {
                 if let Err(e) = install(&app).await {
-                    eprintln!("update install failed: {e}");
+                    crate::log::write(&format!("error update install failed: {e}"));
                 }
             }
             Ok(Some(version)) => {
@@ -92,7 +92,7 @@ pub fn on_startup(app: &AppHandle) {
                 crate::on_main(&app, windows::show_banner);
             }
             Ok(None) => {}
-            Err(e) => eprintln!("update check failed: {e}"),
+            Err(e) => crate::log::write(&format!("error update check failed: {e}")),
         }
     });
 }

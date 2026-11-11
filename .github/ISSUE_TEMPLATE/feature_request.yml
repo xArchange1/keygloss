@@ -1,0 +1,19 @@
+name: Feature request
+description: Suggest an idea or an improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: The feature, and the problem it solves for you.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Keygloss version
+  - type: input
+    id: os
+    attributes:
+      label: Windows version

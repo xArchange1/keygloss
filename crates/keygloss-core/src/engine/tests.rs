@@ -575,6 +575,25 @@ fn hotkey(key: KeyCode, mods: Modifiers) -> Hotkey {
 // ---- Automatic conversion ----
 
 #[test]
+fn logs_each_fix_with_lengths_and_never_the_text() {
+    let mut h = H::boundary();
+    h.keys("ghbdtn ");
+    h.advance(100);
+    assert_eq!(h.text(), "привет ");
+    let logs: Vec<String> = h
+        .take_events()
+        .into_iter()
+        .filter_map(|e| match e {
+            EngineEvent::Log(line) => Some(line),
+            _ => None,
+        })
+        .collect();
+    assert!(logs.iter().any(|l| l.starts_with("fix kind=auto len=6->6 to=ru app=")), "{logs:?}");
+    assert!(logs.iter().any(|l| l.starts_with("layouts [")), "{logs:?}");
+    assert!(!logs.iter().any(|l| l.contains("ghbdtn") || l.contains("привет")), "{logs:?}");
+}
+
+#[test]
 fn converts_wrong_layout_word_at_space() {
     let mut h = H::boundary();
     h.keys("ghbdtn ");

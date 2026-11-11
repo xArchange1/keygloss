@@ -1,5 +1,7 @@
 mod ipc;
+mod log;
 mod persist;
+mod report;
 mod sound;
 mod state;
 mod tray;
@@ -38,7 +40,17 @@ fn on_engine_event(app: &AppHandle, store: &Store<Wry>, ev: EngineEvent) {
             persist::save(store, &s);
             on_main(app, tray::refresh);
         }
-        EngineEvent::StatusChanged(_) => on_main(app, tray::refresh),
+        EngineEvent::StatusChanged(s) => {
+            log::write(&format!(
+                "status running={} hook={} auto={} paused={} layout={}",
+                s.running,
+                s.hook_healthy,
+                s.auto_enabled,
+                s.paused_until.is_some(),
+                s.layout.as_deref().unwrap_or("?")
+            ));
+            on_main(app, tray::refresh);
+        }
         EngineEvent::Toast(_) | EngineEvent::LearnBanner { .. } => on_main(app, windows::show_banner),
         EngineEvent::SnippetPickerOpen { snippets } => {
             let rows = snippets.len();
@@ -47,6 +59,7 @@ fn on_engine_event(app: &AppHandle, store: &Store<Wry>, ev: EngineEvent) {
         EngineEvent::SnippetPickerClose => on_main(app, windows::hide_picker),
         EngineEvent::HotkeyCaptured(_) => {}
         EngineEvent::PlaySound { sound, volume } => sound::play(app, sound, volume),
+        EngineEvent::Log(line) => log::write(&line),
     }
 }
 
@@ -61,8 +74,8 @@ pub(crate) fn publish_fallback(app: &AppHandle, s: &Settings) {
 
 fn start_engine(app: &AppHandle, store: Arc<Store<Wry>>, settings: Settings) -> Option<EngineHandle> {
     let platform = Platform {
-        output: Arc::new(WindowsOutput),
-        layouts: Arc::new(WindowsLayouts),
+        output: Arc::new(log::LoggedOutput(WindowsOutput)),
+        layouts: Arc::new(log::LoggedLayouts(WindowsLayouts)),
         foreground: Arc::new(WindowsForegroundApp),
         focused: Arc::new(WindowsFocusedText),
         clipboard: Arc::new(WindowsClipboard),
@@ -72,7 +85,7 @@ fn start_engine(app: &AppHandle, store: Arc<Store<Wry>>, settings: Settings) -> 
     match engine::start(platform, Box::new(WindowsHook::new()), settings, sink) {
         Ok(engine) => Some(engine),
         Err(e) => {
-            eprintln!("engine did not start: {e}");
+            log::write(&format!("error engine did not start: {e}"));
             None
         }
     }
@@ -115,10 +128,15 @@ pub(crate) fn shutdown(app: &AppHandle) {
 
 fn quit(app: &AppHandle) {
     shutdown(app);
+    log::write("quit");
     app.exit(0);
 }
 
 fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    if let Ok(dir) = app.path().app_log_dir() {
+        log::init(dir);
+    }
+    log::write(&format!("start version={} os={}", app.package_info().version, keygloss_windows::shell::os_version()));
     let store = persist::open(app)?;
     let mut settings = persist::load(&store);
 
@@ -197,6 +215,9 @@ pub fn run() {
             ipc::check_for_update,
             ipc::pending_update,
             ipc::install_update,
+            ipc::report_issue,
+            ipc::open_logs,
+            ipc::log_error,
             ipc::open_settings,
             ipc::open_welcome,
         ])
