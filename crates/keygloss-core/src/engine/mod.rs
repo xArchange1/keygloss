@@ -1083,7 +1083,7 @@ impl Engine {
         let Some(det) = self.detector() else { return false };
         let Decision::Convert(to) = det.live_decide(&candidate) else { return false };
         let Some(converted) = det.live_convert(&candidate, to) else { return false };
-        if converted == candidate {
+        if converted == candidate || !self.long_enough(&converted) {
             return false;
         }
         if !self.guard.allow(&candidate, &converted, now) {
@@ -1146,7 +1146,7 @@ impl Engine {
         }
         let Decision::Convert(to) = det.live_decide(&word) else { return };
         let Some(converted) = det.live_convert(&word, to) else { return };
-        if converted == word {
+        if converted == word || !self.long_enough(&converted) {
             return;
         }
         if !self.guard.allow(&word, &converted, now) {
@@ -1171,6 +1171,11 @@ impl Engine {
     }
 
     // ---- Automatic conversion ----
+
+    /// `autoMinLetters`: an automatic fix needs at least this many letters in the fixed word.
+    fn long_enough(&self, fixed: &str) -> bool {
+        fixed.chars().filter(|c| c.is_alphabetic()).count() >= self.settings.auto_min_letters as usize
+    }
 
     /// `autoConversionProposal`.
     fn auto_proposal(&mut self, word: &str, soft: bool, completed: bool) -> Option<Proposal> {
@@ -1200,7 +1205,8 @@ impl Engine {
             intra_word_gap: gap,
             session_protected: false,
         };
-        det.propose(word, &ctx)
+        let prop = det.propose(word, &ctx)?;
+        self.long_enough(&prop.text).then_some(prop)
     }
 
     /// `convertFromBuffer(manual: false)`: the finished word at a boundary.

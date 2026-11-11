@@ -312,6 +312,7 @@ mod tests {
         let v = serde_json::to_value(Settings::default()).unwrap();
         // The `Settings` interface in src/lib/ipc.ts, field for field.
         let mut ts = vec![
+            "autoMinLetters",
             "autoEnabled", "liveFixEnabled", "inlineLiveFix", "triggerSpace", "triggerEnter", "triggerTab",
             "enterPreConvert", "arrowsCancel", "developerMode", "dedupeChatter", "groupConvert",
             "learnOnUndoEnabled", "typoFix", "twoCapsFix", "sound", "soundVolume", "soundFile", "hotkey",

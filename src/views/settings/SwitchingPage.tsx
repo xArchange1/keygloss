@@ -57,6 +57,11 @@ export function SwitchingPage() {
           onChange={(v) => update({ autoEnabled: v })} />
         <SwitchRow title={t("switch.live")} sub={t("switch.liveSub")} disabled={!s.autoEnabled}
           checked={s.autoEnabled && s.liveFixEnabled} onChange={(v) => update({ liveFixEnabled: v })} />
+        <Row title={t("switch.minLetters")} sub={t("switch.minLettersSub")} disabled={!s.autoEnabled} control={
+          <Select value={String(s.autoMinLetters)} label={t("switch.minLetters")} className="w-[64px]"
+            onChange={(v) => update({ autoMinLetters: Number(v) })}
+            options={["1", "2", "3", "4", "5", "6"].map((n) => ({ value: n, label: n }))} />
+        } />
         <SwitchRow title={t("switch.dev")} sub={t("switch.devSub")} checked={s.developerMode}
           onChange={(v) => update({ developerMode: v })} />
         <Row title={t("switch.manual")} sub={t("switch.manualSub")}
