@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { History, Info, Keyboard, Settings as Gear, ShieldCheck, Tag, WandSparkles } from "lucide-react";
+import { History, Info, Keyboard, Settings as Gear, Tag, WandSparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import * as ipc from "../../lib/ipc";
 import { useStore } from "../../store";
@@ -10,15 +10,14 @@ import { AmbiguousPage } from "./AmbiguousPage";
 import { SnippetsPage } from "./SnippetsPage";
 import { GeneralPage } from "./GeneralPage";
 import { HistoryPage } from "./HistoryPage";
-import { AboutPage, PrivacyPage } from "./InfoPages";
+import { AboutPage } from "./InfoPages";
 
 const SECTIONS = [
+  { id: "general", icon: Gear },
   { id: "switching", icon: Keyboard },
   { id: "exceptions", icon: Tag },
   { id: "snippets", icon: WandSparkles },
   { id: "history", icon: History },
-  { id: "general", icon: Gear },
-  { id: "privacy", icon: ShieldCheck },
   { id: "about", icon: Info },
 ] as const;
 type Page = (typeof SECTIONS)[number]["id"] | "ambiguous";
@@ -51,7 +50,7 @@ function StatusLine() {
 
 export function SettingsView() {
   const { t } = useTranslation();
-  const [page, setPage] = useState<Page>("switching");
+  const [page, setPage] = useState<Page>("general");
   const scroller = useRef<HTMLDivElement>(null);
   useEffect(() => { scroller.current?.scrollTo(0, 0); }, [page]);
   const active = page === "ambiguous" ? "exceptions" : page;
@@ -63,6 +62,7 @@ export function SettingsView() {
           <Brand size={28} />
           <span className="text-[15px] font-semibold tracking-tight">Keygloss</span>
         </div>
+        <div className="mr-1.5 mb-2 ml-2 h-px bg-fg/[0.08]" />
         <ul className="flex flex-1 flex-col gap-0.5 px-2">
           {SECTIONS.map(({ id, icon: Icon }) => (
             <li key={id}>
@@ -86,7 +86,6 @@ export function SettingsView() {
           {page === "snippets" && <SnippetsPage />}
           {page === "history" && <HistoryPage />}
           {page === "general" && <GeneralPage />}
-          {page === "privacy" && <PrivacyPage />}
           {page === "about" && <AboutPage />}
         </div>
       </main>
