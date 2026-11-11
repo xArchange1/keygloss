@@ -11,7 +11,7 @@ use tauri::{AppHandle, Manager, State, WebviewWindow};
 use tauri_plugin_autostart::ManagerExt;
 
 use crate::state::{AppState, idle_status, merge, unix_now};
-use crate::{sound, update, windows};
+use crate::{log, report, sound, update, windows};
 
 // ---- Event names ----
 
@@ -54,7 +54,7 @@ pub fn ui_event(ev: &EngineEvent, time: impl Fn(f64) -> String) -> Option<(&'sta
         EngineEvent::SnippetPickerOpen { snippets } => (EVENT_SNIPPET_PICKER_OPEN, json!({ "snippets": snippets })),
         EngineEvent::SnippetPickerClose => (EVENT_SNIPPET_PICKER_CLOSE, Value::Null),
         EngineEvent::HotkeyCaptured(h) => (EVENT_HOTKEY_CAPTURED, v(h)),
-        EngineEvent::PlaySound { .. } => return None,
+        EngineEvent::PlaySound { .. } | EngineEvent::Log(_) => return None,
     })
 }
 
@@ -72,6 +72,10 @@ pub fn get_settings(state: State<AppState>) -> Settings {
 /// Shallow-merges `patch` (a partial settings object) and returns the result.
 #[tauri::command]
 pub fn update_settings(app: AppHandle, state: State<AppState>, patch: Value) -> Result<Settings, String> {
+    // Keys only: the values can hold words.
+    if let Value::Object(patch) = &patch {
+        log::write(&format!("settings changed: {}", patch.keys().map(String::as_str).collect::<Vec<_>>().join(" ")));
+    }
     match &state.engine {
         Some(e) => e.update_settings(patch),
         None => {
@@ -246,6 +250,30 @@ pub fn pending_update(state: State<AppState>) -> Option<String> {
 #[tauri::command]
 pub async fn install_update(app: AppHandle) -> Result<(), String> {
     update::install(&app).await
+}
+
+/// Opens the GitHub bug form (`bug`) or feature form in the browser, with the app version, the
+/// Windows version and (bug form) the newest log lines filled in.
+#[tauri::command]
+pub fn report_issue(app: AppHandle, bug: bool) -> Result<(), String> {
+    let version = app.package_info().version.to_string();
+    let url = report::url(bug, &version, &keygloss_windows::shell::os_version(), &log::read());
+    log::write(&format!("report issue bug={bug} url_len={}", url.len()));
+    keygloss_windows::shell::open(&url).then_some(()).ok_or("could not open the browser".into())
+}
+
+/// Shows the folder with the log files in Explorer.
+#[tauri::command]
+pub fn open_logs() -> Result<(), String> {
+    let dir = log::dir().ok_or("no log dir")?;
+    keygloss_windows::shell::open(&dir.to_string_lossy()).then_some(()).ok_or("could not open the folder".into())
+}
+
+/// An error a page caught (uncaught exception or promise rejection).
+#[tauri::command]
+pub fn log_error(window: WebviewWindow, message: String) {
+    let message: String = message.chars().take(500).collect();
+    log::write(&format!("error ui[{}] {message}", window.label()));
 }
 
 #[tauri::command]

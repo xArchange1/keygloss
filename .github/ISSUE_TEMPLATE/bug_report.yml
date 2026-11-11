@@ -1,0 +1,35 @@
+name: Bug report
+description: Something does not work as it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        "Report a problem" on the app's About page opens this form with the versions and the log
+        already filled in. The log holds no typed text: only lengths, app names and layouts.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected and what you got instead. Name the app you were typing in.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Keygloss version
+      description: Settings → About.
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Windows version
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log
+      description: The newest lines of the log file ("Open the log folder" on the About page shows the whole file).
+      render: text

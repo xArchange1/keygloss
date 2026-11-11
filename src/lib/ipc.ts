@@ -232,6 +232,12 @@ export const checkForUpdate = () => invoke<string | null>("check_for_update");
 export const pendingUpdate = () => invoke<string | null>("pending_update");
 /** Downloads and installs the update found by the last check; the app restarts. */
 export const installUpdate = () => invoke<void>("install_update");
+/** Opens the GitHub bug form (`bug`) or feature form in the browser, prefilled with the app version, the Windows version and (bug form) the newest log lines. */
+export const reportIssue = (bug: boolean) => invoke<void>("report_issue", { bug });
+/** Shows the folder with the log files in Explorer. */
+export const openLogs = () => invoke<void>("open_logs");
+/** Writes a page error to the log file. */
+export const logError = (message: string) => invoke<void>("log_error", { message });
 
 // Added by the frontend phase; the Rust side must implement these (see the phase report).
 /** Shows (creating if needed) and focuses the settings window. */

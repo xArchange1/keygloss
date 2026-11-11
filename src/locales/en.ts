@@ -181,6 +181,11 @@ const en = {
     basedOn: "A Windows rewrite of Keyboop — MIT License, Copyright (c) 2026 Keyboop contributors.",
     data: "Language data from keyswitcher — MIT License, Copyright (c) 2026 Ilya Granin.",
     welcome: "Welcome tour",
+    feedback: "Feedback",
+    reportBug: "Report a problem",
+    requestFeature: "Suggest a feature",
+    openLogs: "Open the log folder",
+    feedbackHint: "Opens a GitHub form in your browser with the app version, the Windows version and the latest log lines filled in. Nothing is sent until you submit it. The log has no typed text: only lengths, app names and layouts.",
   },
   hkrec: {
     title: "New shortcut",

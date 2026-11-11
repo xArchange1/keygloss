@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { EyeOff, KeyRound, HardDrive, WifiOff, Sparkles } from "lucide-react";
+import { Bug, EyeOff, FolderOpen, KeyRound, HardDrive, Lightbulb, WifiOff, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import * as ipc from "../../lib/ipc";
 import { useSettings } from "../../store";
-import { BlockTitle, Button, Card, PageTitle, Row } from "../../components/ui";
+import { BlockTitle, Button, Card, Hint, PageTitle, Row } from "../../components/ui";
 import { Brand } from "../../components/Brand";
 
 export function PrivacyPage() {
@@ -54,6 +54,13 @@ export function AboutPage() {
       <div className="mt-3">
         <Button onClick={() => ipc.openWelcome().catch(console.error)}><Sparkles size={14} />{t("about.welcome")}</Button>
       </div>
+      <BlockTitle title={t("about.feedback")} />
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={() => ipc.reportIssue(true).catch(console.error)}><Bug size={14} />{t("about.reportBug")}</Button>
+        <Button onClick={() => ipc.reportIssue(false).catch(console.error)}><Lightbulb size={14} />{t("about.requestFeature")}</Button>
+        <Button variant="ghost" onClick={() => ipc.openLogs().catch(console.error)}><FolderOpen size={14} />{t("about.openLogs")}</Button>
+      </div>
+      <Hint>{t("about.feedbackHint")}</Hint>
       <BlockTitle title={t("about.credits")} />
       <div className="space-y-1.5 px-1 text-[12px] text-fg/70">
         <p>{t("about.basedOn")}</p>
