@@ -39,6 +39,8 @@ const en = {
     autoSub: "Two-way, RU ↔ EN. The word is fixed once you finish it",
     live: "Fix as you type",
     liveSub: "Don’t wait for the space: the word is fixed mid-word. Browsers and Electron apps still wait for the space",
+    minLetters: "Shortest word to fix",
+    minLettersSub: "Automatic correction skips words with fewer letters. The manual switch works on any word",
     dev: "Mode for developers",
     devSub: "Protects code: single letters and short combos (variables, commands) are left alone everywhere. In IDEs and terminals auto-switch is fully off.",
     manual: "Manual switch and undo",

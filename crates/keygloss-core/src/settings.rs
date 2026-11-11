@@ -75,6 +75,8 @@ pub struct Settings {
     // Layout switching
     pub auto_enabled: bool,
     pub live_fix_enabled: bool,
+    /// Automatic fixes skip words whose fixed form has fewer letters. 1 = no limit.
+    pub auto_min_letters: u32,
     /// Hidden kill switch: replace inside the hook callback (atomic live fix).
     pub inline_live_fix: bool,
     pub trigger_space: bool,
@@ -163,6 +165,7 @@ impl Default for Settings {
         Settings {
             auto_enabled: true,
             live_fix_enabled: true,
+            auto_min_letters: 1,
             inline_live_fix: true,
             trigger_space: true,
             trigger_enter: true,

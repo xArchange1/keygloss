@@ -733,6 +733,65 @@ fn live_fix_skips_chromium_apps_but_the_boundary_still_converts() {
     assert_eq!(h.text(), "программа ");
 }
 
+#[test]
+fn min_letters_gates_automatic_fixes_only() {
+    let short = |s: &mut Settings| {
+        s.live_fix_enabled = false;
+        s.auto_min_letters = 3;
+    };
+    // Default (1): a two-letter word is switched.
+    let mut h = H::boundary();
+    h.keys("yt ");
+    h.advance(100);
+    assert_eq!(h.text(), "не ");
+    // Below the threshold: left alone, on Space and on Enter.
+    for boundary in [" ", "\n"] {
+        let mut h = H::with(short);
+        h.keys(&format!("yt{boundary}"));
+        h.advance(100);
+        assert_eq!(h.text(), format!("yt{boundary}"));
+        assert_eq!(h.lang(), "en");
+    }
+    // At the threshold: switched.
+    let mut h = H::with(short);
+    h.keys("vbh ");
+    h.advance(100);
+    assert_eq!(h.text(), "мир ");
+    // The manual hotkey still switches a short word.
+    let mut h = H::with(short);
+    h.keys("yt");
+    assert_eq!(h.manual(), HookDecision::Swallow);
+    assert_eq!(h.text(), "не");
+}
+
+#[test]
+fn min_letters_delays_the_live_fix() {
+    let first_fix = |min: u32, inline: bool| {
+        let mut h = H::with(|s| {
+            s.auto_min_letters = min;
+            s.inline_live_fix = inline;
+        });
+        if inline {
+            h.keys("ghjuhfvvf");
+        } else {
+            h.keys("ghjuh");
+            h.advance(200);
+            let fixed = h.text() != "ghjuh";
+            h.keys("fvvf");
+            h.advance(200);
+            assert_eq!(h.text().chars().count(), 9);
+            return if fixed { 5 } else { 9 };
+        }
+        assert_eq!(h.text(), "программа");
+        // Letters on screen after the first fix.
+        h.os.os().outputs[0].1.chars().count()
+    };
+    assert!(first_fix(1, true) < 7);
+    assert!(first_fix(7, true) >= 7);
+    assert_eq!(first_fix(1, false), 5);
+    assert_eq!(first_fix(7, false), 9);
+}
+
 // ---- Manual hotkey ----
 
 #[test]

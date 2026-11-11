@@ -39,6 +39,8 @@ export interface Settings {
   // Layout switching
   autoEnabled: boolean;
   liveFixEnabled: boolean;
+  /** Shortest word (in letters) the automatic fix touches; 1 = no limit. */
+  autoMinLetters: number;
   inlineLiveFix: boolean;
   triggerSpace: boolean;
   triggerEnter: boolean;
@@ -153,7 +155,7 @@ export interface SnippetPickerOpen {
 
 const NO_MODS: Modifiers = { ctrl: false, alt: false, shift: false, meta: false };
 let memSettings: Settings = {
-  autoEnabled: true, liveFixEnabled: true, inlineLiveFix: true, triggerSpace: true,
+  autoEnabled: true, liveFixEnabled: true, autoMinLetters: 1, inlineLiveFix: true, triggerSpace: true,
   triggerEnter: true, triggerTab: false, enterPreConvert: true, arrowsCancel: true,
   developerMode: false, dedupeChatter: false, groupConvert: true, learnOnUndoEnabled: true,
   typoFix: true, twoCapsFix: true, sound: "beep", soundVolume: 0.6, soundFile: "",
