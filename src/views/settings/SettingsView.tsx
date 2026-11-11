@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Info, Keyboard, Settings as Gear, ShieldCheck, Tag, WandSparkles } from "lucide-react";
+import { History, Info, Keyboard, Settings as Gear, ShieldCheck, Tag, WandSparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import * as ipc from "../../lib/ipc";
 import { useStore } from "../../store";
@@ -9,12 +9,14 @@ import { ExceptionsPage } from "./ExceptionsPage";
 import { AmbiguousPage } from "./AmbiguousPage";
 import { SnippetsPage } from "./SnippetsPage";
 import { GeneralPage } from "./GeneralPage";
+import { HistoryPage } from "./HistoryPage";
 import { AboutPage, PrivacyPage } from "./InfoPages";
 
 const SECTIONS = [
   { id: "switching", icon: Keyboard },
   { id: "exceptions", icon: Tag },
   { id: "snippets", icon: WandSparkles },
+  { id: "history", icon: History },
   { id: "general", icon: Gear },
   { id: "privacy", icon: ShieldCheck },
   { id: "about", icon: Info },
@@ -82,6 +84,7 @@ export function SettingsView() {
           {page === "exceptions" && <ExceptionsPage onOpenAmbiguous={() => setPage("ambiguous")} />}
           {page === "ambiguous" && <AmbiguousPage onBack={() => setPage("exceptions")} />}
           {page === "snippets" && <SnippetsPage />}
+          {page === "history" && <HistoryPage />}
           {page === "general" && <GeneralPage />}
           {page === "privacy" && <PrivacyPage />}
           {page === "about" && <AboutPage />}

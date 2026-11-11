@@ -7,6 +7,7 @@ Windows-only Tauri 2 rewrite of Keyboop (macOS, Swift, MIT): a RU↔EN wrong-lay
 - **No voice features of any kind**: no dictation, microphone, voice settings or strings.
 - No Keyboop name, icon or copy. No network calls (no keyboop.com, Telegram or donation links), except the updater's requests to GitHub (`src-tauri/src/update.rs`). The only links are the two GitHub issue forms on the About page, which open in the browser (`report.rs`).
 - Logs never contain typed text, only lengths. The log is `%LOCALAPPDATA%\com.keygloss.app\logs\keygloss.log` (`src-tauri/src/log.rs`); the engine writes to it through `EngineEvent::Log`. The bug form gets its newest lines in the URL, so they become public once submitted.
+- The only typed text kept is the History page: the last 200 automatic fixes in `%APPDATA%\com.keygloss.app\history.json` (`src-tauri/src/history.rs`, fed by `EngineEvent::Converted`). It stays local: never log it or put it in a report.
 - Keep `LICENSE` (MIT, xArchange1) and `THIRD_PARTY.md` (Keyboop and keyswitcher MIT notices).
 
 ## Stack and layout

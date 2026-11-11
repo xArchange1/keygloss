@@ -11,7 +11,7 @@ use tauri::{AppHandle, Manager, State, WebviewWindow};
 use tauri_plugin_autostart::ManagerExt;
 
 use crate::state::{AppState, idle_status, merge, unix_now};
-use crate::{log, report, sound, update, windows};
+use crate::{history, log, report, sound, update, windows};
 
 // ---- Event names ----
 
@@ -29,6 +29,8 @@ pub const EVENT_TOAST: &str = "toast";
 pub const EVENT_SNIPPET_PICKER_OPEN: &str = "snippet-picker-open";
 /// Payload: null.
 pub const EVENT_SNIPPET_PICKER_CLOSE: &str = "snippet-picker-close";
+/// Payload: [`history::Entry`] list, newest first.
+pub const EVENT_HISTORY_CHANGED: &str = "history-changed";
 
 /// One "who wins" pair.
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -54,7 +56,7 @@ pub fn ui_event(ev: &EngineEvent, time: impl Fn(f64) -> String) -> Option<(&'sta
         EngineEvent::SnippetPickerOpen { snippets } => (EVENT_SNIPPET_PICKER_OPEN, json!({ "snippets": snippets })),
         EngineEvent::SnippetPickerClose => (EVENT_SNIPPET_PICKER_CLOSE, Value::Null),
         EngineEvent::HotkeyCaptured(h) => (EVENT_HOTKEY_CAPTURED, v(h)),
-        EngineEvent::PlaySound { .. } | EngineEvent::Log(_) => return None,
+        EngineEvent::PlaySound { .. } | EngineEvent::Log(_) | EngineEvent::Converted { .. } => return None,
     })
 }
 
@@ -285,6 +287,17 @@ pub fn open_settings(app: AppHandle) {
 #[tauri::command]
 pub async fn open_welcome(app: AppHandle) {
     windows::open_welcome(&app);
+}
+
+/// Automatic fixes, newest first.
+#[tauri::command]
+pub fn get_history(state: State<AppState>) -> Vec<history::Entry> {
+    history::load(&state.history)
+}
+
+#[tauri::command]
+pub fn clear_history(state: State<AppState>) {
+    history::clear(&state.history);
 }
 
 #[cfg(test)]

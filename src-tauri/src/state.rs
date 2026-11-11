@@ -18,6 +18,8 @@ pub struct AppState {
     /// Settings while the engine is not running.
     pub fallback: Mutex<Settings>,
     pub store: Arc<Store<Wry>>,
+    /// `history.json`, see [`crate::history`].
+    pub history: Arc<Store<Wry>>,
     /// Foreground window when the snippet picker opened.
     pub picker_return_to: Mutex<isize>,
     /// Last tray model applied.
