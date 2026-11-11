@@ -8,7 +8,6 @@ const ru: Resources = {
     snippets: "Автозамена",
     history: "История",
     general: "Общие",
-    privacy: "Приватность",
     about: "О программе",
   },
   status: {
@@ -120,8 +119,8 @@ const ru: Resources = {
     sub: "Набрали сокращение, нажали пробел — развернулось.",
     colTrigger: "Что заменять",
     colExpansion: "На что",
-    phTrigger: "напр. сув",
-    phExpansion: "напр. С уважением, Алекс",
+    phTrigger: "пример: сув",
+    phExpansion: "пример: С уважением, Алекс",
     expandOn: "Разворачивать по клавише",
     disabled: "Автозамена отключена — не выбрана ни одна клавиша разворота.",
     hint: "Раскладка и регистр не учитываются: !test = !TEST = !еуые.",

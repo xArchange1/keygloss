@@ -6,7 +6,6 @@ const en = {
     snippets: "Snippets",
     history: "History",
     general: "General",
-    privacy: "Privacy",
     about: "About",
   },
   status: {
