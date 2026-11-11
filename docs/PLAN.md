@@ -18,8 +18,8 @@ Tauri 2, Rust (MSVC), React + TS + Vite, Tailwind 4, Zustand, i18next, lucide-re
   - the detector, typo fixes, snippets and other rules;
   - the engine (`engine/`), tested against a fake platform;
   - embedded data (`data/`).
-- `crates/keygloss-windows/`: the Windows implementation (low-level hooks, `SendInput`, layouts, UI Automation, clipboard, sound, non-activating windows).
-- `src-tauri/`: app shell (engine wiring, tray, windows, persistence, IPC commands in `ipc.rs`).
+- `crates/keygloss-windows/`: the Windows implementation (low-level hooks, `SendInput`, layouts, UI Automation, clipboard, non-activating windows).
+- `src-tauri/`: app shell (engine wiring, tray, windows, persistence, sound, IPC commands in `ipc.rs`).
 - `src/`: frontend. The IPC contract is `src/lib/ipc.ts`; strings are in `src/locales/{en,ru}.ts`, and every user-facing string goes in both.
 
 Adding a setting touches `settings.rs`, `ipc.ts` and both locale files. Parallel branches usually conflict there.

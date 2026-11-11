@@ -36,8 +36,6 @@ export function GeneralPage() {
         } />
         <SwitchRow title={t("gen.login")} checked={login}
           onChange={(v) => ipc.setLaunchAtLogin(v).then(setLogin).catch(console.error)} />
-        <SwitchRow title={t("gen.silent")} sub={t("gen.silentSub")} checked={!s.silentMode}
-          onChange={(v) => update({ silentMode: !v })} />
       </Card>
     </>
   );

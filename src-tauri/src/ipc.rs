@@ -4,14 +4,14 @@
 use keygloss_core::data;
 use keygloss_core::engine::{EngineEvent, EngineStatus, HotkeyCheck, HotkeyTarget, check_hotkey as core_check_hotkey};
 use keygloss_core::platform::{AppId, AppInfo};
-use keygloss_core::settings::{Hotkey, Settings};
+use keygloss_core::settings::{Hotkey, Settings, Sound};
 use serde::Serialize;
 use serde_json::{Value, json};
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State, WebviewWindow};
 use tauri_plugin_autostart::ManagerExt;
 
 use crate::state::{AppState, idle_status, merge, unix_now};
-use crate::windows;
+use crate::{sound, windows};
 
 // ---- Event names ----
 
@@ -204,6 +204,27 @@ pub fn set_launch_at_login(app: AppHandle, enabled: bool) -> Result<bool, String
     al.is_enabled().map_err(|e| e.to_string())
 }
 
+/// Plays a sound at a volume: the settings page previews a choice with it.
+#[tauri::command]
+pub fn preview_sound(app: AppHandle, sound: Sound, volume: f64) {
+    sound::play(&app, sound, volume);
+}
+
+/// Asks for an audio file, keeps a copy of it as the custom sound, then selects and plays it.
+/// `Ok(false)`: cancelled. `Err`: the file is not audio Keygloss can play.
+#[tauri::command]
+pub async fn choose_sound_file(app: AppHandle, window: WebviewWindow) -> Result<bool, String> {
+    let dialog = rfd::FileDialog::new().add_filter("WAV, MP3", &["wav", "mp3"]).set_parent(&window);
+    let Some(picked) = dialog.pick_file() else { return Ok(false) };
+    sound::decode(&picked).ok_or("not audio")?;
+    let copy = sound::custom_file(&app).ok_or("no config dir")?;
+    std::fs::copy(&picked, copy).map_err(|e| e.to_string())?;
+    let name = picked.file_name().unwrap_or_default().to_string_lossy();
+    let s = update_settings(app.clone(), app.state(), json!({ "sound": "custom", "soundFile": name }))?;
+    sound::play(&app, s.sound, s.sound_volume);
+    Ok(true)
+}
+
 #[tauri::command]
 pub fn app_version(app: AppHandle) -> String {
     app.package_info().version.to_string()
@@ -268,7 +289,7 @@ mod tests {
         let (name, v) = ev(EngineEvent::SettingsChanged(Box::default()));
         assert_eq!(name, "settings-changed");
         assert_eq!(v, serde_json::to_value(Settings::default()).unwrap());
-        assert!(ui_event(&EngineEvent::PlaySound { volume: 0.5 }, none).is_none());
+        assert!(ui_event(&EngineEvent::PlaySound { sound: Sound::Beep, volume: 0.5 }, none).is_none());
     }
 
     #[test]
@@ -293,7 +314,7 @@ mod tests {
         let mut ts = vec![
             "autoEnabled", "liveFixEnabled", "inlineLiveFix", "triggerSpace", "triggerEnter", "triggerTab",
             "enterPreConvert", "arrowsCancel", "developerMode", "dedupeChatter", "groupConvert",
-            "learnOnUndoEnabled", "typoFix", "twoCapsFix", "soundEnabled", "soundVolume", "silentMode", "hotkey",
+            "learnOnUndoEnabled", "typoFix", "twoCapsFix", "sound", "soundVolume", "soundFile", "hotkey",
             "caseChangeHotkey", "plainPaste", "plainPasteHotkey", "snippetPickHotkey", "pauseMinutes",
             "pausedUntil", "ignoredWords", "forceSwapWords", "learnedWords", "appExceptionModes",
             "appForcedLayouts", "seededDefaultApps", "snippetsOrdered", "snippetExpandSpace", "snippetExpandEnter",

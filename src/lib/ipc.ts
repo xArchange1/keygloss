@@ -33,6 +33,7 @@ export type Hotkey =
 export type AppMode = "off" | "soft";
 export type Theme = "system" | "light" | "dark";
 export type UiLanguage = "auto" | "ru" | "en";
+export type Sound = "off" | "beep" | "whoosh" | "custom";
 
 export interface Settings {
   // Layout switching
@@ -52,10 +53,11 @@ export interface Settings {
   typoFix: boolean;
   twoCapsFix: boolean;
   // Sound
-  soundEnabled: boolean;
+  sound: Sound;
   /** 0..1 */
   soundVolume: number;
-  silentMode: boolean;
+  /** Name of the file picked for "custom"; "" = none. */
+  soundFile: string;
   // Hotkeys
   hotkey: Hotkey;
   caseChangeHotkey: Hotkey | null;
@@ -154,7 +156,7 @@ let memSettings: Settings = {
   autoEnabled: true, liveFixEnabled: true, inlineLiveFix: true, triggerSpace: true,
   triggerEnter: true, triggerTab: false, enterPreConvert: true, arrowsCancel: true,
   developerMode: false, dedupeChatter: false, groupConvert: true, learnOnUndoEnabled: true,
-  typoFix: true, twoCapsFix: true, soundEnabled: true, soundVolume: 0.6, silentMode: false,
+  typoFix: true, twoCapsFix: true, sound: "beep", soundVolume: 0.6, soundFile: "",
   hotkey: { mode: "key", key: "Pause", mods: NO_MODS }, caseChangeHotkey: null, plainPaste: false,
   plainPasteHotkey: { mode: "key", key: "KeyV", mods: { ...NO_MODS, ctrl: true, shift: true } },
   snippetPickHotkey: null, pauseMinutes: 15, pausedUntil: 0, ignoredWords: ["вк", "тг", "vk"],
@@ -208,6 +210,10 @@ export const snippetPickerClose = () => invoke<void>("snippet_picker_close");
 export const getLaunchAtLogin = () => invoke<boolean>("get_launch_at_login");
 export const setLaunchAtLogin = (enabled: boolean) =>
   invoke<boolean>("set_launch_at_login", { enabled });
+export const previewSound = (sound: Sound, volume: number) =>
+  invoke<void>("preview_sound", { sound, volume });
+/** Opens a file dialog; a picked file becomes the custom sound. False = cancelled; rejects on a file that is not audio. */
+export const chooseSoundFile = () => invoke<boolean>("choose_sound_file");
 export const appVersion = () => invoke<string>("app_version");
 
 // Added by the frontend phase; the Rust side must implement these (see the phase report).

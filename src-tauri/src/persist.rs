@@ -25,6 +25,12 @@ pub fn settings_from_entries(entries: impl IntoIterator<Item = (String, Value)>)
     let Ok(Value::Object(mut merged)) = serde_json::to_value(Settings::default()) else {
         return Settings::default();
     };
+    let entries: Vec<_> = entries.into_iter().collect();
+    // Files from before the `sound` choice: either of the two old switches had the sound off.
+    let stored = |key: &str, value: bool| entries.iter().any(|(k, v)| k == key && *v == Value::Bool(value));
+    if stored("soundEnabled", false) || stored("silentMode", true) {
+        merged.insert("sound".into(), "off".into());
+    }
     for (key, value) in entries {
         if !merged.contains_key(&key) {
             continue;
@@ -57,6 +63,7 @@ pub fn save(store: &Store<Wry>, settings: &Settings) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use keygloss_core::settings::Sound;
     use serde_json::json;
 
     fn entries(v: Value) -> Vec<(String, Value)> {
@@ -70,6 +77,16 @@ mod tests {
         assert_eq!(s.sound_volume, 0.25);
         assert_eq!(s.ignored_words, Settings::default().ignored_words);
         assert_eq!(settings_from_entries(Vec::new()), Settings::default());
+    }
+
+    #[test]
+    fn sound_switched_off_in_an_old_file_stays_off() {
+        let load = |v| settings_from_entries(entries(v)).sound;
+        assert_eq!(load(json!({ "soundEnabled": true, "silentMode": false })), Sound::Beep);
+        assert_eq!(load(json!({ "soundEnabled": false, "silentMode": false })), Sound::Off);
+        assert_eq!(load(json!({ "soundEnabled": true, "silentMode": true })), Sound::Off);
+        // A choice made since then wins over the stale keys.
+        assert_eq!(load(json!({ "soundEnabled": false, "sound": "whoosh" })), Sound::Whoosh);
     }
 
     #[test]

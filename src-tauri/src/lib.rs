@@ -45,7 +45,7 @@ fn on_engine_event(app: &AppHandle, store: &Store<Wry>, ev: EngineEvent) {
         }
         EngineEvent::SnippetPickerClose => on_main(app, windows::hide_picker),
         EngineEvent::HotkeyCaptured(_) => {}
-        EngineEvent::PlaySound { volume } => sound::play_cue(volume),
+        EngineEvent::PlaySound { sound, volume } => sound::play(app, sound, volume),
     }
 }
 
@@ -183,6 +183,8 @@ pub fn run() {
             ipc::snippet_picker_close,
             ipc::get_launch_at_login,
             ipc::set_launch_at_login,
+            ipc::preview_sound,
+            ipc::choose_sound_file,
             ipc::app_version,
             ipc::open_settings,
             ipc::open_welcome,

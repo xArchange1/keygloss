@@ -57,3 +57,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Audio playback
+
+The conversion sounds are synthesized in code (`crates/keygloss-core/src/cue.rs`); no audio files
+are bundled. Playback and decoding of a user's own WAV or MP3 file use rodio
+(<https://github.com/RustAudio/rodio>, MIT OR Apache-2.0) and, through it, Symphonia
+(<https://github.com/pdeljanov/Symphonia>, MPL-2.0), unmodified.

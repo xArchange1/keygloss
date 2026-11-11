@@ -24,3 +24,5 @@ tauri-plugin-autostart = "2.7.0"
 tauri-plugin-single-instance = "2.5.5"
 webview2-com = "0.39.1"
 windows-core = "0.62.2"
+rodio = { version = "0.23", default-features = false, features = ["playback", "wav", "mp3"] }
+rfd = { version = "0.18.0", default-features = false }
