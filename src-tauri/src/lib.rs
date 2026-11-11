@@ -117,7 +117,6 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let store = persist::open(app)?;
     let mut settings = persist::load(&store);
 
-    windows::create_settings(app)?;
     let banner = windows::hwnd(&windows::create_banner(app)?);
     let picker = windows::hwnd(&windows::create_picker(app)?);
 
@@ -138,6 +137,9 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         banner_hwnd: banner,
         picker_hwnd: picker,
     });
+    // After the state exists: building a window pumps messages, so the page's first
+    // commands can run before `setup` returns and would fail without it.
+    windows::create_settings(app)?;
     tray::create(app)?;
     if first_run {
         windows::open_welcome(app);
