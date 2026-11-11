@@ -1,3 +1,4 @@
+mod history;
 mod ipc;
 mod log;
 mod persist;
@@ -33,7 +34,7 @@ fn emit_ui(app: &AppHandle, ev: &EngineEvent) {
 }
 
 /// Routes an engine event (called on the engine's worker thread).
-fn on_engine_event(app: &AppHandle, store: &Store<Wry>, ev: EngineEvent) {
+fn on_engine_event(app: &AppHandle, store: &Store<Wry>, history: &Store<Wry>, ev: EngineEvent) {
     emit_ui(app, &ev);
     match ev {
         EngineEvent::SettingsChanged(s) => {
@@ -60,6 +61,10 @@ fn on_engine_event(app: &AppHandle, store: &Store<Wry>, ev: EngineEvent) {
         EngineEvent::HotkeyCaptured(_) => {}
         EngineEvent::PlaySound { sound, volume } => sound::play(app, sound, volume),
         EngineEvent::Log(line) => log::write(&line),
+        EngineEvent::Converted { from, to } => {
+            let list = history::add(history, history::Entry { at: state::unix_now(), from, to });
+            let _ = app.emit(ipc::EVENT_HISTORY_CHANGED, list);
+        }
     }
 }
 
@@ -72,7 +77,12 @@ pub(crate) fn publish_fallback(app: &AppHandle, s: &Settings) {
     on_main(app, tray::refresh);
 }
 
-fn start_engine(app: &AppHandle, store: Arc<Store<Wry>>, settings: Settings) -> Option<EngineHandle> {
+fn start_engine(
+    app: &AppHandle,
+    store: Arc<Store<Wry>>,
+    history: Arc<Store<Wry>>,
+    settings: Settings,
+) -> Option<EngineHandle> {
     let platform = Platform {
         output: Arc::new(log::LoggedOutput(WindowsOutput)),
         layouts: Arc::new(log::LoggedLayouts(WindowsLayouts)),
@@ -81,7 +91,7 @@ fn start_engine(app: &AppHandle, store: Arc<Store<Wry>>, settings: Settings) -> 
         clipboard: Arc::new(WindowsClipboard),
     };
     let handle = app.clone();
-    let sink = Arc::new(move |ev| on_engine_event(&handle, &store, ev));
+    let sink = Arc::new(move |ev| on_engine_event(&handle, &store, &history, ev));
     match engine::start(platform, Box::new(WindowsHook::new()), settings, sink) {
         Ok(engine) => Some(engine),
         Err(e) => {
@@ -124,6 +134,7 @@ pub(crate) fn shutdown(app: &AppHandle) {
         persist::save(&state.store, &e.settings());
     }
     let _ = state.store.save();
+    let _ = state.history.save();
 }
 
 fn quit(app: &AppHandle) {
@@ -138,6 +149,7 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     }
     log::write(&format!("start version={} os={}", app.package_info().version, keygloss_windows::shell::os_version()));
     let store = persist::open(app)?;
+    let history = history::open(app)?;
     let mut settings = persist::load(&store);
 
     let banner = windows::hwnd(&windows::create_banner(app)?);
@@ -150,11 +162,12 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         persist::save(&store, &settings);
     }
 
-    let engine = start_engine(app, store.clone(), settings.clone());
+    let engine = start_engine(app, store.clone(), history.clone(), settings.clone());
     app.manage(AppState {
         engine,
         fallback: Mutex::new(settings),
         store,
+        history,
         picker_return_to: Mutex::new(0),
         tray_model: Mutex::new(None),
         banner_hwnd: banner,
@@ -220,6 +233,8 @@ pub fn run() {
             ipc::log_error,
             ipc::open_settings,
             ipc::open_welcome,
+            ipc::get_history,
+            ipc::clear_history,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Keygloss");

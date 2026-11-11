@@ -135,6 +135,8 @@ pub enum EngineEvent {
     PlaySound { sound: Sound, volume: f64 },
     /// One line for the log file. Never contains typed text, only lengths.
     Log(String),
+    /// An automatic layout fix replaced the typed `from` with `to`, for the local history.
+    Converted { from: String, to: String },
 }
 
 /// Slow work for the worker thread.
@@ -453,6 +455,11 @@ impl Engine {
             let (sound, volume) = (s.sound, s.sound_volume.min(1.0));
             self.emit(EngineEvent::PlaySound { sound, volume });
         }
+    }
+
+    /// An automatic layout fix, for the history.
+    fn note_converted(&mut self, from: &str, to: &str) {
+        self.emit(EngineEvent::Converted { from: from.to_string(), to: to.to_string() });
     }
 
     fn count_rescued(&mut self, n: u64) {
@@ -1136,6 +1143,7 @@ impl Engine {
         self.buffer.apply_conversion(&converted);
         self.live_fix_last = converted.clone();
         self.log_fix("live", n, len(&converted), Some(to));
+        self.note_converted(&candidate, &converted);
         self.select_layout(to, now);
         self.undo.note_conversion(&candidate, &converted, unix, &self.exceptions.learned);
         self.count_rescued(1);
@@ -1201,6 +1209,7 @@ impl Engine {
             return;
         }
         self.log_fix("pause", n, len(&converted), Some(to));
+        self.note_converted(&word, &converted);
         self.buffer.apply_conversion(&converted);
         self.live_fix_last = converted.clone();
         self.select_layout(to, now);
@@ -1280,6 +1289,7 @@ impl Engine {
             return;
         }
         self.log_fix("auto", len(&word), len(&converted), Some(prop.to));
+        self.note_converted(&word, &converted);
         self.buffer.apply_completed_conversion(&converted);
         if tail != item.tail {
             self.buffer.apply_completed_tail(&completed_tail);
@@ -1392,6 +1402,7 @@ impl Engine {
             return false;
         }
         self.log_fix("enter", len(&word), len(&prop.text), Some(prop.to));
+        self.note_converted(&word, &prop.text);
         self.buffer.apply_conversion(&prop.text);
         self.buffer.boundary("\n", now);
         if !prop.rescue {

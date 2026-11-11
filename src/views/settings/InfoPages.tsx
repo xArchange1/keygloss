@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
-import { Bug, EyeOff, FolderOpen, KeyRound, HardDrive, Lightbulb, WifiOff, Sparkles } from "lucide-react";
+import { useEffect, useId, useState } from "react";
+import { Bug, EyeOff, FolderOpen, Heart, KeyRound, HardDrive, Lightbulb, WifiOff, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import * as ipc from "../../lib/ipc";
-import { useSettings } from "../../store";
-import { BlockTitle, Button, Card, Hint, PageTitle, Row } from "../../components/ui";
+import type { Theme } from "../../lib/ipc";
+import { useSettings, useUpdate } from "../../store";
+import { BlockTitle, Button, Card, Hint, PageTitle, Row, Segmented } from "../../components/ui";
 import { Brand } from "../../components/Brand";
 
 export function PrivacyPage() {
@@ -32,6 +33,8 @@ export function PrivacyPage() {
 export function AboutPage() {
   const { t, i18n } = useTranslation();
   const s = useSettings();
+  const update = useUpdate();
+  const themeId = useId();
   const [version, setVersion] = useState("");
   useEffect(() => { ipc.appVersion().then(setVersion).catch(console.error); }, []);
 
@@ -50,9 +53,18 @@ export function AboutPage() {
           <span className="font-semibold tabular-nums">{s.rescuedCount.toLocaleString(i18n.language)}</span>
         } />
         <Row title={t("about.license")} control={<span className="text-fg/75">{t("about.licenseVal")}</span>} />
+        <Row id={themeId} title={t("gen.theme")} control={
+          <Segmented<Theme> value={s.appTheme} label={t("gen.theme")} onChange={(appTheme) => update({ appTheme })}
+            options={[
+              { value: "system", label: t("gen.themeSystem") },
+              { value: "light", label: t("gen.themeLight") },
+              { value: "dark", label: t("gen.themeDark") },
+            ]} />
+        } />
       </Card>
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap gap-2">
         <Button onClick={() => ipc.openWelcome().catch(console.error)}><Sparkles size={14} />{t("about.welcome")}</Button>
+        <Button><Heart size={14} />{t("about.support")}</Button>
       </div>
       <BlockTitle title={t("about.feedback")} />
       <div className="flex flex-wrap gap-2">

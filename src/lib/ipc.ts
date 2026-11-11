@@ -153,6 +153,14 @@ export interface Toast {
   params: Record<string, string>;
 }
 
+/** One automatic fix (src-tauri/src/history.rs). */
+export interface HistoryEntry {
+  /** Unix seconds. */
+  at: number;
+  from: string;
+  to: string;
+}
+
 export interface SnippetPickerOpen {
   /** [name, text] */
   snippets: [string, string][];
@@ -189,7 +197,8 @@ function browserInvoke(cmd: string, args?: Record<string, unknown>): unknown {
     case "get_launch_at_login": return false;
     case "set_launch_at_login": return args!.enabled;
     case "app_version": return "dev";
-    case "check_for_update": case "pending_update": return null;
+    case "check_for_update": case "pending_update": case "clear_history": return null;
+    case "get_history": return [{ at: Date.now() / 1000 - 60, from: "ghbdtn", to: "привет" }, { at: Date.now() / 1000 - 3600, from: "vbh", to: "мир" }];
   }
 }
 
@@ -240,6 +249,9 @@ export const installUpdate = () => invoke<void>("install_update");
 export const reportIssue = (bug: boolean) => invoke<void>("report_issue", { bug });
 /** Shows the folder with the log files in Explorer. */
 export const openLogs = () => invoke<void>("open_logs");
+/** Automatic fixes, newest first. Stored on this computer only. */
+export const getHistory = () => invoke<HistoryEntry[]>("get_history");
+export const clearHistory = () => invoke<void>("clear_history");
 /** Writes a page error to the log file. */
 export const logError = (message: string) => invoke<void>("log_error", { message });
 
@@ -261,6 +273,8 @@ interface EventPayloads {
   toast: Toast;
   "snippet-picker-open": SnippetPickerOpen;
   "snippet-picker-close": null;
+  /** Newest first. */
+  "history-changed": HistoryEntry[];
 }
 
 export type EventName = keyof EventPayloads;

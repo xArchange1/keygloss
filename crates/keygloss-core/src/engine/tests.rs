@@ -603,6 +603,7 @@ fn converts_wrong_layout_word_at_space() {
     let events = h.take_events();
     assert!(events.iter().any(|e| matches!(e, EngineEvent::PlaySound { sound: Sound::Beep, volume } if (*volume - 0.6).abs() < 1e-9)));
     assert!(events.iter().any(|e| matches!(e, EngineEvent::SettingsChanged(s) if s.rescued_count == 1)));
+    assert!(events.contains(&EngineEvent::Converted { from: "ghbdtn".into(), to: "привет".into() }));
     // Typing continues in Russian.
     h.keys("vbh ");
     h.advance(100);
