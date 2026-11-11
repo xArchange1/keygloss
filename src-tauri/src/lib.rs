@@ -3,6 +3,7 @@ mod persist;
 mod sound;
 mod state;
 mod tray;
+mod update;
 mod windows;
 
 use std::sync::{Arc, Mutex};
@@ -18,7 +19,7 @@ use tauri_plugin_store::Store;
 use state::{AppState, idle_status};
 
 /// Runs `f` on the main thread without waiting (the engine's event thread must never block on it).
-fn on_main(app: &AppHandle, f: impl FnOnce(&AppHandle) + Send + 'static) {
+pub(crate) fn on_main(app: &AppHandle, f: impl FnOnce(&AppHandle) + Send + 'static) {
     let handle = app.clone();
     let _ = app.run_on_main_thread(move || f(&handle));
 }
@@ -102,14 +103,18 @@ pub(crate) fn on_tray_menu(app: &AppHandle, id: &str) {
     }
 }
 
-/// Unhooks the keyboard, writes pending settings and exits.
-fn quit(app: &AppHandle) {
+/// Unhooks the keyboard and writes pending settings.
+pub(crate) fn shutdown(app: &AppHandle) {
     let state = app.state::<AppState>();
     if let Some(e) = &state.engine {
         e.shutdown();
         persist::save(&state.store, &e.settings());
     }
     let _ = state.store.save();
+}
+
+fn quit(app: &AppHandle) {
+    shutdown(app);
     app.exit(0);
 }
 
@@ -136,6 +141,7 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         tray_model: Mutex::new(None),
         banner_hwnd: banner,
         picker_hwnd: picker,
+        update: Mutex::new(None),
     });
     // After the state exists: building a window pumps messages, so the page's first
     // commands can run before `setup` returns and would fail without it.
@@ -144,6 +150,7 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     if first_run {
         windows::open_welcome(app);
     }
+    update::on_startup(app);
     Ok(())
 }
 
@@ -156,6 +163,7 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| windows::open_settings(app)))
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_autostart::Builder::new().build())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| setup(app.handle()))
         .on_window_event(|window, event| {
             // The app lives in the tray: closing Settings only hides it.
@@ -186,6 +194,9 @@ pub fn run() {
             ipc::preview_sound,
             ipc::choose_sound_file,
             ipc::app_version,
+            ipc::check_for_update,
+            ipc::pending_update,
+            ipc::install_update,
             ipc::open_settings,
             ipc::open_welcome,
         ])

@@ -8,6 +8,7 @@ use keygloss_core::settings::Settings;
 use serde_json::Value;
 use tauri::Wry;
 use tauri_plugin_store::Store;
+use tauri_plugin_updater::Update;
 
 use crate::tray;
 
@@ -24,6 +25,8 @@ pub struct AppState {
     /// Physical HWNDs of the non-activating windows.
     pub banner_hwnd: isize,
     pub picker_hwnd: isize,
+    /// Update found by the last check.
+    pub update: Mutex<Option<Update>>,
 }
 
 pub fn unix_now() -> f64 {
@@ -75,6 +78,14 @@ impl AppState {
         let mut s = lock(&self.fallback);
         f(&mut s);
         s.clone()
+    }
+
+    pub fn pending_update(&self) -> Option<Update> {
+        lock(&self.update).clone()
+    }
+
+    pub fn set_pending_update(&self, update: Option<Update>) {
+        *lock(&self.update) = update;
     }
 
     pub fn set_picker_return_to(&self, hwnd: isize) {

@@ -11,7 +11,7 @@ use tauri::{AppHandle, Manager, State, WebviewWindow};
 use tauri_plugin_autostart::ManagerExt;
 
 use crate::state::{AppState, idle_status, merge, unix_now};
-use crate::{sound, windows};
+use crate::{sound, update, windows};
 
 // ---- Event names ----
 
@@ -230,6 +230,24 @@ pub fn app_version(app: AppHandle) -> String {
     app.package_info().version.to_string()
 }
 
+/// Asks GitHub for a newer release on the chosen channel. `Some(version)`: one is ready to install.
+#[tauri::command]
+pub async fn check_for_update(app: AppHandle) -> Result<Option<String>, String> {
+    update::check(&app).await
+}
+
+/// Version found by the last check, if any.
+#[tauri::command]
+pub fn pending_update(state: State<AppState>) -> Option<String> {
+    state.pending_update().map(|u| u.version)
+}
+
+/// Downloads and runs the installer of the update found by the last check; the app restarts.
+#[tauri::command]
+pub async fn install_update(app: AppHandle) -> Result<(), String> {
+    update::install(&app).await
+}
+
 #[tauri::command]
 pub fn open_settings(app: AppHandle) {
     windows::open_settings(&app);
@@ -321,7 +339,7 @@ mod tests {
             "appForcedLayouts", "seededDefaultApps", "snippetsOrdered", "snippetExpandSpace", "snippetExpandEnter",
             "snippetExpandTab", "textSnippets", "undoDeclinedWords", "undoStrikeCount", "undoStrikeTime",
             "typoPersonalWords", "lastLayoutCyr", "lastLayoutLat", "language", "appTheme", "didInitialSetup",
-            "didShowWelcome", "rescuedCount",
+            "didShowWelcome", "rescuedCount", "updateCheckOnStartup", "autoUpdate", "updateChannel",
         ];
         ts.sort();
         assert_eq!(keys(&v), ts);

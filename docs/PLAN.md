@@ -5,7 +5,7 @@ Windows-only Tauri 2 rewrite of Keyboop (macOS, Swift, MIT): a RU↔EN wrong-lay
 ## Rules
 
 - **No voice features of any kind**: no dictation, microphone, voice settings or strings.
-- No Keyboop name, icon or copy. No network calls (no keyboop.com, Telegram or donation links).
+- No Keyboop name, icon or copy. No network calls (no keyboop.com, Telegram or donation links), except the updater's requests to GitHub (`src-tauri/src/update.rs`).
 - Logs never contain typed text, only lengths.
 - Keep `LICENSE` (MIT, xArchange1) and `THIRD_PARTY.md` (Keyboop and keyswitcher MIT notices).
 
@@ -32,4 +32,5 @@ Theme tokens live in `src/styles.css` (`--kg-*`, exposed as Tailwind colors). Go
 
 - Checks: `cargo test --workspace`, `cargo clippy --workspace`, `pnpm build`.
 - Run: `pnpm tauri dev`. Release build: `pnpm tauri build`.
+- Release: set the new version in `Cargo.toml`, `package.json` and `src-tauri/tauri.conf.json`, then push a tag `v<version>`. `.github/workflows/release.yml` builds the signed NSIS installer and publishes the GitHub release the in-app updater reads. A version with a suffix (`0.2.0-beta.1`) becomes a pre-release, which only the beta channel offers. The updater signing key is the repository secret `TAURI_SIGNING_PRIVATE_KEY`; its public half is in `tauri.conf.json`. Losing it means installed copies can no longer update.
 - Only one instance runs at a time (single-instance plugin), and its global keyboard hook types into the live session. Live-test one branch at a time.
