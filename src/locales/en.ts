@@ -49,7 +49,7 @@ const en = {
     groupSub: "One hotkey fixes the whole typed phrase, not just one word.",
     groupAutoOff: "Available when auto-switch is off — otherwise it fixes things on the fly.",
     learn: "Learn from undo",
-    learnSub: "Undo a switch right away and Keygloss offers to add the word to exceptions. Say no and it won’t ask about that word again.",
+    learnSub: "Undo the same switch right away twice and Keygloss offers to add the word to exceptions. Say no and it won’t ask about that word again.",
     trig: "Triggers",
     trigAfter: "After a word",
     arrows: "Arrow keys cancel the switch",

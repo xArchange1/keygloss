@@ -2,6 +2,7 @@
 //!
 //! After an automatic conversion W→C, the user undoing it within [`UNDO_WINDOW_SECS`] counts as
 //! a strike on W: either by a manual hotkey flip C→W, or by erasing C and retyping W exactly.
+//! A live fix converts a word's start, so the flip may cover the rest of the word typed after it.
 //! Every undo protects W for the current typing context; after [`STRIKE_THRESHOLD`] strikes
 //! (decaying after [`STRIKE_DECAY_SECS`]) the engine asks "Keep W as is?".
 //!
@@ -15,7 +16,7 @@ use crate::settings::Settings;
 /// An undo must follow the conversion within this many seconds.
 pub const UNDO_WINDOW_SECS: f64 = 4.0;
 /// Undos of one word before the "keep as is?" question.
-pub const STRIKE_THRESHOLD: u32 = 3;
+pub const STRIKE_THRESHOLD: u32 = 2;
 /// A strike older than this resets the count.
 pub const STRIKE_DECAY_SECS: f64 = 7.0 * 24.0 * 3600.0;
 
@@ -24,6 +25,8 @@ enum Stage {
     Fresh,
     Deleting,
     Retyping,
+    /// The word went on past our output: only a hotkey flip can still undo it.
+    TypedOn,
 }
 
 #[derive(Clone, Debug)]
@@ -138,19 +141,20 @@ impl UndoLearner {
         self.candidate = Some(Candidate { original: o, converted: c, created_at: now, stage: Stage::Fresh });
     }
 
-    /// The user flipped `from` into `to` by hotkey. An exact reversal of our recent conversion
-    /// is an undo.
+    /// The user flipped `from` into `to` by hotkey. A reversal of our recent conversion is an
+    /// undo of `to`, also when the word went on past a live fix (`from` starts with our output).
     pub fn note_manual_convert(&mut self, from: &str, to: &str, now: f64, learned: &HashSet<String>) -> Option<UndoEvent> {
         if !self.enabled {
             return None;
         }
         let cand = self.live_candidate(now)?;
-        if from.to_lowercase() != cand.converted || to.to_lowercase() != cand.original {
+        let (from, to) = (from.to_lowercase(), to.to_lowercase());
+        if !from.starts_with(&cand.converted) || !to.starts_with(&cand.original) {
             return None;
         }
         self.candidate = None;
-        let ask = self.record_relevant_undo(&cand.original, now, learned);
-        Some(UndoEvent { original: cand.original, ask })
+        let ask = self.record_relevant_undo(&to, now, learned);
+        Some(UndoEvent { original: to, ask })
     }
 
     /// Call after every printable key and Backspace with the buffer's current word.
@@ -169,7 +173,16 @@ impl UndoLearner {
                 } else if cand.converted.starts_with(&cur) && cur.chars().count() < cand.converted.chars().count() {
                     cand.stage = Stage::Deleting;
                     self.candidate = Some(cand);
+                } else if cand.stage == Stage::Fresh && cur.starts_with(&cand.converted) {
+                    cand.stage = Stage::TypedOn;
+                    self.candidate = Some(cand);
                 } else {
+                    self.candidate = None;
+                }
+                None
+            }
+            Stage::TypedOn => {
+                if !cur.starts_with(&cand.converted) {
                     self.candidate = None;
                 }
                 None
@@ -268,15 +281,14 @@ mod tests {
     }
 
     #[test]
-    fn three_strikes_ask_once() {
+    fn two_strikes_ask_once() {
         let mut u = learner();
         let e1 = retype_undo(&mut u, 0.0).unwrap();
         assert_eq!(e1, UndoEvent { original: "гифки".into(), ask: None });
         assert!(u.is_session_protected("Гифки"));
         assert_eq!(u.strike_count("гифки"), 1);
-        assert!(retype_undo(&mut u, 10.0).unwrap().ask.is_none());
-        let e3 = retype_undo(&mut u, 20.0).unwrap();
-        assert_eq!(e3.ask.as_deref(), Some("гифки"));
+        let e2 = retype_undo(&mut u, 20.0).unwrap();
+        assert_eq!(e2.ask.as_deref(), Some("гифки"));
         assert_eq!(u.strike_count("гифки"), 0); // the strikes were spent on the question
         // While the question is pending, undos do not count.
         assert!(retype_undo(&mut u, 30.0).unwrap().ask.is_none());
@@ -304,15 +316,27 @@ mod tests {
     }
 
     #[test]
+    fn manual_flip_after_typing_on_past_a_live_fix() {
+        let none = HashSet::new();
+        let mut u = learner();
+        u.note_conversion("ghbd", "прив", 0.0, &none);
+        for cur in ["приве", "привет"] {
+            assert!(u.observe(cur, 0.5, &none).is_none());
+        }
+        let ev = u.note_manual_convert("Привет", "Ghbdtn", 1.0, &none).unwrap();
+        assert_eq!(ev.original, "ghbdtn");
+        assert_eq!(u.strike_count("ghbdtn"), 1);
+        assert!(u.is_session_protected("ghbdtn"));
+    }
+
+    #[test]
     fn strikes_decay_after_a_week() {
         let none = HashSet::new();
         let mut u = learner();
-        for t in [0.0, 10.0] {
-            u.note_conversion("a1", "b1", t, &none);
-            u.note_manual_convert("b1", "a1", t + 1.0, &none).unwrap();
-        }
-        assert_eq!(u.strike_count("a1"), 2);
-        let later = 11.0 + STRIKE_DECAY_SECS + 1.0;
+        u.note_conversion("a1", "b1", 0.0, &none);
+        u.note_manual_convert("b1", "a1", 1.0, &none).unwrap();
+        assert_eq!(u.strike_count("a1"), 1);
+        let later = 1.0 + STRIKE_DECAY_SECS + 1.0;
         u.note_conversion("a1", "b1", later, &none);
         let ev = u.note_manual_convert("b1", "a1", later + 1.0, &none).unwrap();
         assert!(ev.ask.is_none());
@@ -327,11 +351,11 @@ mod tests {
         u.note_conversion("x1", "y1", 0.0, &none);
         assert!(u.note_manual_convert("y1", "x1", 1.0, &none).is_none());
         let mut s = Settings::default();
-        s.undo_strike_count.insert("old".into(), 3);
-        s.undo_strike_count.insert("w".into(), 2);
+        s.undo_strike_count.insert("old".into(), 2);
+        s.undo_strike_count.insert("w".into(), 1);
         let mut u = UndoLearner::from_settings(&s);
         assert_eq!(u.strike_count("old"), 0);
-        assert_eq!(u.strike_count("w"), 2);
+        assert_eq!(u.strike_count("w"), 1);
         u.decline_learn("z");
         u.write_to(&mut s);
         assert_eq!(s.undo_declined_words, vec!["z".to_string()]);
