@@ -85,8 +85,6 @@ export function SwitchingPage() {
         } />
         <SwitchRow title={t("switch.arrows")} sub={t("switch.arrowsSub")} checked={s.arrowsCancel}
           onChange={(v) => update({ arrowsCancel: v })} />
-        <SwitchRow title={t("switch.chatter")} sub={t("switch.chatterSub")} checked={s.dedupeChatter}
-          onChange={(v) => update({ dedupeChatter: v })} />
       </Card>
 
       <SectionTitle>{t("switch.fixSection")}</SectionTitle>
@@ -95,6 +93,8 @@ export function SwitchingPage() {
           onChange={(v) => update({ typoFix: v })} />
         <SwitchRow title={t("switch.twoCaps")} sub={t("switch.twoCapsSub")} checked={s.twoCapsFix}
           onChange={(v) => update({ twoCapsFix: v })} />
+        <SwitchRow title={t("switch.chatter")} sub={t("switch.chatterSub")} checked={s.dedupeChatter}
+          onChange={(v) => update({ dedupeChatter: v })} />
         <OptionalHotkey title={t("switch.caseTitle")} sub={t("switch.caseSub")} target="caseChange" field="caseChangeHotkey" />
       </Card>
 
