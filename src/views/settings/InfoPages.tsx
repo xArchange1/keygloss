@@ -5,6 +5,7 @@ import * as ipc from "../../lib/ipc";
 import { useSettings } from "../../store";
 import { BlockTitle, Button, Card, Hint, Row } from "../../components/ui";
 import { Brand } from "../../components/Brand";
+import { WhatsNew } from "../../components/WhatsNew";
 
 const PRIVACY = [
   [WifiOff, "priv.net"],
@@ -18,6 +19,7 @@ export function AboutPage() {
   const s = useSettings();
   const [version, setVersion] = useState("");
   useEffect(() => { ipc.appVersion().then(setVersion).catch(console.error); }, []);
+  const [whatsNew, setWhatsNew] = useState(false);
 
   return (
     <>
@@ -29,7 +31,12 @@ export function AboutPage() {
         </div>
       </div>
       <Card>
-        <Row title={t("about.version")} control={<span className="text-fg/75 tabular-nums">{version}</span>} />
+        <Row title={t("about.version")} control={
+          <span className="flex items-center gap-3">
+            <Button variant="ghost" onClick={() => setWhatsNew(true)}>{t("about.whatsNew")}</Button>
+            <span className="text-fg/75 tabular-nums">{version}</span>
+          </span>
+        } />
         <Row title={t("about.rescued")} control={
           <span className="font-semibold tabular-nums">{s.rescuedCount.toLocaleString(i18n.language)}</span>
         } />
@@ -60,6 +67,7 @@ export function AboutPage() {
         <p>{t("about.basedOn")}</p>
         <p>{t("about.data")}</p>
       </div>
+      {whatsNew && <WhatsNew onClose={() => setWhatsNew(false)} />}
     </>
   );
 }

@@ -161,6 +161,13 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         settings.did_initial_setup = true;
         persist::save(&store, &settings);
     }
+    let version = app.package_info().version.to_string();
+    let updated = settings.last_seen_version != version;
+    let whats_new = updated && !first_run && settings.show_whats_new;
+    if updated {
+        settings.last_seen_version = version;
+        persist::save(&store, &settings);
+    }
 
     let engine = start_engine(app, store.clone(), history.clone(), settings.clone());
     app.manage(AppState {
@@ -173,6 +180,7 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         banner_hwnd: banner,
         picker_hwnd: picker,
         update: Mutex::new(None),
+        whats_new: whats_new.into(),
     });
     // After the state exists: building a window pumps messages, so the page's first
     // commands can run before `setup` returns and would fail without it.
@@ -180,6 +188,9 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     tray::create(app)?;
     if first_run {
         windows::open_welcome(app);
+    }
+    if whats_new {
+        windows::open_settings(app);
     }
     update::on_startup(app);
     Ok(())
@@ -228,6 +239,7 @@ pub fn run() {
             ipc::check_for_update,
             ipc::pending_update,
             ipc::install_update,
+            ipc::take_whats_new,
             ipc::report_issue,
             ipc::open_logs,
             ipc::log_error,

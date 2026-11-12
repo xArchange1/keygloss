@@ -1,5 +1,6 @@
 //! App state: the engine (if it started) or, without it, the settings in memory.
 
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -29,6 +30,8 @@ pub struct AppState {
     pub picker_hwnd: isize,
     /// Update found by the last check.
     pub update: Mutex<Option<Update>>,
+    /// The app was updated: Settings shows the release notes once (`take_whats_new`).
+    pub whats_new: AtomicBool,
 }
 
 pub fn unix_now() -> f64 {
