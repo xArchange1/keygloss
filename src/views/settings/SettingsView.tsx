@@ -11,7 +11,7 @@ import { SnippetsPage } from "./SnippetsPage";
 import { GeneralPage } from "./GeneralPage";
 import { HistoryPage } from "./HistoryPage";
 import { AboutPage } from "./InfoPages";
-import { WhatsNew } from "../../components/WhatsNew";
+import { UpdateDialog, WhatsNew } from "../../components/WhatsNew";
 
 const SECTIONS = [
   { id: "general", icon: Gear },
@@ -57,6 +57,11 @@ export function SettingsView() {
   const active = page === "ambiguous" ? "exceptions" : page;
   const [whatsNew, setWhatsNew] = useState(false);
   useEffect(() => { ipc.takeWhatsNew().then((v) => v && setWhatsNew(true)).catch(console.error); }, []);
+  const [update, setUpdate] = useState<ipc.PendingUpdate | null>(null);
+  useEffect(() => {
+    const sub = ipc.on("show-update", () => ipc.pendingUpdate().then(setUpdate).catch(console.error));
+    return () => void sub.then((u) => u());
+  }, []);
 
   return (
     <div className="flex h-full">
@@ -93,6 +98,7 @@ export function SettingsView() {
         </div>
       </main>
       {whatsNew && <WhatsNew onClose={() => setWhatsNew(false)} />}
+      {update && <UpdateDialog update={update} onClose={() => setUpdate(null)} />}
     </div>
   );
 }

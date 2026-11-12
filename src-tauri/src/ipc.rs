@@ -9,7 +9,7 @@ use keygloss_core::platform::{AppId, AppInfo};
 use keygloss_core::settings::{Hotkey, Settings, Sound};
 use serde::Serialize;
 use serde_json::{Value, json};
-use tauri::{AppHandle, Manager, State, WebviewWindow};
+use tauri::{AppHandle, Emitter, Manager, State, WebviewWindow};
 use tauri_plugin_autostart::ManagerExt;
 
 use crate::state::{AppState, idle_status, merge, unix_now};
@@ -32,6 +32,10 @@ pub const EVENT_TOAST: &str = "toast";
 pub const EVENT_SNIPPET_PICKER_OPEN: &str = "snippet-picker-open";
 /// Payload: null.
 pub const EVENT_SNIPPET_PICKER_CLOSE: &str = "snippet-picker-close";
+/// Payload: `{ version }`. Startup found an update (and does not install it on its own).
+pub const EVENT_UPDATE_BANNER: &str = "update-banner";
+/// Payload: null. Settings shows the pending update's notes and install button.
+pub const EVENT_SHOW_UPDATE: &str = "show-update";
 /// Payload: [`history::Entry`] list, newest first.
 pub const EVENT_HISTORY_CHANGED: &str = "history-changed";
 
@@ -269,10 +273,25 @@ pub async fn check_for_update(app: AppHandle) -> Result<Option<String>, String> 
     update::check(&app).await
 }
 
-/// Version found by the last check, if any.
+/// The update found by the last check.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct PendingUpdate {
+    pub version: String,
+    /// The release's notes (`scripts/release-notes.ts`).
+    pub notes: Option<String>,
+}
+
+/// Update found by the last check, if any.
 #[tauri::command]
-pub fn pending_update(state: State<AppState>) -> Option<String> {
-    state.pending_update().map(|u| u.version)
+pub fn pending_update(state: State<AppState>) -> Option<PendingUpdate> {
+    state.pending_update().map(|u| PendingUpdate { version: u.version, notes: u.body })
+}
+
+/// The update banner's "What's new": Settings shows the pending update's notes.
+#[tauri::command]
+pub fn open_update(app: AppHandle) {
+    windows::open_settings(&app);
+    let _ = app.emit_to(windows::SETTINGS, EVENT_SHOW_UPDATE, ());
 }
 
 /// True once after an update with "show what's new" on: Settings then shows the release notes.
@@ -397,6 +416,8 @@ mod tests {
         }
         let app = AppInfo { id: AppId::from_exe("Notepad.exe"), name: "Notepad".into() };
         assert_eq!(serde_json::to_value(app).unwrap(), json!({ "id": "notepad.exe", "name": "Notepad" }));
+        let u = PendingUpdate { version: "0.2.0".into(), notes: None };
+        assert_eq!(serde_json::to_value(u).unwrap(), json!({ "version": "0.2.0", "notes": null }));
         let p = AmbiguousPair { en: "yt".into(), ru: "не".into() };
         assert_eq!(serde_json::to_value(p).unwrap(), json!({ "en": "yt", "ru": "не" }));
         let hk: Hotkey = serde_json::from_value(json!({ "mode": "combo", "mods": { "ctrl": true, "alt": false, "shift": true, "meta": false } })).unwrap();

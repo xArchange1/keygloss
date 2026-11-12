@@ -1,6 +1,6 @@
 //! App state: the engine (if it started) or, without it, the settings in memory.
 
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, AtomicIsize};
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -25,9 +25,9 @@ pub struct AppState {
     pub picker_return_to: Mutex<isize>,
     /// Last tray model applied.
     pub tray_model: Mutex<Option<tray::Model>>,
-    /// Physical HWNDs of the non-activating windows.
-    pub banner_hwnd: isize,
-    pub picker_hwnd: isize,
+    /// Physical HWNDs of the non-activating windows, set once they exist.
+    pub banner_hwnd: AtomicIsize,
+    pub picker_hwnd: AtomicIsize,
     /// Update found by the last check.
     pub update: Mutex<Option<Update>>,
     /// The app was updated: Settings shows the release notes once (`take_whats_new`).

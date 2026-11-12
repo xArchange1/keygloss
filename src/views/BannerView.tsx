@@ -6,9 +6,12 @@ import { Brand } from "../components/Brand";
 import { Button } from "../components/ui";
 
 type Item =
-  | { id: number; kind: "toast"; key: string; params: Record<string, string>; ms: number }
-  | { id: number; kind: "learn"; word: string }
-  | { id: number; kind: "switch"; from: string; to: string };
+  | { kind: "toast"; key: string; params: Record<string, string>; ms: number }
+  | { kind: "learn"; word: string }
+  | { kind: "switch"; from: string; to: string }
+  | { kind: "update"; version: string };
+/** `id` tells a message from the one that replaced it. */
+type Shown = Item & { id: number };
 
 /** An unanswered question is "abandoned", not declined (as in the original). */
 const dismiss = (item: Item) => {
@@ -20,29 +23,37 @@ const TOAST_MS = 4000;
 /** The "Got it" toast that follows an answered question. */
 const ANSWERED_MS = 3000;
 const LEARN_MS = 20000;
+const UPDATE_MS = 10000;
+/** "Installing…" stays up until the installer closes the app. */
+const INSTALLING_MS = 120000;
 
-/** Info toasts (`toast`) and the "Keep as is?" / "Always switch?" questions (`learn-banner`, `switch-banner`). */
+const lifetime = (item: Item) => item.kind === "toast" ? item.ms : item.kind === "update" ? UPDATE_MS : LEARN_MS;
+
+/** Info toasts (`toast`), the "Keep as is?" / "Always switch?" questions (`learn-banner`, `switch-banner`)
+ * and the update offer (`update-banner`). */
 export function BannerView() {
   const { t } = useTranslation();
-  const [item, setItem] = useState<Item | null>(null);
+  const [item, setItem] = useState<Shown | null>(null);
   const [leaving, setLeaving] = useState(false);
-  const current = useRef<Item | null>(null);
+  const current = useRef<Shown | null>(null);
   current.current = item;
+  const seq = useRef(0);
+
+  const show = (next: Item) => {
+    if (current.current) dismiss(current.current);
+    setLeaving(false);
+    setItem({ ...next, id: ++seq.current });
+  };
 
   useEffect(() => {
-    let seq = 0;
-    const show = (next: Item) => {
-      if (current.current) dismiss(current.current);
-      setLeaving(false);
-      setItem(next);
-    };
     const subs = [
       ipc.on("toast", (p) => show({
-        id: ++seq, kind: "toast", key: p.key, params: p.params,
+        kind: "toast", key: p.key, params: p.params,
         ms: current.current && current.current.kind !== "toast" ? ANSWERED_MS : TOAST_MS,
       })),
-      ipc.on("learn-banner", (p) => show({ id: ++seq, kind: "learn", word: p.word })),
-      ipc.on("switch-banner", (p) => show({ id: ++seq, kind: "switch", from: p.from, to: p.to })),
+      ipc.on("learn-banner", (p) => show({ kind: "learn", word: p.word })),
+      ipc.on("switch-banner", (p) => show({ kind: "switch", from: p.from, to: p.to })),
+      ipc.on("update-banner", (p) => show({ kind: "update", version: p.version })),
     ];
     return () => subs.forEach((u) => u.then((f) => f()));
   }, []);
@@ -64,7 +75,7 @@ export function BannerView() {
     const timer = setTimeout(() => {
       dismiss(item);
       leave();
-    }, item.kind === "toast" ? item.ms : LEARN_MS);
+    }, lifetime(item));
     return () => clearTimeout(timer);
   }, [item]);
 
@@ -72,6 +83,19 @@ export function BannerView() {
     if (item?.kind === "learn") ipc.answerLearnBanner(item.word, yes).catch(console.error);
     else if (item?.kind === "switch") ipc.answerSwitchBanner(item.to, yes).catch(console.error);
     else return;
+    leave();
+  };
+
+  const install = (version: string) => {
+    show({ kind: "toast", key: "upd.installing", params: { version }, ms: INSTALLING_MS });
+    ipc.installUpdate().catch((e) => {
+      console.error(e);
+      show({ kind: "toast", key: "upd.failed", params: {}, ms: TOAST_MS });
+    });
+  };
+
+  const notes = () => {
+    ipc.openUpdate().catch(console.error);
     leave();
   };
 
@@ -84,6 +108,15 @@ export function BannerView() {
         <div className="min-w-0 flex-1">
           {item.kind === "toast" ? (
             <p className="pt-1 text-[13px] leading-snug">{t(item.key, item.params)}</p>
+          ) : item.kind === "update" ? (
+            <>
+              <p className="pt-0.5 text-[13.5px] font-semibold">{t("banner.updateTitle", { version: item.version })}</p>
+              <p className="mt-0.5 text-[12.5px] text-fg/70">{t("banner.updateBody")}</p>
+              <div className="mt-3 flex justify-end gap-2">
+                <Button onClick={notes}>{t("banner.updateNotes")}</Button>
+                <Button variant="primary" onClick={() => install(item.version)}>{t("banner.updateInstall")}</Button>
+              </div>
+            </>
           ) : (
             <>
               <p className="pt-0.5 text-[13.5px] font-semibold">

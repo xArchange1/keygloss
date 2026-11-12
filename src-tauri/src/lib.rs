@@ -9,6 +9,7 @@ mod tray;
 mod update;
 mod windows;
 
+use std::sync::atomic::Ordering::Relaxed;
 use std::sync::{Arc, Mutex};
 
 use keygloss_core::engine::{self, EngineEvent, EngineHandle, Platform};
@@ -154,9 +155,6 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let mut settings = persist::load(&store);
     history::load(&history, settings.history_keep_days);
 
-    let banner = windows::hwnd(&windows::create_banner(app)?);
-    let picker = windows::hwnd(&windows::create_picker(app)?);
-
     let first_run = !settings.did_show_welcome;
     if first_run {
         settings.did_show_welcome = true;
@@ -179,13 +177,16 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         history,
         picker_return_to: Mutex::new(0),
         tray_model: Mutex::new(None),
-        banner_hwnd: banner,
-        picker_hwnd: picker,
+        banner_hwnd: 0.into(),
+        picker_hwnd: 0.into(),
         update: Mutex::new(None),
         whats_new: whats_new.into(),
     });
     // After the state exists: building a window pumps messages, so the page's first
     // commands can run before `setup` returns and would fail without it.
+    let state = app.state::<AppState>();
+    state.banner_hwnd.store(windows::hwnd(&windows::create_banner(app)?), Relaxed);
+    state.picker_hwnd.store(windows::hwnd(&windows::create_picker(app)?), Relaxed);
     windows::create_settings(app)?;
     tray::create(app)?;
     if first_run {
@@ -244,6 +245,7 @@ pub fn run() {
             ipc::check_for_update,
             ipc::pending_update,
             ipc::install_update,
+            ipc::open_update,
             ipc::take_whats_new,
             ipc::report_issue,
             ipc::open_logs,
