@@ -52,7 +52,7 @@ fn on_engine_event(app: &AppHandle, store: &Store<Wry>, history: &Store<Wry>, ev
             ));
             on_main(app, tray::refresh);
         }
-        EngineEvent::Toast(_) | EngineEvent::LearnBanner { .. } => on_main(app, windows::show_banner),
+        EngineEvent::Toast(_) | EngineEvent::LearnBanner { .. } | EngineEvent::SwitchBanner { .. } => on_main(app, windows::show_banner),
         EngineEvent::SnippetPickerOpen { snippets } => {
             let rows = snippets.len();
             on_main(app, move |app| windows::show_picker(app, rows));
@@ -231,6 +231,9 @@ pub fn run() {
             ipc::get_ambiguous_pairs,
             ipc::answer_learn_banner,
             ipc::dismiss_learn_banner,
+            ipc::answer_switch_banner,
+            ipc::swap_layout,
+            ipc::dismiss_switch_banner,
             ipc::snippet_picker_choose,
             ipc::snippet_picker_close,
             ipc::get_launch_at_login,

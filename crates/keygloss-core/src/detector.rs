@@ -288,7 +288,7 @@ impl<'a> Detector<'a> {
         }
         let hit = |set: &HashSet<String>| set.contains(w) || set.iter().any(|e| e.len() > w.len() && e.starts_with(w));
         let (exc, e) = (self.exceptions, &self.data.extra);
-        if hit(&exc.learned) || hit(&exc.ignored) || hit(&e.default_keep) {
+        if hit(&exc.ignored) || hit(&e.default_keep) {
             return true;
         }
         if alt { hit(&e.alt_prefix_keep) } else { hit(&e.latin_prefix_keep) }
@@ -756,7 +756,7 @@ mod tests {
     fn user_exceptions() {
         let mut exc = Exceptions::default();
         exc.ignored.insert("ghbdtn".into());
-        exc.learned.insert("руддщ".into());
+        exc.ignored.insert("руддщ".into());
         exc.ignored.insert(":p".into());
         let d = det(&exc);
         assert_eq!(d.decide("ghbdtn", None, None, false), KEEP);

@@ -47,6 +47,7 @@ use crate::settings::{AppMode, Hotkey, Settings, Sound};
 use crate::snippets::{self, SnippetIndex};
 use crate::text_case::{self, CaseToggleError};
 use crate::typo::{self, TypoFixer};
+use crate::switch_learn::SwitchLearner;
 use crate::undo::{UndoEvent, UndoLearner};
 
 use hotkeys::{Gesture, Recorder, held_after, key_matches, needs_mask};
@@ -126,6 +127,8 @@ pub enum EngineEvent {
     Toast(Toast),
     /// Ask "Keep <word> as is?".
     LearnBanner { word: String },
+    /// Ask "Always switch <from> to <to>?".
+    SwitchBanner { from: String, to: String },
     /// Show the picker with these `[name, text]` entries.
     SnippetPickerOpen { snippets: Vec<(String, String)> },
     SnippetPickerClose,
@@ -239,6 +242,7 @@ pub(crate) struct Engine {
     settings: Settings,
     exceptions: Exceptions,
     undo: UndoLearner,
+    switch: SwitchLearner,
     typo: TypoFixer,
     /// [`TypoFixer::forget_wrongfully_learned`] ran on the loaded data.
     typo_cleaned: bool,
@@ -323,6 +327,7 @@ impl Engine {
         let mut e = Engine {
             exceptions: Exceptions::from_settings(&settings),
             undo: UndoLearner::from_settings(&settings),
+            switch: SwitchLearner::from_settings(&settings),
             typo: TypoFixer::new(settings.typo_personal_words.clone()),
             typo_cleaned: false,
             snippets: SnippetIndex::new(&keymap, &settings.snippets_ordered),
@@ -1066,7 +1071,7 @@ impl Engine {
 
     fn undo_observe(&mut self, now: Instant) {
         let unix = self.unix(now);
-        if let Some(ev) = self.undo.observe(self.buffer.current_word(), unix, &self.exceptions.learned) {
+        if let Some(ev) = self.undo.observe(self.buffer.current_word(), unix, &self.exceptions.ignored) {
             self.on_undo_event(ev);
         }
     }
@@ -1148,7 +1153,7 @@ impl Engine {
         self.log_fix("live", n, len(&converted), Some(to));
         self.note_converted(&candidate, &converted);
         self.select_layout(to, now);
-        self.undo.note_conversion(&candidate, &converted, unix, &self.exceptions.learned);
+        self.undo.note_conversion(&candidate, &converted, unix, &self.exceptions.ignored);
         self.count_rescued(1);
         self.play_sound();
         true
@@ -1216,7 +1221,7 @@ impl Engine {
         self.buffer.apply_conversion(&converted);
         self.live_fix_last = converted.clone();
         self.select_layout(to, now);
-        self.undo.note_conversion(&word, &converted, unix, &self.exceptions.learned);
+        self.undo.note_conversion(&word, &converted, unix, &self.exceptions.ignored);
         self.count_rescued(1);
         self.mute(now, MUTE_DRAIN);
         self.play_sound();
@@ -1299,7 +1304,7 @@ impl Engine {
         }
         if !prop.rescue {
             let unix = self.unix(now);
-            self.undo.note_conversion(&word, &converted, unix, &self.exceptions.learned);
+            self.undo.note_conversion(&word, &converted, unix, &self.exceptions.ignored);
         }
         self.count_rescued(1);
         self.select_layout(prop.to, now);
@@ -1351,7 +1356,7 @@ impl Engine {
             return;
         }
         let unix = self.unix(now);
-        self.undo.note_conversion(word, fixed, unix, &self.exceptions.learned);
+        self.undo.note_conversion(word, fixed, unix, &self.exceptions.ignored);
         self.last_text_fix = Some((word.to_string(), fixed.to_string()));
         self.log_fix("typo", len(word), len(fixed), None);
         self.buffer.apply_completed_conversion(fixed);
@@ -1417,7 +1422,7 @@ impl Engine {
         self.buffer.boundary("\n", now);
         if !prop.rescue {
             let unix = self.unix(now);
-            self.undo.note_conversion(&word, &prop.text, unix, &self.exceptions.learned);
+            self.undo.note_conversion(&word, &prop.text, unix, &self.exceptions.ignored);
         }
         self.select_layout(prop.to, now);
         self.count_rescued(1);
@@ -1540,14 +1545,31 @@ impl Engine {
         self.log_fix("manual", len(&word), len(&converted), Some(to));
         self.buffer.apply_conversion(&converted);
         let unix = self.unix(now);
-        if let Some(ev) = self.undo.note_manual_convert(&word, &converted, unix, &self.exceptions.learned) {
+        let undid = self.undo.reverses_last_conversion(&word, &converted, unix);
+        if let Some(ev) = self.undo.note_manual_convert(&word, &converted, unix, &self.exceptions.ignored) {
             self.on_undo_event(ev);
+        }
+        if !undid {
+            self.note_switch(&word, &converted, unix);
         }
         self.undo.protect(&converted);
         self.count_rescued(1);
         self.select_layout(to, now);
         self.mute(now, MUTE_DRAIN);
         self.play_sound();
+    }
+
+    /// A manual switch that is not an undo: may ask "Always switch …?".
+    fn note_switch(&mut self, from: &str, to: &str, unix: f64) {
+        if !self.switch.enabled {
+            return;
+        }
+        if let Some(word) = self.switch.note_switch(from, to, unix, &self.exceptions) {
+            self.log(format!("switch ask len={}", len(&word)));
+            self.emit(EngineEvent::SwitchBanner { from: from.to_lowercase(), to: word });
+        }
+        self.switch.write_to(&mut self.settings);
+        self.mark_settings();
     }
 
     /// `convertGroup`: false only when there is no group.
@@ -1578,7 +1600,7 @@ impl Engine {
             return false;
         }
         let unix = self.unix(now);
-        if let Some(ev) = self.undo.note_manual_convert(&fixed, &original, unix, &self.exceptions.learned) {
+        if let Some(ev) = self.undo.note_manual_convert(&fixed, &original, unix, &self.exceptions.ignored) {
             self.on_undo_event(ev);
         }
         self.undo.protect(&original);
@@ -1839,6 +1861,24 @@ impl Engine {
         self.mark_settings();
     }
 
+    pub(crate) fn answer_switch(&mut self, word: &str, add: bool) {
+        self.log(format!("switch answer add={add}"));
+        if add {
+            if self.switch.confirm(word, &mut self.exceptions) {
+                self.exceptions.write_to(&mut self.settings);
+                self.toast("toast.alwaysSwitch", &[("word", word.to_lowercase())]);
+            }
+        } else {
+            self.switch.decline(word);
+        }
+        self.switch.write_to(&mut self.settings);
+        self.mark_settings();
+    }
+
+    pub(crate) fn dismiss_switch(&mut self, word: &str) {
+        self.switch.dismiss(word);
+    }
+
     pub(crate) fn picker_choose(&mut self, index: usize, now: Instant) {
         self.run_deferred(Deferred::PickerChoose(index), now);
     }
@@ -1855,6 +1895,13 @@ impl Engine {
             self.undo = UndoLearner::from_settings(s);
         }
         self.undo.enabled = s.learn_on_undo_enabled;
+        if old.switch_strike_count != s.switch_strike_count
+            || old.switch_strike_time != s.switch_strike_time
+            || old.switch_declined_words != s.switch_declined_words
+        {
+            self.switch = SwitchLearner::from_settings(s);
+        }
+        self.switch.enabled = s.learn_on_switch_enabled;
         if old.typo_personal_words != s.typo_personal_words {
             self.typo = TypoFixer::new(s.typo_personal_words.clone());
             self.typo_cleaned = false;

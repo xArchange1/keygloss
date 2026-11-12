@@ -11,6 +11,7 @@
 //! - [`apps`]: built-in per-app policy tables (Windows process names).
 //! - [`typo`]: typo fixes (table, mechanical, numeric, two capitals, Caps Lock word).
 //! - [`undo`]: learning from undo.
+//! - [`switch_learn`]: learning from manual switches.
 //! - [`resonance`]: anti-resonance guard for automatic conversions.
 //! - [`double_space`]: the "double space inserts a period" tail rule.
 //! - [`snippets`]: snippet trigger matching, expansion and picker mapping.
@@ -34,4 +35,5 @@ pub mod settings;
 pub mod snippets;
 pub mod text_case;
 pub mod typo;
+pub mod switch_learn;
 pub mod undo;

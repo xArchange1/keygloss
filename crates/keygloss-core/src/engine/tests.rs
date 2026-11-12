@@ -1299,7 +1299,7 @@ fn two_undos_raise_the_banner_and_accepting_learns_the_word() {
     assert!(events.contains(&EngineEvent::LearnBanner { word: "ghbdtn".into() }));
     h.engine(|e, _| e.answer_learn("ghbdtn", true));
     let events = h.take_events();
-    assert!(events.iter().any(|e| matches!(e, EngineEvent::SettingsChanged(s) if s.learned_words == vec!["ghbdtn".to_string()])));
+    assert!(events.iter().any(|e| matches!(e, EngineEvent::SettingsChanged(s) if s.ignored_words.contains(&"ghbdtn".to_string()))));
     assert!(events.iter().any(|e| matches!(e, EngineEvent::Toast(t) if t.key == "toast.learned")));
     h.set_text("", false);
     h.click();
@@ -1553,4 +1553,43 @@ fn undo_after_typing_past_a_live_fix_counts() {
         h.advance(1000);
     }
     assert!(h.take_events().contains(&EngineEvent::LearnBanner { word: "ghbdtn".into() }));
+}
+
+// ---- Learn from switch ----
+
+#[test]
+fn two_manual_switches_raise_the_banner_and_accepting_adds_to_always_switch() {
+    let mut h = H::with(|s| s.auto_enabled = false);
+    for round in 0..2 {
+        h.set_text("", false);
+        h.set_layout(EN);
+        h.click();
+        h.keys("ghbdtn");
+        h.manual();
+        assert_eq!(h.text(), "привет", "round {round}");
+        h.advance(1000);
+    }
+    let events = h.take_events();
+    assert!(events.contains(&EngineEvent::SwitchBanner { from: "ghbdtn".into(), to: "привет".into() }));
+    h.engine(|e, _| e.answer_switch("привет", true));
+    let events = h.take_events();
+    assert!(events.iter().any(|e| matches!(e, EngineEvent::SettingsChanged(s) if s.force_swap_words == vec!["привет".to_string()])));
+    assert!(events.iter().any(|e| matches!(e, EngineEvent::Toast(t) if t.key == "toast.alwaysSwitch")));
+}
+
+#[test]
+fn undoing_an_automatic_fix_is_not_a_switch_request() {
+    let mut h = H::with(|s| s.learn_on_undo_enabled = false);
+    for round in 0..2 {
+        h.set_text("", false);
+        h.set_layout(EN);
+        h.click();
+        h.keys("ghbdtn ");
+        h.advance(100);
+        assert_eq!(h.text(), "привет ", "round {round}");
+        h.manual();
+        assert_eq!(h.text(), "ghbdtn ");
+        h.advance(1000);
+    }
+    assert!(!h.take_events().iter().any(|e| matches!(e, EngineEvent::SwitchBanner { .. } | EngineEvent::LearnBanner { .. })));
 }
