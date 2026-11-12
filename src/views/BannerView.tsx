@@ -6,7 +6,7 @@ import { Brand } from "../components/Brand";
 import { Button } from "../components/ui";
 
 type Item =
-  | { id: number; kind: "toast"; key: string; params: Record<string, string> }
+  | { id: number; kind: "toast"; key: string; params: Record<string, string>; ms: number }
   | { id: number; kind: "learn"; word: string }
   | { id: number; kind: "switch"; from: string; to: string };
 
@@ -17,6 +17,8 @@ const dismiss = (item: Item) => {
 };
 
 const TOAST_MS = 4000;
+/** The "Got it" toast that follows an answered question. */
+const ANSWERED_MS = 3000;
 const LEARN_MS = 20000;
 
 /** Info toasts (`toast`) and the "Keep as is?" / "Always switch?" questions (`learn-banner`, `switch-banner`). */
@@ -35,7 +37,10 @@ export function BannerView() {
       setItem(next);
     };
     const subs = [
-      ipc.on("toast", (p) => show({ id: ++seq, kind: "toast", key: p.key, params: p.params })),
+      ipc.on("toast", (p) => show({
+        id: ++seq, kind: "toast", key: p.key, params: p.params,
+        ms: current.current && current.current.kind !== "toast" ? ANSWERED_MS : TOAST_MS,
+      })),
       ipc.on("learn-banner", (p) => show({ id: ++seq, kind: "learn", word: p.word })),
       ipc.on("switch-banner", (p) => show({ id: ++seq, kind: "switch", from: p.from, to: p.to })),
     ];
@@ -59,7 +64,7 @@ export function BannerView() {
     const timer = setTimeout(() => {
       dismiss(item);
       leave();
-    }, item.kind === "toast" ? TOAST_MS : LEARN_MS);
+    }, item.kind === "toast" ? item.ms : LEARN_MS);
     return () => clearTimeout(timer);
   }, [item]);
 
