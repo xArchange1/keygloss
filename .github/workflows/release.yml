@@ -1,7 +1,8 @@
 name: Release
 
-# Pushing a tag v<version> publishes that version: a signed NSIS installer and the updater
-# manifest (latest.json) the app reads. A version with a suffix (v0.2.0-beta.1) is a pre-release.
+# Pushing a tag v<version> publishes that version: NSIS and MSI installers, their updater signatures
+# (.sig) and the updater manifest (latest.json) the app reads. A version with a suffix
+# (v0.2.0-beta.1) is a pre-release, built as NSIS only: WiX rejects non-numeric pre-release versions.
 on:
   push:
     tags: ["v*"]
@@ -43,4 +44,6 @@ jobs:
           releaseName: Keygloss ${{ github.ref_name }}
           releaseBody: ${{ steps.notes.outputs.body }}
           prerelease: ${{ contains(github.ref_name, '-') }}
-          args: --config src-tauri/tauri.release.conf.json
+          # Installed copies update through the NSIS installer, not the MSI.
+          updaterJsonPreferNsis: true
+          args: --config src-tauri/tauri.release.conf.json${{ contains(github.ref_name, '-') && ' --bundles nsis' || '' }}
