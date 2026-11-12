@@ -58,8 +58,8 @@ export function GeneralPage() {
             onChange={(language) => update({ language })}
             // Order: English, Russian, then any other language.
             options={[
-              { value: "en", label: "English" },
-              { value: "ru", label: "Русский" },
+              { value: "en", label: "English (English)" },
+              { value: "ru", label: "Russian (Русский)" },
             ]} />
         } />
         <SwitchRow title={t("gen.login")} checked={login}
