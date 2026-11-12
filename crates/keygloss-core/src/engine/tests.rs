@@ -1253,6 +1253,17 @@ fn typo_fix_and_its_undo() {
 }
 
 #[test]
+fn typo_learned_before_its_fix_existed_is_fixed() {
+    // Counted as the user's own word by an older version that could not fix it.
+    let mut h = H::with(|s| {
+        s.typo_personal_words.insert("tlephone".into(), 2);
+    });
+    h.keys("tlephone ");
+    h.advance(100);
+    assert_eq!(h.text(), "telephone ");
+}
+
+#[test]
 fn two_caps_fix() {
     // On by default.
     let mut h = H::boundary();

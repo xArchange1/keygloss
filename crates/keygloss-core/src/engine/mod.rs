@@ -240,6 +240,8 @@ pub(crate) struct Engine {
     exceptions: Exceptions,
     undo: UndoLearner,
     typo: TypoFixer,
+    /// [`TypoFixer::forget_wrongfully_learned`] ran on the loaded data.
+    typo_cleaned: bool,
     snippets: SnippetIndex,
     keymap: Keymap,
     buffer: WordBuffer,
@@ -322,6 +324,7 @@ impl Engine {
             exceptions: Exceptions::from_settings(&settings),
             undo: UndoLearner::from_settings(&settings),
             typo: TypoFixer::new(settings.typo_personal_words.clone()),
+            typo_cleaned: false,
             snippets: SnippetIndex::new(&keymap, &settings.snippets_ordered),
             keymap,
             buffer: WordBuffer::new(),
@@ -1321,6 +1324,13 @@ impl Engine {
             self.apply_text_fix(word, &fixed, item, now);
             return;
         }
+        if !self.typo_cleaned {
+            self.typo_cleaned = true;
+            let n = self.typo.forget_wrongfully_learned(data);
+            if n > 0 {
+                self.log(format!("typo personal words: removed {n} with a known fix"));
+            }
+        }
         self.typo.note_typed(data, word);
         if self.typo.personal != self.settings.typo_personal_words {
             self.settings.typo_personal_words = self.typo.personal.clone();
@@ -1847,6 +1857,7 @@ impl Engine {
         self.undo.enabled = s.learn_on_undo_enabled;
         if old.typo_personal_words != s.typo_personal_words {
             self.typo = TypoFixer::new(s.typo_personal_words.clone());
+            self.typo_cleaned = false;
         }
         self.gestures = Default::default();
         self.rebuild_keymap();
