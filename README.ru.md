@@ -37,6 +37,10 @@ pnpm install
 pnpm tauri dev
 ```
 
+## Благодарности
+
+Вдохновлено [Keyboop](https://keyboop.com) ([GitHub](https://github.com/iffuno/keyboop)). Его автор не планирует версии для Windows и Linux, поэтому появился Keygloss.
+
 ## Лицензия
 
 MIT, см. [LICENSE](LICENSE).
