@@ -7,6 +7,7 @@ const key = (k: KeyCode, m: Partial<Modifiers> = {}): Hotkey => ({ mode: "key", 
 /** Ready-made choices per feature. Default first where the feature has one. */
 export const PRESETS: Record<HotkeyTarget, Hotkey[]> = {
   manual: [
+    { mode: "doubletap", key: "ShiftLeft" },
     key("Pause"),
     key("ScrollLock"),
     { mode: "modkey", key: "ControlRight" },

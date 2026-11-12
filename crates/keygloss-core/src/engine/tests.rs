@@ -379,6 +379,7 @@ impl H {
     fn with(edit: impl FnOnce(&mut Settings)) -> H {
         data::warm_up();
         let mut settings = Settings::default();
+        settings.hotkey = hotkey(KeyCode::Pause, Modifiers::NONE); // `manual()` presses Pause
         edit(&mut settings);
         let os = FakeOs::new();
         let clock = Arc::new(FakeClock { base: Instant::now(), offset: Mutex::new(Duration::ZERO) });
@@ -953,6 +954,16 @@ fn double_tap_within_300ms_either_side() {
     h.tap(KeyCode::ShiftLeft);
     h.advance(10);
     assert!(!fired(&h, "ru"), "a key between the taps");
+}
+
+#[test]
+fn default_manual_hotkey_is_double_shift() {
+    let mut h = H::with(|s| s.hotkey = Settings::default().hotkey);
+    h.tap(KeyCode::ShiftLeft);
+    h.advance(100);
+    h.tap(KeyCode::ShiftLeft);
+    h.advance(10);
+    assert!(fired(&h, "en"));
 }
 
 #[test]

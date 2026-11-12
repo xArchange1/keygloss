@@ -448,8 +448,7 @@ mod tests {
 
     #[test]
     fn clashes_with_our_hotkeys() {
-        let mut s = Settings::default();
-        // Default manual hotkey is Pause.
+        let mut s = Settings { hotkey: key(KeyCode::Pause, NONE), ..Settings::default() };
         let c = check_hotkey(HotkeyTarget::CaseChange, &key(KeyCode::Pause, NONE), &s);
         assert_eq!((c.verdict, c.conflicts_with), (HotkeyVerdict::Blocked, Some(HotkeyTarget::Manual)));
         // Re-assigning a feature its own hotkey is not a clash.
