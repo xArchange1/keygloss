@@ -53,6 +53,7 @@ export interface Settings {
   dedupeChatter: boolean;
   groupConvert: boolean;
   learnOnUndoEnabled: boolean;
+  learnOnSwitchEnabled: boolean;
   // Typo fixes
   typoFix: boolean;
   twoCapsFix: boolean;
@@ -75,7 +76,6 @@ export interface Settings {
   // Exceptions (app keys are lowercase exe names, e.g. "code.exe")
   ignoredWords: string[];
   forceSwapWords: string[];
-  learnedWords: string[];
   appExceptionModes: Record<string, AppMode>;
   /** exe name -> "en" | "ru" */
   appForcedLayouts: Record<string, string>;
@@ -92,6 +92,9 @@ export interface Settings {
   undoDeclinedWords: string[];
   undoStrikeCount: Record<string, number>;
   undoStrikeTime: Record<string, number>;
+  switchDeclinedWords: string[];
+  switchStrikeCount: Record<string, number>;
+  switchStrikeTime: Record<string, number>;
   typoPersonalWords: Record<string, number>;
   // Layouts
   lastLayoutCyr: string;
@@ -154,6 +157,11 @@ export interface LearnBanner {
   word: string;
 }
 
+export interface SwitchBanner {
+  from: string;
+  to: string;
+}
+
 export interface Toast {
   /** i18n key. */
   key: string;
@@ -179,15 +187,15 @@ const NO_MODS: Modifiers = { ctrl: false, alt: false, shift: false, meta: false 
 let memSettings: Settings = {
   autoEnabled: true, liveFixEnabled: true, autoMinLetters: 1, inlineLiveFix: true, triggerSpace: true,
   triggerEnter: true, triggerTab: false, enterPreConvert: true, arrowsCancel: true,
-  developerMode: false, dedupeChatter: false, groupConvert: true, learnOnUndoEnabled: true,
+  developerMode: false, dedupeChatter: false, groupConvert: true, learnOnUndoEnabled: true, learnOnSwitchEnabled: true,
   typoFix: true, twoCapsFix: true, sound: "beep", soundVolume: 0.6, soundFile: "",
   hotkey: { mode: "key", key: "Pause", mods: NO_MODS }, caseChangeHotkey: null, plainPaste: false,
   plainPasteHotkey: { mode: "key", key: "KeyV", mods: { ...NO_MODS, ctrl: true, shift: true } },
   snippetPickHotkey: null, pauseMinutes: 15, pausedUntil: 0, ignoredWords: ["вк", "тг", "vk"],
-  forceSwapWords: [], learnedWords: [], appExceptionModes: {}, appForcedLayouts: {},
+  forceSwapWords: [], appExceptionModes: {}, appForcedLayouts: {},
   seededDefaultApps: [], snippetsOrdered: [], snippetExpandSpace: true, snippetExpandEnter: true,
   snippetExpandTab: true, textSnippets: [], undoDeclinedWords: [], undoStrikeCount: {},
-  undoStrikeTime: {}, typoPersonalWords: {}, lastLayoutCyr: "", lastLayoutLat: "",
+  undoStrikeTime: {}, switchDeclinedWords: [], switchStrikeCount: {}, switchStrikeTime: {}, typoPersonalWords: {}, lastLayoutCyr: "", lastLayoutLat: "",
   language: "auto", appTheme: "system", didInitialSetup: false, didShowWelcome: false, rescuedCount: 0,
   updateCheckOnStartup: true, autoUpdate: false, updateChannel: "stable",
   showWhatsNew: true, historyKeepDays: 0, lastSeenVersion: "",
@@ -236,6 +244,11 @@ export const listApps = () => invoke<AppInfo[]>("list_apps");
 export const getAmbiguousPairs = () => invoke<AmbiguousPair[]>("get_ambiguous_pairs");
 export const answerLearnBanner = (word: string, keep: boolean) =>
   invoke<void>("answer_learn_banner", { word, keep });
+/** `add` puts `word` (the switched-to form) into "Always switch"; otherwise it is never asked about again. */
+export const answerSwitchBanner = (word: string, add: boolean) =>
+  invoke<void>("answer_switch_banner", { word, add });
+/** The switch banner timed out unanswered. */
+export const dismissSwitchBanner = (word: string) => invoke<void>("dismiss_switch_banner", { word });
 /** 0-based index into the picker entries. */
 export const snippetPickerChoose = (index: number) =>
   invoke<void>("snippet_picker_choose", { index });
@@ -281,6 +294,7 @@ interface EventPayloads {
   "engine-status": EngineStatus;
   "hotkey-captured": Hotkey;
   "learn-banner": LearnBanner;
+  "switch-banner": SwitchBanner;
   toast: Toast;
   "snippet-picker-open": SnippetPickerOpen;
   "snippet-picker-close": null;

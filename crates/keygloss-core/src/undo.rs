@@ -56,6 +56,9 @@ pub struct UndoLearner {
     pending: HashSet<String>,
     session_protected: HashSet<String>,
     candidate: Option<Candidate>,
+    /// Our last automatic conversion `(converted, original, at)`, lowercase, tracked even when
+    /// learning is off or the word cannot be learned.
+    last_auto: Option<(String, String, f64)>,
 }
 
 impl UndoLearner {
@@ -135,10 +138,18 @@ impl UndoLearner {
     pub fn note_conversion(&mut self, original: &str, converted: &str, now: f64, learned: &HashSet<String>) {
         self.candidate = None;
         let (o, c) = (original.to_lowercase(), converted.to_lowercase());
+        self.last_auto = Some((c.clone(), o.clone(), now));
         if !self.enabled || o == c || o.is_empty() || c.is_empty() || learned.contains(&o) || self.declined.contains(&o) {
             return;
         }
         self.candidate = Some(Candidate { original: o, converted: c, created_at: now, stage: Stage::Fresh });
+    }
+
+    /// `from`→`to` by hotkey reverses our recent automatic conversion (an undo, not a switch).
+    pub fn reverses_last_conversion(&self, from: &str, to: &str, now: f64) -> bool {
+        self.last_auto.as_ref().is_some_and(|(c, o, at)| {
+            now - at <= UNDO_WINDOW_SECS && from.to_lowercase().starts_with(c) && to.to_lowercase().starts_with(o)
+        })
     }
 
     /// The user flipped `from` into `to` by hotkey. A reversal of our recent conversion is an
@@ -234,7 +245,7 @@ impl UndoLearner {
     pub fn confirm_learn(&mut self, word: &str, exceptions: &mut Exceptions) -> bool {
         let w = word.to_lowercase();
         self.pending.remove(&w);
-        if exceptions.learned.contains(&w) {
+        if exceptions.ignored.contains(&w) {
             return false;
         }
         exceptions.add_learned(&w);
@@ -295,10 +306,10 @@ mod tests {
         assert_eq!(u.strike_count("гифки"), 0);
         let mut exc = Exceptions::default();
         assert!(u.confirm_learn("гифки", &mut exc));
-        assert!(exc.learned.contains("гифки"));
+        assert!(exc.ignored.contains("гифки"));
         // A learned word is no longer a candidate.
-        u.note_conversion("гифки", "ubarb", 40.0, &exc.learned);
-        assert!(u.note_manual_convert("ubarb", "гифки", 41.0, &exc.learned).is_none());
+        u.note_conversion("гифки", "ubarb", 40.0, &exc.ignored);
+        assert!(u.note_manual_convert("ubarb", "гифки", 41.0, &exc.ignored).is_none());
     }
 
     #[test]

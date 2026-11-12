@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import * as ipc from "../../lib/ipc";
 import type { AppInfo, AppMode } from "../../lib/ipc";
 import { useSettings, useUpdate } from "../../store";
-import { BlockTitle, Button, Card, Chips, Hint, PageTitle, Segmented, Select, TextInput } from "../../components/ui";
+import { BlockTitle, Button, Card, Chips, PageTitle, Segmented, Select, TextInput } from "../../components/ui";
 
 const sorted = (words: string[]) => [...words].sort((a, b) => a.localeCompare(b));
 const without = (words: string[], w: string) => words.filter((x) => x !== w);
@@ -104,16 +104,6 @@ export function ExceptionsPage({ onOpenAmbiguous }: { onOpenAmbiguous: () => voi
         onAdd={(w) => update({ forceSwapWords: [...s.forceSwapWords, w], ignoredWords: without(s.ignoredWords, w) })} />
       <Chips words={sorted(s.forceSwapWords)} empty={t("exc.empty")}
         onRemove={(w) => update({ forceSwapWords: without(s.forceSwapWords, w) })} />
-
-      <BlockTitle title={t("exc.learnedTitle")} />
-      <Chips words={sorted(s.learnedWords)} empty={t("exc.learnedEmpty")}
-        onRemove={(w) => update({ learnedWords: without(s.learnedWords, w) })} />
-      <div className="mt-2 flex items-start justify-between gap-4">
-        <Hint>{t("exc.learnedHint")}</Hint>
-        <Button className="mt-1.5" disabled={!s.learnedWords.length} onClick={() => update({ learnedWords: [] })}>
-          {t("common.clear")}
-        </Button>
-      </div>
     </>
   );
 }

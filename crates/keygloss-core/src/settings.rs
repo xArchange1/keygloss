@@ -98,6 +98,7 @@ pub struct Settings {
     pub dedupe_chatter: bool,
     pub group_convert: bool,
     pub learn_on_undo_enabled: bool,
+    pub learn_on_switch_enabled: bool,
 
     // Typo fixes
     pub typo_fix: bool,
@@ -130,7 +131,6 @@ pub struct Settings {
     // Exceptions (app keys are lowercase executable names, e.g. "code.exe")
     pub ignored_words: Vec<String>,
     pub force_swap_words: Vec<String>,
-    pub learned_words: Vec<String>,
     pub app_exception_modes: BTreeMap<String, AppMode>,
     /// Layout language forced when the app comes to the foreground: "en" or "ru".
     pub app_forced_layouts: BTreeMap<String, String>,
@@ -151,6 +151,10 @@ pub struct Settings {
     pub undo_strike_count: BTreeMap<String, u32>,
     /// Unix seconds of the last strike per word.
     pub undo_strike_time: BTreeMap<String, f64>,
+    pub switch_declined_words: Vec<String>,
+    pub switch_strike_count: BTreeMap<String, u32>,
+    /// Unix seconds of the last manual switch per word.
+    pub switch_strike_time: BTreeMap<String, f64>,
     /// How many times each unknown word was typed.
     pub typo_personal_words: BTreeMap<String, u32>,
 
@@ -199,6 +203,7 @@ impl Default for Settings {
             dedupe_chatter: false,
             group_convert: true,
             learn_on_undo_enabled: true,
+            learn_on_switch_enabled: true,
 
             typo_fix: true,
             two_caps_fix: true,
@@ -221,7 +226,6 @@ impl Default for Settings {
 
             ignored_words: vec!["вк".into(), "тг".into(), "vk".into()],
             force_swap_words: Vec::new(),
-            learned_words: Vec::new(),
             app_exception_modes: BTreeMap::new(),
             app_forced_layouts: BTreeMap::new(),
             seeded_default_apps: Vec::new(),
@@ -235,6 +239,9 @@ impl Default for Settings {
             undo_declined_words: Vec::new(),
             undo_strike_count: BTreeMap::new(),
             undo_strike_time: BTreeMap::new(),
+            switch_declined_words: Vec::new(),
+            switch_strike_count: BTreeMap::new(),
+            switch_strike_time: BTreeMap::new(),
             typo_personal_words: BTreeMap::new(),
 
             last_layout_cyr: String::new(),

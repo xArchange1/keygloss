@@ -10,6 +10,8 @@ use tauri::{AppHandle, Manager, Wry};
 use tauri_plugin_store::{Store, StoreExt};
 
 pub const FILE: &str = "settings.json";
+/// Old key: words learned from undo, now kept in `ignoredWords` ("Never switch").
+const OLD_LEARNED: &str = "learnedWords";
 /// Changes within this window are written to disk once.
 const SAVE_DEBOUNCE: Duration = Duration::from_millis(500);
 
@@ -31,6 +33,7 @@ pub fn settings_from_entries(entries: impl IntoIterator<Item = (String, Value)>)
     if stored("soundEnabled", false) || stored("silentMode", true) {
         merged.insert("sound".into(), "off".into());
     }
+    let old_learned = entries.iter().find(|(k, _)| k == OLD_LEARNED).map(|(_, v)| v.clone());
     for (key, value) in entries {
         if !merged.contains_key(&key) {
             continue;
@@ -42,11 +45,23 @@ pub fn settings_from_entries(entries: impl IntoIterator<Item = (String, Value)>)
             merged.insert(key, previous);
         }
     }
-    serde_json::from_value(Value::Object(merged)).unwrap_or_default()
+    let mut s: Settings = serde_json::from_value(Value::Object(merged)).unwrap_or_default();
+    if let Some(Value::Array(old)) = old_learned {
+        for w in old.iter().filter_map(Value::as_str) {
+            if !s.ignored_words.iter().any(|x| x == w) {
+                s.ignored_words.push(w.to_string());
+            }
+        }
+    }
+    s
 }
 
 pub fn load(store: &Store<Wry>) -> Settings {
-    settings_from_entries(store.entries())
+    let s = settings_from_entries(store.entries());
+    if store.delete(OLD_LEARNED) {
+        save(store, &s);
+    }
+    s
 }
 
 /// Puts every key into the store; the store's debounce writes the file.
@@ -94,12 +109,16 @@ mod tests {
         let s = settings_from_entries(entries(json!({
             "autoEnabled": "yes",
             "hotkey": { "mode": "nope" },
-            "learnedWords": ["ок"],
             "someOldKey": 1,
         })));
         assert!(s.auto_enabled);
         assert_eq!(s.hotkey, Settings::default().hotkey);
-        assert_eq!(s.learned_words, vec!["ок".to_string()]);
+    }
+
+    #[test]
+    fn old_learned_words_move_to_ignored() {
+        let s = settings_from_entries(entries(json!({ "ignoredWords": ["vk"], "learnedWords": ["ок", "vk"] })));
+        assert_eq!(s.ignored_words, vec!["vk".to_string(), "ок".to_string()]);
     }
 
     #[test]

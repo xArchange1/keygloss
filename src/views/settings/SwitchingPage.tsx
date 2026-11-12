@@ -72,6 +72,8 @@ export function SwitchingPage() {
             onChange={(hotkey) => update({ hotkey })} />} />
         <SwitchRow title={t("switch.learn")} sub={t("switch.learnSub")} checked={s.learnOnUndoEnabled}
           onChange={(v) => update({ learnOnUndoEnabled: v })} />
+        <SwitchRow title={t("switch.learnSwitch")} sub={t("switch.learnSwitchSub")} checked={s.learnOnSwitchEnabled}
+          onChange={(v) => update({ learnOnSwitchEnabled: v })} />
       </Card>
 
       <SectionTitle>{t("switch.trig")}</SectionTitle>

@@ -23,6 +23,7 @@ pub const EVENT_ENGINE_STATUS: &str = "engine-status";
 pub const EVENT_HOTKEY_CAPTURED: &str = "hotkey-captured";
 /// Payload: `{ word }`.
 pub const EVENT_LEARN_BANNER: &str = "learn-banner";
+pub const EVENT_SWITCH_BANNER: &str = "switch-banner";
 /// Payload: [`keygloss_core::engine::Toast`].
 pub const EVENT_TOAST: &str = "toast";
 /// Payload: `{ snippets: [name, text][] }`.
@@ -53,6 +54,7 @@ pub fn ui_event(ev: &EngineEvent, time: impl Fn(f64) -> String) -> Option<(&'sta
             (EVENT_TOAST, v(&t))
         }
         EngineEvent::LearnBanner { word } => (EVENT_LEARN_BANNER, json!({ "word": word })),
+        EngineEvent::SwitchBanner { from, to } => (EVENT_SWITCH_BANNER, json!({ "from": from, "to": to })),
         EngineEvent::SnippetPickerOpen { snippets } => (EVENT_SNIPPET_PICKER_OPEN, json!({ "snippets": snippets })),
         EngineEvent::SnippetPickerClose => (EVENT_SNIPPET_PICKER_CLOSE, Value::Null),
         EngineEvent::HotkeyCaptured(h) => (EVENT_HOTKEY_CAPTURED, v(h)),
@@ -165,7 +167,7 @@ pub async fn get_ambiguous_pairs() -> Vec<AmbiguousPair> {
         .collect()
 }
 
-/// `keep` adds the word to learned words, otherwise it is declined.
+/// `keep` adds the word to "Never switch", otherwise it is declined.
 #[tauri::command]
 pub fn answer_learn_banner(state: State<AppState>, word: String, keep: bool) {
     if let Some(e) = &state.engine {
@@ -178,6 +180,22 @@ pub fn answer_learn_banner(state: State<AppState>, word: String, keep: bool) {
 pub fn dismiss_learn_banner(state: State<AppState>, word: String) {
     if let Some(e) = &state.engine {
         e.dismiss_learn_banner(&word);
+    }
+}
+
+/// `add` puts the word into "Always switch", otherwise it is declined.
+#[tauri::command]
+pub fn answer_switch_banner(state: State<AppState>, word: String, add: bool) {
+    if let Some(e) = &state.engine {
+        e.answer_switch_banner(&word, add);
+    }
+}
+
+/// The switch banner timed out unanswered.
+#[tauri::command]
+pub fn dismiss_switch_banner(state: State<AppState>, word: String) {
+    if let Some(e) = &state.engine {
+        e.dismiss_switch_banner(&word);
     }
 }
 
@@ -343,6 +361,10 @@ mod tests {
         let ev = |e: EngineEvent| ui_event(&e, none).unwrap();
         assert_eq!(ev(EngineEvent::LearnBanner { word: "ok".into() }), ("learn-banner", json!({ "word": "ok" })));
         assert_eq!(
+            ev(EngineEvent::SwitchBanner { from: "vs".into(), to: "мы".into() }),
+            ("switch-banner", json!({ "from": "vs", "to": "мы" }))
+        );
+        assert_eq!(
             ev(EngineEvent::SnippetPickerOpen { snippets: vec![("a".into(), "b".into())] }),
             ("snippet-picker-open", json!({ "snippets": [["a", "b"]] }))
         );
@@ -380,11 +402,12 @@ mod tests {
             "autoMinLetters",
             "autoEnabled", "liveFixEnabled", "inlineLiveFix", "triggerSpace", "triggerEnter", "triggerTab",
             "enterPreConvert", "arrowsCancel", "developerMode", "dedupeChatter", "groupConvert",
-            "learnOnUndoEnabled", "typoFix", "twoCapsFix", "sound", "soundVolume", "soundFile", "hotkey",
+            "learnOnUndoEnabled", "learnOnSwitchEnabled", "typoFix", "twoCapsFix", "sound", "soundVolume", "soundFile", "hotkey",
             "caseChangeHotkey", "plainPaste", "plainPasteHotkey", "snippetPickHotkey", "pauseMinutes",
-            "pausedUntil", "ignoredWords", "forceSwapWords", "learnedWords", "appExceptionModes",
+            "pausedUntil", "ignoredWords", "forceSwapWords", "appExceptionModes",
             "appForcedLayouts", "seededDefaultApps", "snippetsOrdered", "snippetExpandSpace", "snippetExpandEnter",
             "snippetExpandTab", "textSnippets", "undoDeclinedWords", "undoStrikeCount", "undoStrikeTime",
+            "switchDeclinedWords", "switchStrikeCount", "switchStrikeTime",
             "typoPersonalWords", "lastLayoutCyr", "lastLayoutLat", "language", "appTheme", "didInitialSetup",
             "didShowWelcome", "rescuedCount", "updateCheckOnStartup", "autoUpdate", "updateChannel", "showWhatsNew",
             "historyKeepDays",

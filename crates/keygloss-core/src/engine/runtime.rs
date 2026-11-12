@@ -451,7 +451,7 @@ impl EngineHandle {
         self.with(|e, _| check_hotkey(target, hotkey, e.settings()))
     }
 
-    /// "Keep <word> as is?": `keep` adds it to learned words, otherwise it is declined for good.
+    /// "Keep <word> as is?": `keep` adds it to "Never switch", otherwise it is declined for good.
     pub fn answer_learn_banner(&self, word: &str, keep: bool) {
         self.with(|e, _| e.answer_learn(word, keep));
     }
@@ -459,6 +459,16 @@ impl EngineHandle {
     /// The banner timed out unanswered.
     pub fn dismiss_learn_banner(&self, word: &str) {
         self.with(|e, _| e.dismiss_learn(word));
+    }
+
+    /// "Always switch to <word>?": `add` puts it into "Always switch", otherwise it is declined for good.
+    pub fn answer_switch_banner(&self, word: &str, add: bool) {
+        self.with(|e, _| e.answer_switch(word, add));
+    }
+
+    /// The switch banner timed out unanswered.
+    pub fn dismiss_switch_banner(&self, word: &str) {
+        self.with(|e, _| e.dismiss_switch(word));
     }
 
     /// Inserts picker entry `index` (0-based) and closes the picker.

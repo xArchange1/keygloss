@@ -14,8 +14,6 @@ pub struct Exceptions {
     /// Always converted into (a word typed in the other layout that maps here is converted;
     /// the word itself typed as is stays).
     pub force_swap: HashSet<String>,
-    /// Learned from undo; kept like `ignored`.
-    pub learned: HashSet<String>,
 }
 
 /// Result of [`Exceptions::add_ignored`].
@@ -46,7 +44,6 @@ impl Exceptions {
         Exceptions {
             ignored: set(&s.ignored_words),
             force_swap: set(&s.force_swap_words),
-            learned: set(&s.learned_words),
         }
     }
 
@@ -59,7 +56,6 @@ impl Exceptions {
         };
         s.ignored_words = sorted(&self.ignored);
         s.force_swap_words = sorted(&self.force_swap);
-        s.learned_words = sorted(&self.learned);
     }
 
     /// An entry with whitespace can never match a token, so it is refused.
@@ -67,9 +63,9 @@ impl Exceptions {
         !word.chars().any(char::is_whitespace)
     }
 
-    /// Ignored or learned (the user's own "keep" lists).
+    /// On the user's "Never switch" list.
     pub fn is_kept(&self, w: &str) -> bool {
-        self.ignored.contains(w) || self.learned.contains(w)
+        self.ignored.contains(w)
     }
 
     pub fn add_ignored(&mut self, word: &str, data: &LangData) -> AddOutcome {
@@ -111,19 +107,13 @@ impl Exceptions {
         self.force_swap.remove(&word.to_lowercase());
     }
 
+    /// Learned from undo: goes to "Never switch" (and leaves "Always switch").
     pub fn add_learned(&mut self, word: &str) {
         let w = word.to_lowercase();
         if !w.is_empty() {
-            self.learned.insert(w);
+            self.force_swap.remove(&w);
+            self.ignored.insert(w);
         }
-    }
-
-    pub fn remove_learned(&mut self, word: &str) {
-        self.learned.remove(&word.to_lowercase());
-    }
-
-    pub fn set_learned(&mut self, words: &[String]) {
-        self.learned = clean(words);
     }
 
     /// Current choice for a pair: only the user's explicit force-swap entries count.
@@ -192,6 +182,6 @@ mod tests {
         assert!(e.ignored.contains("vk"));
         e.add_learned("Гифки");
         e.write_to(&mut s);
-        assert_eq!(s.learned_words, vec!["гифки".to_string()]);
+        assert!(s.ignored_words.contains(&"гифки".to_string()));
     }
 }
