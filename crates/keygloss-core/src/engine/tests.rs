@@ -1153,9 +1153,9 @@ fn password_field_is_never_touched() {
     let mut h = H::with(|s| s.snippets_ordered.push(("!br".into(), "Best regards".into())));
     h.os.os().password = true;
     h.click();
-    h.keys("ghjuhfvvf ghbdtn !br ");
+    h.keys("ghjuhfvvf ghbdtn !br\t");
     h.advance(300);
-    assert_eq!(h.text(), "ghjuhfvvf ghbdtn !br ");
+    assert_eq!(h.text(), "ghjuhfvvf ghbdtn !br\t");
     h.set_text("ghbdtn", true);
     h.manual();
     assert_eq!(h.text(), "ghbdtn");
@@ -1184,11 +1184,25 @@ fn snippet_expands_in_either_layout() {
         e.set_settings(s, Instant::now());
     });
     assert_eq!(h.text(), "");
-    h.keys("!br ");
-    assert_eq!(h.text(), "Best regards ");
+    h.keys("!br\t");
+    assert_eq!(h.text(), "Best regards\t");
     h.set_layout(RU);
-    h.keys("!br\n");
-    assert_eq!(h.text(), "Best regards Best regards\n");
+    h.keys("!br\t");
+    assert_eq!(h.text(), "Best regards\tBest regards\t");
+}
+
+#[test]
+fn snippet_expands_only_on_tab_by_default() {
+    let mut h = H::boundary();
+    h.shared.with(|e| {
+        let mut s = e.settings().clone();
+        s.snippets_ordered.push(("!br".into(), "Best regards".into()));
+        e.set_settings(s, Instant::now());
+    });
+    h.keys("!br !br\n");
+    assert_eq!(h.text(), "!br !br\n");
+    h.keys("!br\t");
+    assert_eq!(h.text(), "!br !br\nBest regards\t");
 }
 
 #[test]
