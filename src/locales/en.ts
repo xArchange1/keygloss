@@ -209,6 +209,11 @@ const en = {
     openLogs: "Open the log folder",
     feedbackHint: "Opens a GitHub form in your browser with the app version, the Windows version and the latest log lines filled in. Nothing is sent until you submit it. The log has no typed text: only lengths, app names and layouts.",
   },
+  updDialog: {
+    title: "Keygloss {{version}} is available",
+    later: "Later",
+    noNotes: "No notes for this version.",
+  },
   whatsNew: {
     title: "What’s new",
     close: "Got it",
@@ -257,6 +262,10 @@ const en = {
     go: "Let’s go",
   },
   banner: {
+    updateTitle: "Keygloss {{version}} is available",
+    updateBody: "Install it now, or see what’s new first.",
+    updateNotes: "What’s new",
+    updateInstall: "Install",
     learnTitle: "Keep “{{word}}” as is?",
     learnBody: "Add it to “Never switch” so Keygloss stops switching it?",
     switchTitle: "Always switch “{{from}}” to “{{to}}”?",
@@ -271,7 +280,6 @@ const en = {
     resumed: "Back on duty",
     autoOn: "Auto-switch is on",
     autoOff: "Auto-switch is off",
-    updateAvailable: "Keygloss {{version}} is available. Install it in Settings → General",
     nothingToConvert: "Nothing to convert: type a word or select some text",
     noSelection: "Select some text first",
     caseTooLong: "Too much selected: case changes work on up to {{max}} characters",

@@ -24,7 +24,7 @@ export function GeneralPage() {
   };
   useEffect(() => {
     ipc.appVersion().then(setVersion).catch(console.error);
-    ipc.pendingUpdate().then((v) => found(v) && setUpd("available")).catch(console.error);
+    ipc.pendingUpdate().then((u) => found(u?.version ?? null) && setUpd("available")).catch(console.error);
   }, []);
   const check = () => {
     setUpd("checking");

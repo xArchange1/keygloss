@@ -24,6 +24,15 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: pnpm install --frozen-lockfile
+      # The release body is also `notes` in latest.json: the update dialog shows it.
+      - id: notes
+        shell: bash
+        run: |
+          {
+            echo 'body<<NOTES_EOF'
+            node --experimental-strip-types scripts/release-notes.ts "${GITHUB_REF_NAME#v}"
+            echo NOTES_EOF
+          } >> "$GITHUB_OUTPUT"
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -32,5 +41,6 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: Keygloss ${{ github.ref_name }}
+          releaseBody: ${{ steps.notes.outputs.body }}
           prerelease: ${{ contains(github.ref_name, '-') }}
           args: --config src-tauri/tauri.release.conf.json

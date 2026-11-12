@@ -74,7 +74,7 @@ pub async fn install(app: &AppHandle) -> Result<(), String> {
     update.download_and_install(|_, _| {}, || {}).await.map_err(|e| e.to_string())
 }
 
-/// The startup check: installs what it finds, or says so in a toast.
+/// The startup check: installs what it finds, or offers it in the banner.
 pub fn on_startup(app: &AppHandle) {
     let settings = app.state::<AppState>().settings();
     // Not in dev runs: an update would install over the build being worked on.
@@ -90,8 +90,7 @@ pub fn on_startup(app: &AppHandle) {
                 }
             }
             Ok(Some(version)) => {
-                let toast = json!({ "key": "toast.updateAvailable", "params": { "version": version } });
-                let _ = app.emit(ipc::EVENT_TOAST, toast);
+                let _ = app.emit(ipc::EVENT_UPDATE_BANNER, json!({ "version": version }));
                 crate::on_main(&app, windows::show_banner);
             }
             Ok(None) => {}

@@ -176,6 +176,17 @@ export interface HistoryEntry {
   to: string;
 }
 
+export interface UpdateBanner {
+  version: string;
+}
+
+/** The update found by the last check. */
+export interface PendingUpdate {
+  version: string;
+  /** Release notes, see src/lib/releaseNotes.ts. */
+  notes: string | null;
+}
+
 export interface SnippetPickerOpen {
   /** [name, text] */
   snippets: [string, string][];
@@ -267,11 +278,13 @@ export const appVersion = () => invoke<string>("app_version");
 /** Asks GitHub for a newer release on the chosen channel: its version, or null. */
 export const checkForUpdate = () => invoke<string | null>("check_for_update");
 /** Version found by the last check (the startup one too), or null. */
-export const pendingUpdate = () => invoke<string | null>("pending_update");
+export const pendingUpdate = () => invoke<PendingUpdate | null>("pending_update");
 /** True once after an update with `showWhatsNew` on: show the release notes. */
 export const takeWhatsNew = () => invoke<boolean>("take_whats_new");
 /** Downloads and installs the update found by the last check; the app restarts. */
 export const installUpdate = () => invoke<void>("install_update");
+/** Opens Settings on the pending update's notes (`show-update`). */
+export const openUpdate = () => invoke<void>("open_update");
 /** Opens the GitHub bug form (`bug`) or feature form in the browser, prefilled with the app version, the Windows version and (bug form) the newest log lines. */
 export const reportIssue = (bug: boolean) => invoke<void>("report_issue", { bug });
 /** Shows the folder with the log files in Explorer. */
@@ -299,6 +312,8 @@ interface EventPayloads {
   "learn-banner": LearnBanner;
   "switch-banner": SwitchBanner;
   toast: Toast;
+  "update-banner": UpdateBanner;
+  "show-update": null;
   "snippet-picker-open": SnippetPickerOpen;
   "snippet-picker-close": null;
   /** Newest first. */

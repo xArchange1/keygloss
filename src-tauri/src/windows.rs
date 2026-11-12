@@ -2,6 +2,8 @@
 //! (`WS_EX_NOACTIVATE`) and shown with `SetWindowPos(SWP_NOACTIVATE | SWP_SHOWWINDOW)`.
 //! Everything here runs on the main thread.
 
+use std::sync::atomic::Ordering::Relaxed;
+
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
 use crate::state::AppState;
@@ -132,19 +134,19 @@ fn show_floating(app: &AppHandle, label: &str, hwnd: isize, rect: Option<(i32, i
 pub fn show_banner(app: &AppHandle) {
     let (w, h) = BANNER_SIZE;
     let rect = on_primary(app, w, h, |aw, _| (aw - w - BANNER_MARGIN, BANNER_MARGIN));
-    show_floating(app, BANNER, app.state::<AppState>().banner_hwnd, rect);
+    show_floating(app, BANNER, app.state::<AppState>().banner_hwnd.load(Relaxed), rect);
 }
 
 /// Sized to `rows` entries, centred horizontally, centred on two thirds of the work area's height.
 pub fn show_picker(app: &AppHandle, rows: usize) {
     let state = app.state::<AppState>();
     let foreground = keygloss_windows::shell::foreground_window();
-    if foreground != state.picker_hwnd {
+    if foreground != state.picker_hwnd.load(Relaxed) {
         state.set_picker_return_to(foreground);
     }
     let (w, h) = (PICKER_WIDTH, PICKER_CHROME + PICKER_ROW * rows.clamp(1, PICKER_MAX_ROWS) as f64);
     let rect = on_primary(app, w, h, |aw, ah| ((aw - w) / 2.0, (ah * 2.0 / 3.0 - h / 2.0).min(ah - h).max(0.0)));
-    show_floating(app, PICKER, state.picker_hwnd, rect);
+    show_floating(app, PICKER, state.picker_hwnd.load(Relaxed), rect);
 }
 
 pub fn hide_picker(app: &AppHandle) {
@@ -157,7 +159,7 @@ pub fn hide_picker(app: &AppHandle) {
 /// the focus back to the app the snippet is meant for before it is typed.
 pub fn release_picker_focus(app: &AppHandle) {
     let state = app.state::<AppState>();
-    let activated = keygloss_windows::shell::foreground_window() == state.picker_hwnd;
+    let activated = keygloss_windows::shell::foreground_window() == state.picker_hwnd.load(Relaxed);
     hide_picker(app);
     let back = state.picker_return_to();
     if activated && back != 0 {
