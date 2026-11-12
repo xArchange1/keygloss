@@ -7,4 +7,7 @@ import { RU_MARKER } from "../src/lib/releaseNotes.ts";
 
 const release = CHANGELOG.find((r) => r.version === process.argv[2]);
 const list = (lines: string[]) => lines.map((l) => `- ${l}`).join("\n");
-if (release) console.log(`${list(release.en)}\n\n${RU_MARKER}\n\n${list(release.ru)}`);
+if (release) {
+  const ru = `<details><summary>Русский</summary>\n\n${list(release.ru)}\n\n</details>`;
+  console.log(`${list(release.en)}\n\n${RU_MARKER}\n${ru}`);
+}
