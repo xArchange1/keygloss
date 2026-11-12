@@ -5,20 +5,31 @@ use windows::Win32::Foundation::{LPARAM, WPARAM};
 use windows::Win32::Globalization::{GetLocaleInfoEx, LCIDToLocaleName, LOCALE_SLOCALIZEDLANGUAGENAME};
 use windows::Win32::UI::Input::KeyboardAndMouse::*;
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetForegroundWindow, GetWindowThreadProcessId, PostMessageW, WM_INPUTLANGCHANGEREQUEST,
+    GUITHREADINFO, GetForegroundWindow, GetGUIThreadInfo, GetWindowThreadProcessId, PostMessageW,
+    WM_INPUTLANGCHANGEREQUEST,
 };
 use windows::core::PCWSTR;
 
 use crate::keymap::{SCAN_KEYS, is_char_key};
 
-/// Layout of the foreground window's thread (null HKL if there is no foreground window).
+/// Layout of the thread that owns the keyboard focus in the foreground window (null HKL if there
+/// is no foreground window). The focus can sit in a child window of another thread or process,
+/// such as a WebView2 page (Keygloss's own windows): that thread translates the keys and gets the
+/// layout switches, while the top-level window's thread keeps its old layout.
 pub fn foreground_hkl() -> HKL {
     unsafe {
         let hwnd = GetForegroundWindow();
         if hwnd.is_invalid() {
             return HKL::default();
         }
-        GetKeyboardLayout(GetWindowThreadProcessId(hwnd, None))
+        let thread = GetWindowThreadProcessId(hwnd, None);
+        let mut info = GUITHREADINFO { cbSize: size_of::<GUITHREADINFO>() as u32, ..Default::default() };
+        let focus = if GetGUIThreadInfo(thread, &mut info).is_ok() && !info.hwndFocus.is_invalid() {
+            GetWindowThreadProcessId(info.hwndFocus, None)
+        } else {
+            thread
+        };
+        GetKeyboardLayout(focus)
     }
 }
 
