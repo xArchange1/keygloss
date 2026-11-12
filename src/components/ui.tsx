@@ -1,4 +1,4 @@
-import { useId, useState, type InputHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type InputHTMLAttributes, type KeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Check as CheckIcon, ChevronDown, CircleHelp, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -134,17 +134,98 @@ export function Segmented<T extends string>({ value, options, onChange, label, c
   );
 }
 
+/** Letter keys pressed within this many ms of each other search as one prefix. */
+const TYPE_AHEAD_MS = 500;
+
+/**
+ * Dropdown. While open, a letter jumps to the next option starting with it; Enter, Space or a
+ * click applies the highlighted option, Escape, Tab or a click outside cancels.
+ */
 export function Select<T extends string>({ value, options, onChange, label, title, className }: {
   value: T; options: { value: T; label: string }[]; onChange: (v: T) => void; label?: string; title?: string;
   className?: string;
 }) {
+  const id = useId();
+  const [active, setActive] = useState<number | null>(null);
+  const wrap = useRef<HTMLSpanElement>(null);
+  const typed = useRef({ text: "", at: 0 });
+  const open = active !== null;
+  const selected = Math.max(0, options.findIndex((o) => o.value === value));
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => !wrap.current?.contains(e.target as Node) && setActive(null);
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open]);
+
+  useEffect(() => {
+    if (open) document.getElementById(`${id}-${active}`)?.scrollIntoView({ block: "nearest" });
+  }, [id, open, active]);
+
+  const commit = (i: number) => {
+    setActive(null);
+    if (options[i].value !== value) onChange(options[i].value);
+  };
+
+  // The first option from `from` (wrapping) whose label starts with `prefix`.
+  const find = (prefix: string, from: number) => {
+    for (let n = 0; n < options.length; n++) {
+      const i = (from + n) % options.length;
+      if (options[i].label.toLowerCase().startsWith(prefix)) return i;
+    }
+    return -1;
+  };
+
+  const typeAhead = (e: KeyboardEvent, at: number) => {
+    const t = typed.current;
+    const head = e.timeStamp - t.at < TYPE_AHEAD_MS ? t.text : "";
+    t.at = e.timeStamp;
+    t.text = head + e.key.toLowerCase();
+    // A repeated single letter moves on to the next match.
+    const i = find(t.text, head ? at : at + 1);
+    if (i >= 0) setActive(i);
+  };
+
+  const onKey = (e: KeyboardEvent) => {
+    if (active === null) {
+      if (["ArrowDown", "ArrowUp", "Enter", " "].includes(e.key)) {
+        e.preventDefault();
+        setActive(selected);
+      }
+      return;
+    }
+    const move = { ArrowDown: active + 1, ArrowUp: active - 1, Home: 0, End: options.length - 1 }[e.key];
+    if (move !== undefined) setActive(Math.max(0, Math.min(options.length - 1, move)));
+    else if (e.key === "Enter" || e.key === " ") commit(active);
+    else if (e.key === "Escape" || e.key === "Tab") setActive(null);
+    else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) typeAhead(e, active);
+    else return;
+    if (e.key !== "Tab") e.preventDefault();
+  };
+
   return (
-    <span className={cx("relative inline-flex", className)}>
-      <select value={value} aria-label={label} title={title} onChange={(e) => onChange(e.target.value as T)}
-        className="h-7 w-full cursor-pointer appearance-none rounded-md border border-fg/15 bg-raised pr-7 pl-2.5 text-[12px] hover:border-fg/30 focus:border-detail">
-        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
+    <span ref={wrap} className={cx("relative inline-flex", className)}>
+      <button type="button" role="combobox" aria-label={label} title={title} aria-haspopup="listbox"
+        aria-expanded={open} aria-controls={open ? id : undefined}
+        aria-activedescendant={open ? `${id}-${active}` : undefined}
+        onClick={() => setActive(open ? null : selected)} onKeyDown={onKey} onBlur={() => setActive(null)}
+        className="h-7 w-full cursor-pointer truncate rounded-md border border-fg/15 bg-raised pr-7 pl-2.5 text-left text-[12px] hover:border-fg/30 focus:border-detail">
+        {options[active ?? selected]?.label}
+      </button>
       <ChevronDown size={14} className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-fg/60" />
+      {open && (
+        <div id={id} role="listbox" aria-label={label} onMouseDown={(e) => e.preventDefault()}
+          className="absolute top-8 left-0 z-30 max-h-64 min-w-full overflow-y-auto rounded-lg border border-fg/12 bg-raised p-1 shadow-[0_12px_32px_rgb(0_0_0/0.22)]">
+          {options.map((o, i) => (
+            <div key={o.value} id={`${id}-${i}`} role="option" aria-selected={i === active}
+              onMouseMove={() => setActive(i)} onClick={() => commit(i)}
+              className={cx("cursor-pointer rounded-md px-2 py-1 text-[12px] whitespace-nowrap", i === active && "bg-fg/[0.08]")}>
+              {o.label}
+            </div>
+          ))}
+        </div>
+      )}
     </span>
   );
 }
