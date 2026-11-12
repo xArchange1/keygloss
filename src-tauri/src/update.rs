@@ -42,10 +42,13 @@ async fn newest_tag() -> Result<Option<String>, reqwest::Error> {
 pub async fn check(app: &AppHandle) -> Result<Option<String>, String> {
     let state = app.state::<AppState>();
     let mut endpoints = Vec::new();
-    if state.settings().update_channel == UpdateChannel::Beta
-        && let Some(tag) = newest_tag().await.map_err(|e| e.to_string())?
-    {
-        endpoints.push(manifest(Some(&tag)));
+    if state.settings().update_channel == UpdateChannel::Beta {
+        // A failed lookup (e.g. the API's rate limit) still leaves the stable manifest.
+        match newest_tag().await {
+            Ok(Some(tag)) => endpoints.push(manifest(Some(&tag))),
+            Ok(None) => {}
+            Err(e) => crate::log::write(&format!("error beta release lookup failed: {e}")),
+        }
     }
     endpoints.push(manifest(None));
     let handle = app.clone();
