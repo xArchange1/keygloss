@@ -1282,9 +1282,9 @@ fn two_caps_fix() {
 // ---- Learn from undo ----
 
 #[test]
-fn three_undos_raise_the_banner_and_accepting_learns_the_word() {
+fn two_undos_raise_the_banner_and_accepting_learns_the_word() {
     let mut h = H::boundary();
-    for round in 0..3 {
+    for round in 0..2 {
         h.set_text("", false);
         h.set_layout(EN);
         h.click();
@@ -1535,4 +1535,22 @@ fn runtime_end_to_end() {
     handle.shutdown();
     assert!(!handle.status().running);
     assert!(handler.lock().unwrap().is_none());
+}
+
+#[test]
+fn undo_after_typing_past_a_live_fix_counts() {
+    // The live fix converts "ghbd"; the rest of the word is typed on the new layout.
+    let mut h = H::new();
+    for round in 0..2 {
+        h.set_text("", false);
+        h.set_layout(EN);
+        h.click();
+        h.keys("ghbdtn");
+        h.advance(100);
+        assert_eq!(h.text(), "привет", "round {round}");
+        h.manual();
+        assert_eq!(h.text(), "ghbdtn", "round {round}");
+        h.advance(1000);
+    }
+    assert!(h.take_events().contains(&EngineEvent::LearnBanner { word: "ghbdtn".into() }));
 }
