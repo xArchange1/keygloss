@@ -170,6 +170,10 @@ pub struct Settings {
     /// Show the release notes on the first start after an update.
     pub show_whats_new: bool,
 
+    // History
+    /// History entries older than this many days are removed; 0 = keep them (up to the 200 newest).
+    pub history_keep_days: u32,
+
     // App state
     pub did_initial_setup: bool,
     pub did_show_welcome: bool,
@@ -243,6 +247,8 @@ impl Default for Settings {
             auto_update: false,
             update_channel: UpdateChannel::Stable,
             show_whats_new: true,
+
+            history_keep_days: 0,
 
             did_initial_setup: false,
             did_show_welcome: false,
