@@ -4,9 +4,10 @@ import { useTranslation } from "react-i18next";
 import * as ipc from "../../lib/ipc";
 import type { HistoryEntry } from "../../lib/ipc";
 import { useSettings, useUpdate } from "../../store";
-import { Button, Card, PageTitle } from "../../components/ui";
+import { Button, Card, PageTitle, Row, Segmented } from "../../components/ui";
 
 const without = (words: string[], w: string) => words.filter((x) => x !== w);
+const KEEP_DAYS = [0, 3, 7, 30];
 
 export function HistoryPage() {
   const { t, i18n } = useTranslation();
@@ -14,10 +15,13 @@ export function HistoryPage() {
   const update = useUpdate();
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   useEffect(() => {
-    ipc.getHistory().then(setEntries).catch(console.error);
     const off = ipc.on("history-changed", setEntries);
     return () => { off.then((f) => f()); };
   }, []);
+  // Refetched when the period changes: reading the history removes what is now too old.
+  useEffect(() => {
+    ipc.getHistory().then(setEntries).catch(console.error);
+  }, [s.historyKeepDays]);
 
   const toggleNever = (word: string) =>
     s.ignoredWords.includes(word)
@@ -34,6 +38,13 @@ export function HistoryPage() {
       <p className="-mt-2.5 mb-[18px] flex items-start gap-1.5 text-fg/70">
         <Lock size={13} className="mt-[3px] shrink-0 text-detail" />{t("hist.local")}
       </p>
+      <Card className="mb-3">
+        <Row title={t("hist.auto")} sub={t("hist.autoSub")} control={
+          <Segmented value={String(s.historyKeepDays)} label={t("hist.auto")}
+            onChange={(v) => update({ historyKeepDays: Number(v) })}
+            options={KEEP_DAYS.map((d) => ({ value: String(d), label: d ? t("hist.days", { count: d }) : t("hist.autoOff") }))} />
+        } />
+      </Card>
       <Card>
         {entries.length === 0 && <p className="px-3.5 py-3 text-[12px] text-fg/60">{t("hist.empty")}</p>}
         {entries.map((e, i) => {

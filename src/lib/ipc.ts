@@ -106,6 +106,9 @@ export interface Settings {
   updateChannel: UpdateChannel;
   /** Show the release notes on the first start after an update. */
   showWhatsNew: boolean;
+  // History
+  /** Entries older than this many days are removed; 0 = keep. */
+  historyKeepDays: number;
   // App state
   didInitialSetup: boolean;
   didShowWelcome: boolean;
@@ -187,7 +190,7 @@ let memSettings: Settings = {
   undoStrikeTime: {}, typoPersonalWords: {}, lastLayoutCyr: "", lastLayoutLat: "",
   language: "auto", appTheme: "system", didInitialSetup: false, didShowWelcome: false, rescuedCount: 0,
   updateCheckOnStartup: true, autoUpdate: false, updateChannel: "stable",
-  showWhatsNew: true, lastSeenVersion: "",
+  showWhatsNew: true, historyKeepDays: 0, lastSeenVersion: "",
 };
 
 function browserInvoke(cmd: string, args?: Record<string, unknown>): unknown {

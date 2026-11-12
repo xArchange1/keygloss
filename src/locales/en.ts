@@ -171,6 +171,10 @@ const en = {
     empty: "No fixes yet",
     never: "Never translate",
     clear: "Clear history",
+    auto: "Clear automatically",
+    autoSub: "Removes fixes older than the chosen period.",
+    autoOff: "Off",
+    days: "{{count}} days",
   },
   priv: {
     title: "Stays on your PC",

@@ -298,7 +298,7 @@ pub async fn open_welcome(app: AppHandle) {
 /// Automatic fixes, newest first.
 #[tauri::command]
 pub fn get_history(state: State<AppState>) -> Vec<history::Entry> {
-    history::load(&state.history)
+    history::load(&state.history, state.settings().history_keep_days)
 }
 
 #[tauri::command]
@@ -387,6 +387,7 @@ mod tests {
             "snippetExpandTab", "textSnippets", "undoDeclinedWords", "undoStrikeCount", "undoStrikeTime",
             "typoPersonalWords", "lastLayoutCyr", "lastLayoutLat", "language", "appTheme", "didInitialSetup",
             "didShowWelcome", "rescuedCount", "updateCheckOnStartup", "autoUpdate", "updateChannel", "showWhatsNew",
+            "historyKeepDays",
             "lastSeenVersion",
         ];
         ts.sort();
