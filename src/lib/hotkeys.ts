@@ -8,7 +8,6 @@ const key = (k: KeyCode, m: Partial<Modifiers> = {}): Hotkey => ({ mode: "key", 
 export const PRESETS: Record<HotkeyTarget, Hotkey[]> = {
   manual: [
     { mode: "doubletap", key: "ShiftLeft" },
-    key("Pause"),
     key("ScrollLock"),
     { mode: "modkey", key: "ControlRight" },
     { mode: "modkey", key: "AltRight" },
