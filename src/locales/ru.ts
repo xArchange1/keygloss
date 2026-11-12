@@ -151,7 +151,6 @@ const ru: Resources = {
     themeLight: "Светлое",
     themeDark: "Тёмное",
     language: "Язык интерфейса",
-    langAuto: "Как в системе",
     login: "Запускать при входе в систему",
   },
   upd: {

@@ -56,10 +56,10 @@ export function GeneralPage() {
         <Row title={t("gen.language")} control={
           <Select<UiLanguage> value={s.language} label={t("gen.language")} className="w-[170px]"
             onChange={(language) => update({ language })}
+            // Order: English, Russian, then any other language.
             options={[
-              { value: "auto", label: t("gen.langAuto") },
-              { value: "ru", label: "Русский" },
               { value: "en", label: "English" },
+              { value: "ru", label: "Русский" },
             ]} />
         } />
         <SwitchRow title={t("gen.login")} checked={login}

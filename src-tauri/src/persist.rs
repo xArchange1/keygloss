@@ -4,7 +4,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use keygloss_core::settings::Settings;
+use keygloss_core::settings::{Settings, UiLanguage};
 use serde_json::Value;
 use tauri::{AppHandle, Manager, Wry};
 use tauri_plugin_store::{Store, StoreExt};
@@ -57,8 +57,15 @@ pub fn settings_from_entries(entries: impl IntoIterator<Item = (String, Value)>)
 }
 
 pub fn load(store: &Store<Wry>) -> Settings {
-    let s = settings_from_entries(store.entries());
-    if store.delete(OLD_LEARNED) {
+    let mut s = settings_from_entries(store.entries());
+    let mut changed = store.delete(OLD_LEARNED);
+    // On install (or over the old "auto"), the interface takes the OS language if it is
+    // translated, else English.
+    if store.get("language").and_then(|v| serde_json::from_value::<UiLanguage>(v).ok()).is_none() {
+        s.language = if keygloss_windows::shell::ui_language_is_russian() { UiLanguage::Ru } else { UiLanguage::En };
+        changed = true;
+    }
+    if changed {
         save(store, &s);
     }
     s
@@ -113,6 +120,12 @@ mod tests {
         })));
         assert!(s.auto_enabled);
         assert_eq!(s.hotkey, Settings::default().hotkey);
+    }
+
+    #[test]
+    fn old_auto_language_is_not_a_language() {
+        assert!(serde_json::from_value::<UiLanguage>(json!("auto")).is_err());
+        assert_eq!(serde_json::from_value::<UiLanguage>(json!("ru")).unwrap(), UiLanguage::Ru);
     }
 
     #[test]

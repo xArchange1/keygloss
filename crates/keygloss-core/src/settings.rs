@@ -59,11 +59,10 @@ pub enum Theme {
     Dark,
 }
 
-/// Interface language (`language`).
+/// Interface language (`language`). Picked from the OS language on install.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum UiLanguage {
-    Auto,
     Ru,
     En,
 }
@@ -247,7 +246,7 @@ impl Default for Settings {
             last_layout_cyr: String::new(),
             last_layout_lat: String::new(),
 
-            language: UiLanguage::Auto,
+            language: UiLanguage::En,
             app_theme: Theme::System,
 
             update_check_on_startup: true,
