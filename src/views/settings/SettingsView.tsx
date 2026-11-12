@@ -60,9 +60,9 @@ export function SettingsView() {
 
   return (
     <div className="flex h-full">
-      <nav aria-label="Keygloss" className="flex w-[220px] shrink-0 flex-col border-r border-fg/[0.08] bg-fg/[0.03]">
-        <div className="flex items-center gap-2.5 px-4 pt-5 pb-4">
-          <Brand size={28} />
+      <nav aria-label="Keygloss" className="flex w-[180px] shrink-0 flex-col border-r border-fg/[0.08] bg-fg/[0.03]">
+        <div className="flex items-center gap-2 px-3.5 pt-4 pb-3">
+          <Brand size={24} />
           <span className="text-[15px] font-semibold tracking-tight">Keygloss</span>
         </div>
         <div className="mr-1.5 mb-2 ml-2 h-px bg-fg/[0.08]" />
@@ -82,7 +82,7 @@ export function SettingsView() {
         <StatusLine />
       </nav>
       <main ref={scroller} className="flex-1 overflow-x-hidden overflow-y-auto">
-        <div key={page} className="kg-in ml-6 w-[600px] pt-7 pb-10">
+        <div key={page} className="kg-in mx-5 w-[460px] pt-5 pb-8">
           {page === "switching" && <SwitchingPage />}
           {page === "exceptions" && <ExceptionsPage onOpenAmbiguous={() => setPage("ambiguous")} />}
           {page === "ambiguous" && <AmbiguousPage onBack={() => setPage("exceptions")} />}

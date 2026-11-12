@@ -42,7 +42,7 @@ fn lock_down(w: WebviewWindow) -> tauri::Result<WebviewWindow> {
 }
 
 pub fn create_settings(app: &AppHandle) -> tauri::Result<WebviewWindow> {
-    builder(app, SETTINGS).inner_size(872.0, 640.0).min_inner_size(872.0, 480.0).visible(false).center().build().and_then(lock_down)
+    builder(app, SETTINGS).inner_size(680.0, 560.0).min_inner_size(680.0, 420.0).visible(false).center().build().and_then(lock_down)
 }
 
 /// A transparent, undecorated, topmost, non-activating, hidden window.
