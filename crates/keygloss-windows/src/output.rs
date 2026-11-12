@@ -97,6 +97,17 @@ fn send_clean(body: Vec<INPUT>) -> Result<(), PlatformError> {
     }
 }
 
+/// Sends a real key event again (tagged, so the hook lets it through), e.g. one held while our
+/// output was being sent.
+pub(crate) fn replay_key(vk: u32, scan: u32, extended: bool, up: bool) {
+    let mut flags = if up { KEYEVENTF_KEYUP } else { KEYBD_EVENT_FLAGS(0) };
+    if extended {
+        flags |= KEYEVENTF_EXTENDEDKEY;
+    }
+    let event = [input(VIRTUAL_KEY(vk as u16), scan as u16, flags)];
+    unsafe { SendInput(&event, size_of::<INPUT>() as i32) };
+}
+
 /// `TextOutput` implementation. Every event is tagged with [`MARKER`].
 #[derive(Clone, Copy, Debug, Default)]
 pub struct WindowsOutput;

@@ -58,8 +58,75 @@ pub struct Platform {
 
 pub(crate) type EventSink = Arc<dyn Fn(EngineEvent) + Send + Sync>;
 
+/// One [`TextOutput`] call held back until the engine lock is released.
+enum OutputCall {
+    Replace(usize, String),
+    Chord(KeyCode, Modifiers),
+    Mask,
+}
+
+/// The engine's [`TextOutput`]. Output from the hook thread is sent at once; output from any
+/// other thread is queued and sent by [`Shared::with`] / [`pump`] after the engine lock is
+/// released. `SendInput` waits for every low-level hook to handle each injected event, ours
+/// included, so sending under the lock froze input for the hook timeout (seconds) whenever a real
+/// key reached the hook mid-send and blocked on the lock.
+struct QueuedOutput {
+    inner: Arc<dyn TextOutput>,
+    /// Set (under the engine lock) while the hook thread runs the engine.
+    direct: AtomicBool,
+    queue: Mutex<Vec<OutputCall>>,
+    /// Calls are queued or being sent ([`InputHandler::output_pending`]).
+    pending: AtomicBool,
+}
+
+impl QueuedOutput {
+    fn call(&self, c: OutputCall) -> Result<(), PlatformError> {
+        if !self.direct.load(Ordering::SeqCst) {
+            self.queue.lock().unwrap_or_else(|p| p.into_inner()).push(c);
+            self.pending.store(true, Ordering::SeqCst);
+            return Ok(());
+        }
+        match c {
+            OutputCall::Replace(n, text) => self.inner.replace_text(n, &text),
+            OutputCall::Chord(key, mods) => self.inner.send_chord(key, mods),
+            OutputCall::Mask => self.inner.send_mask_key(),
+        }
+    }
+
+    /// Sends the queued calls. Call without the engine lock. Failures are the inner output's to
+    /// report (the app logs them).
+    fn flush(&self) {
+        let queue = || self.queue.lock().unwrap_or_else(|p| p.into_inner());
+        let calls = std::mem::take(&mut *queue());
+        for c in calls {
+            let _ = match c {
+                OutputCall::Replace(n, text) => self.inner.replace_text(n, &text),
+                OutputCall::Chord(key, mods) => self.inner.send_chord(key, mods),
+                OutputCall::Mask => self.inner.send_mask_key(),
+            };
+        }
+        let q = queue();
+        if q.is_empty() {
+            self.pending.store(false, Ordering::SeqCst);
+        }
+    }
+}
+
+impl TextOutput for QueuedOutput {
+    fn replace_text(&self, backspaces: usize, text: &str) -> Result<(), PlatformError> {
+        self.call(OutputCall::Replace(backspaces, text.to_string()))
+    }
+    fn send_chord(&self, key: KeyCode, mods: Modifiers) -> Result<(), PlatformError> {
+        self.call(OutputCall::Chord(key, mods))
+    }
+    fn send_mask_key(&self) -> Result<(), PlatformError> {
+        self.call(OutputCall::Mask)
+    }
+}
+
 pub(crate) struct Shared {
     pub(crate) engine: Mutex<Engine>,
+    output: Arc<QueuedOutput>,
     wake: Condvar,
     /// Real key events currently inside [`InputHandler::on_key`].
     pub(crate) hook_busy: Arc<AtomicUsize>,
@@ -73,15 +140,27 @@ pub(crate) fn lock(m: &Mutex<Engine>) -> MutexGuard<'_, Engine> {
 impl Shared {
     pub(crate) fn new(settings: Settings, platform: &Platform, clock: &dyn Clock) -> Arc<Shared> {
         let hook_busy = Arc::new(AtomicUsize::new(0));
+        let output = Arc::new(QueuedOutput {
+            inner: platform.output.clone(),
+            direct: AtomicBool::new(false),
+            queue: Mutex::new(Vec::new()),
+            pending: AtomicBool::new(false),
+        });
         let engine = Engine::new(
             settings,
-            platform.output.clone(),
+            output.clone(),
             platform.layouts.clone(),
             hook_busy.clone(),
             clock.now(),
             clock.unix_now(),
         );
-        Arc::new(Shared { engine: Mutex::new(engine), wake: Condvar::new(), hook_busy, stop: AtomicBool::new(false) })
+        Arc::new(Shared {
+            engine: Mutex::new(engine),
+            output,
+            wake: Condvar::new(),
+            hook_busy,
+            stop: AtomicBool::new(false),
+        })
     }
 
     /// Runs `f` on the engine and wakes the worker if it queued something.
@@ -91,6 +170,8 @@ impl Shared {
         if e.wake() {
             self.wake.notify_all();
         }
+        drop(e);
+        self.output.flush();
         out
     }
 }
@@ -104,7 +185,16 @@ pub(crate) struct HookHandler {
 impl InputHandler for HookHandler {
     fn on_key(&mut self, event: &KeyEvent) -> HookDecision {
         self.shared.hook_busy.fetch_add(1, Ordering::SeqCst);
-        let decision = self.shared.with(|e| e.on_key(event));
+        let out = &self.shared.output;
+        let decision = self.shared.with(|e| {
+            // On the hook thread output cannot deadlock; send what another thread left queued
+            // first so the order holds.
+            out.flush();
+            out.direct.store(true, Ordering::SeqCst);
+            let d = e.on_key(event);
+            out.direct.store(false, Ordering::SeqCst);
+            d
+        });
         self.shared.hook_busy.fetch_sub(1, Ordering::SeqCst);
         decision
     }
@@ -112,6 +202,10 @@ impl InputHandler for HookHandler {
     fn on_mouse_down(&mut self) {
         let now = self.clock.now();
         self.shared.with(|e| e.on_mouse_down(now));
+    }
+
+    fn output_pending(&self) -> bool {
+        self.shared.output.pending.load(Ordering::SeqCst)
     }
 }
 
@@ -187,6 +281,7 @@ pub(crate) fn pump(shared: &Shared, p: &Platform, clock: &dyn Clock, sink: &Even
             e.tick(clock.now());
             (e.take_job(), e.take_events())
         };
+        shared.output.flush();
         for ev in events {
             sink(ev);
         }

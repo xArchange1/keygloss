@@ -117,6 +117,12 @@ pub trait InputHandler: Send + 'static {
     fn on_key(&mut self, event: &KeyEvent) -> HookDecision;
     /// Any real mouse button press (resets typing context).
     fn on_mouse_down(&mut self);
+    /// Output from another thread is queued or being sent. The hook holds real key events (swallows
+    /// them) until this is false, then hands them to [`Self::on_key`] in order and re-sends the
+    /// ones it passes: a key let through mid-send would land inside the replacement.
+    fn output_pending(&self) -> bool {
+        false
+    }
 }
 
 /// Global keyboard and mouse-button hook. Synthetic events sent through [`TextOutput`] are

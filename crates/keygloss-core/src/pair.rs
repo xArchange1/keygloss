@@ -94,6 +94,9 @@ pub struct LanguagePair {
     pub decimal_alias: Option<char>,
     /// Letters whose doubling is grammar, not a typo (never de-doubled by the typo fixer).
     pub typo_keep_doubled: &'static [char],
+    /// Letter pairs commonly confused in spelling (either way); the typo fixer tries swapping
+    /// one for the other (`превет` → `привет`).
+    pub typo_confused_letters: &'static [(char, char)],
     /// Latin short word that continues an Alt phrase after a Latin abbreviation with a comma
     /// (`… касается iOS, nj`). Empty disables the rule.
     pub label_bridge_word: &'static str,
@@ -160,6 +163,7 @@ pub static RU_EN: LanguagePair = LanguagePair {
     is_impossible_alt_spelling: is_impossible_russian_spelling,
     decimal_alias: Some('ю'),
     typo_keep_doubled: &['н'],
+    typo_confused_letters: &[('е', 'и'), ('о', 'а')],
     label_bridge_word: "nj",
     files: PairFiles {
         words_latin: include_bytes!("../data/words_en.json"),

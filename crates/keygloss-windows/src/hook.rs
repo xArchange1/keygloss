@@ -1,6 +1,7 @@
 //! `InputHook` via `WH_KEYBOARD_LL` + `WH_MOUSE_LL` on a dedicated message-loop thread.
 
 use std::cell::RefCell;
+use std::collections::VecDeque;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
@@ -10,14 +11,14 @@ use std::time::Instant;
 use keygloss_core::platform::{
     HookDecision, InputHandler, InputHook, KeyCode, KeyEvent, Modifiers, PlatformError,
 };
-use windows::Win32::Foundation::{HINSTANCE, LPARAM, LRESULT, WPARAM};
+use windows::Win32::Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, WPARAM};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::Input::KeyboardAndMouse::{GetKeyState, VK_CAPITAL};
 use windows::Win32::UI::WindowsAndMessaging::*;
 
 use crate::keymap::key_from_hook;
-use crate::output::is_own_event;
+use crate::output::{is_own_event, replay_key};
 
 const _: () = assert!((KeyCode::Unidentified as usize) < 128);
 
@@ -31,8 +32,39 @@ struct HookState {
     caps_lock: bool,
 }
 
+/// A held key event: vk, scan, extended, down.
+type Held = (u32, u32, bool, bool);
+
+/// How often held keys are retried while output is pending.
+const HELD_RETRY_MS: u32 = 5;
+
 thread_local! {
     static STATE: RefCell<Option<HookState>> = const { RefCell::new(None) };
+    /// Real key events held while output from another thread is pending, oldest first.
+    static HELD: RefCell<VecDeque<Held>> = const { RefCell::new(VecDeque::new()) };
+}
+
+/// Hands the held keys to the handler once no output is pending, re-sending the passed ones.
+unsafe extern "system" fn release_held(_: HWND, _: u32, timer: usize, _: u32) {
+    loop {
+        let pending = STATE.with(|s| s.try_borrow().map_or(true, |s| s.as_ref().is_some_and(|s| s.handler.output_pending())));
+        if pending {
+            return;
+        }
+        let Some((vk, scan, extended, down)) = HELD.with(|h| h.borrow_mut().pop_front()) else {
+            unsafe {
+                let _ = KillTimer(None, timer);
+            }
+            return;
+        };
+        let swallow = STATE.with(|s| match s.try_borrow_mut() {
+            Ok(mut s) => s.as_mut().is_some_and(|s| s.on_key(vk, scan, extended, down)),
+            Err(_) => false,
+        });
+        if !swallow {
+            replay_key(vk, scan, extended, !down);
+        }
+    }
 }
 
 impl HookState {
@@ -89,6 +121,20 @@ unsafe extern "system" fn keyboard_proc(code: i32, wparam: WPARAM, lparam: LPARA
         if !is_own_event(kb.dwExtraInfo) {
             let down = matches!(wparam.0 as u32, WM_KEYDOWN | WM_SYSKEYDOWN);
             let extended = kb.flags.contains(LLKHF_EXTENDED);
+            // Hold the key while output is pending, and behind keys already held (order).
+            let hold = HELD.with(|h| !h.borrow().is_empty())
+                || STATE.with(|s| s.try_borrow().is_ok_and(|s| s.as_ref().is_some_and(|s| s.handler.output_pending())));
+            if hold {
+                let first = HELD.with(|h| {
+                    let mut h = h.borrow_mut();
+                    h.push_back((kb.vkCode, kb.scanCode, extended, down));
+                    h.len() == 1
+                });
+                if first {
+                    unsafe { SetTimer(None, 0, HELD_RETRY_MS, Some(release_held)) };
+                }
+                return LRESULT(1);
+            }
             // try_borrow_mut: never panic if the handler somehow re-enters the hook.
             let swallow = STATE.with(|s| match s.try_borrow_mut() {
                 Ok(mut s) => s.as_mut().is_some_and(|s| s.on_key(kb.vkCode, kb.scanCode, extended, down)),
