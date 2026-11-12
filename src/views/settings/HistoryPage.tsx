@@ -39,7 +39,7 @@ export function HistoryPage() {
         <Lock size={13} className="mt-[3px] shrink-0 text-detail" />{t("hist.local")}
       </p>
       <Card className="mb-3">
-        <Row title={t("hist.auto")} sub={t("hist.autoSub")} control={
+        <Row title={t("hist.auto")} help={t("hist.autoSub")} control={
           <Segmented value={String(s.historyKeepDays)} label={t("hist.auto")}
             onChange={(v) => update({ historyKeepDays: Number(v) })}
             options={KEEP_DAYS.map((d) => ({ value: String(d), label: d ? t("hist.days", { count: d }) : t("hist.autoOff") }))} />

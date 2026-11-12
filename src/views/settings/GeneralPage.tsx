@@ -72,7 +72,7 @@ export function GeneralPage() {
             ? <Button variant="primary" disabled={upd === "installing"} onClick={install}>{t("upd.install")}</Button>
             : <Button disabled={upd === "checking"} onClick={check}>{t("upd.check")}</Button>
         } />
-        <Row title={t("upd.channel")} sub={t("upd.channelSub")} control={
+        <Row title={t("upd.channel")} help={t("upd.channelSub")} control={
           <Segmented<UpdateChannel> value={s.updateChannel} label={t("upd.channel")}
             onChange={(updateChannel) => { update({ updateChannel }); setUpd("idle"); }}
             options={[
@@ -82,9 +82,9 @@ export function GeneralPage() {
         } />
         <SwitchRow title={t("upd.startup")} checked={s.updateCheckOnStartup}
           onChange={(updateCheckOnStartup) => update({ updateCheckOnStartup })} />
-        <SwitchRow title={t("upd.auto")} sub={t("upd.autoSub")} disabled={!s.updateCheckOnStartup}
+        <SwitchRow title={t("upd.auto")} help={t("upd.autoSub")} disabled={!s.updateCheckOnStartup}
           checked={s.autoUpdate} onChange={(autoUpdate) => update({ autoUpdate })} />
-        <SwitchRow title={t("upd.whatsNew")} sub={t("upd.whatsNewSub")} checked={s.showWhatsNew}
+        <SwitchRow title={t("upd.whatsNew")} help={t("upd.whatsNewSub")} checked={s.showWhatsNew}
           onChange={(showWhatsNew) => update({ showWhatsNew })} />
       </Card>
     </>

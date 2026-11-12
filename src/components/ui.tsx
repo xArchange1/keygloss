@@ -1,27 +1,57 @@
-import { useId, type InputHTMLAttributes, type ReactNode } from "react";
-import { Check as CheckIcon, ChevronDown, X } from "lucide-react";
+import { useId, useState, type InputHTMLAttributes, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { Check as CheckIcon, ChevronDown, CircleHelp, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 
-export function PageTitle({ title, sub }: { title: string; sub?: string }) {
+/** `children` followed by a "?"; hovering or focusing either shows `help` in a themed popup. */
+export function Help({ children, help }: { children: ReactNode; help?: ReactNode }) {
+  const id = useId();
+  const [at, setAt] = useState<{ left: number; top?: number; bottom?: number } | null>(null);
+  if (!help) return <>{children}</>;
+  const show = (e: { currentTarget: HTMLElement }) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const left = Math.max(8, Math.min(r.left, window.innerWidth - 288));
+    // Below the label, or above it when the bottom of the window is near.
+    setAt(r.bottom + 150 < window.innerHeight ? { left, top: r.bottom + 6 } : { left, bottom: window.innerHeight - r.top + 6 });
+  };
   return (
-    <header className="mb-[18px]">
-      <h1 className="text-[22px] font-semibold tracking-tight">{title}</h1>
-      {sub && <p className="mt-1 text-fg/70">{sub}</p>}
+    <span tabIndex={0} aria-describedby={at ? id : undefined} onMouseEnter={show} onFocus={show}
+      onMouseLeave={() => setAt(null)} onBlur={() => setAt(null)}
+      className="group inline-flex cursor-help items-center gap-1 rounded-sm">
+      <span>{children}</span>
+      <CircleHelp size={13} aria-hidden strokeWidth={2.2}
+        className="shrink-0 text-fg/40 transition-colors group-hover:text-detail group-focus-visible:text-detail" />
+      {at && createPortal(
+        <div id={id} role="tooltip" style={at}
+          className="kg-in pointer-events-none fixed z-50 w-max max-w-[280px] rounded-lg border border-fg/12 bg-raised px-3 py-2 text-[12px] leading-snug font-normal tracking-normal text-fg normal-case shadow-[0_8px_24px_rgb(0_0_0/0.22)]">
+          {help}
+        </div>,
+        document.body,
+      )}
+    </span>
+  );
+}
+
+export function PageTitle({ title, sub, help }: { title: string; sub?: string; help?: ReactNode }) {
+  return (
+    <header className="mb-3">
+      <h1 className="text-[20px] font-semibold tracking-tight"><Help help={help}>{title}</Help></h1>
+      {sub && <p className="mt-0.5 text-fg/70">{sub}</p>}
     </header>
   );
 }
 
 /** Small caps heading above a group of cards. */
 export function SectionTitle({ children }: { children: ReactNode }) {
-  return <h2 className="mt-[18px] mb-2 px-1 text-[11px] font-semibold tracking-[0.08em] text-detail uppercase">{children}</h2>;
+  return <h2 className="mt-3.5 mb-1.5 px-1 text-[11px] font-semibold tracking-[0.08em] text-detail uppercase">{children}</h2>;
 }
 
-export function BlockTitle({ title, sub }: { title: string; sub?: string }) {
+export function BlockTitle({ title, sub, help }: { title: string; sub?: string; help?: ReactNode }) {
   return (
-    <div className="mt-[18px] mb-2.5">
-      <h2 className="text-[15px] font-semibold">{title}</h2>
+    <div className="mt-4 mb-2">
+      <h2 className="text-[14px] font-semibold"><Help help={help}>{title}</Help></h2>
       {sub && <p className="mt-0.5 text-fg/70">{sub}</p>}
     </div>
   );
@@ -39,14 +69,14 @@ export function Card({ children, className }: { children: ReactNode; className?:
   );
 }
 
-/** A settings row: title and optional subtitle on the left, a control on the right. */
-export function Row({ title, sub, control, disabled, id }: {
-  title: ReactNode; sub?: ReactNode; control?: ReactNode; disabled?: boolean; id?: string;
+/** A settings row: title (with an optional `help` popup) and subtitle on the left, a control on the right. */
+export function Row({ title, sub, help, control, disabled, id }: {
+  title: ReactNode; sub?: ReactNode; help?: ReactNode; control?: ReactNode; disabled?: boolean; id?: string;
 }) {
   return (
-    <div className={cx("flex min-h-8 items-center gap-4 px-3.5 py-2", disabled && "opacity-50")}>
+    <div className={cx("flex min-h-8 items-center gap-3 px-3 py-1.5", disabled && "opacity-50")}>
       <div className="min-w-0 flex-1">
-        <div id={id} className="font-medium">{title}</div>
+        <div className="font-medium"><Help help={help}><span id={id}>{title}</span></Help></div>
         {sub && <div className="mt-0.5 text-[12px] text-fg/65">{sub}</div>}
       </div>
       {control && <div className="flex shrink-0 items-center">{control}</div>}
@@ -54,12 +84,12 @@ export function Row({ title, sub, control, disabled, id }: {
   );
 }
 
-export function SwitchRow({ title, sub, checked, onChange, disabled }: {
-  title: string; sub?: ReactNode; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean;
+export function SwitchRow({ title, sub, help, checked, onChange, disabled }: {
+  title: string; sub?: ReactNode; help?: ReactNode; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean;
 }) {
   const id = useId();
   return (
-    <Row id={id} title={title} sub={sub} disabled={disabled}
+    <Row id={id} title={title} sub={sub} help={help} disabled={disabled}
       control={<Toggle checked={checked} onChange={onChange} disabled={disabled} labelledBy={id} />} />
   );
 }

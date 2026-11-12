@@ -8,8 +8,8 @@ import { HotkeyPicker } from "../../components/HotkeyPicker";
 import { Button, Card, CheckPill, Hint, PageTitle, Row, SectionTitle, Select, SwitchRow } from "../../components/ui";
 
 /** Toggle row for an optional hotkey (null = off) plus its picker row while on. */
-export function OptionalHotkey({ title, sub, target, field }: {
-  title: string; sub: string; target: HotkeyTarget; field: "caseChangeHotkey" | "snippetPickHotkey";
+export function OptionalHotkey({ title, help, target, field }: {
+  title: string; help: string; target: HotkeyTarget; field: "caseChangeHotkey" | "snippetPickHotkey";
 }) {
   const { t } = useTranslation();
   const s = useSettings();
@@ -17,7 +17,7 @@ export function OptionalHotkey({ title, sub, target, field }: {
   const value = s[field];
   return (
     <>
-      <SwitchRow title={title} sub={sub} checked={!!value}
+      <SwitchRow title={title} help={help} checked={!!value}
         onChange={(on) => update({ [field]: on ? PRESETS[target][0] : null } as Partial<Settings>)} />
       {value && (
         <Row title={t("common.shortcut")}
@@ -51,28 +51,28 @@ export function SwitchingPage() {
 
   return (
     <>
-      <PageTitle title={t("switch.title")} sub={t("switch.sub")} />
+      <PageTitle title={t("switch.title")} help={t("switch.sub")} />
       <Card>
-        <SwitchRow title={t("switch.auto")} sub={t("switch.autoSub")} checked={s.autoEnabled}
+        <SwitchRow title={t("switch.auto")} help={t("switch.autoSub")} checked={s.autoEnabled}
           onChange={(v) => update({ autoEnabled: v })} />
-        <SwitchRow title={t("switch.live")} sub={t("switch.liveSub")} disabled={!s.autoEnabled}
+        <SwitchRow title={t("switch.live")} help={t("switch.liveSub")} disabled={!s.autoEnabled}
           checked={s.autoEnabled && s.liveFixEnabled} onChange={(v) => update({ liveFixEnabled: v })} />
         <SwitchRow title={t("switch.group")} disabled={s.autoEnabled}
-          sub={s.autoEnabled ? t("switch.groupAutoOff") : t("switch.groupSub")}
+          help={s.autoEnabled ? t("switch.groupAutoOff") : t("switch.groupSub")}
           checked={!s.autoEnabled && s.groupConvert} onChange={(v) => update({ groupConvert: v })} />
-        <Row title={t("switch.minLetters")} sub={t("switch.minLettersSub")} disabled={!s.autoEnabled} control={
+        <Row title={t("switch.minLetters")} help={t("switch.minLettersSub")} disabled={!s.autoEnabled} control={
           <Select value={String(s.autoMinLetters)} label={t("switch.minLetters")} className="w-[64px]"
             onChange={(v) => update({ autoMinLetters: Number(v) })}
             options={["1", "2", "3", "4", "5", "6"].map((n) => ({ value: n, label: n }))} />
         } />
-        <SwitchRow title={t("switch.dev")} sub={t("switch.devSub")} checked={s.developerMode}
+        <SwitchRow title={t("switch.dev")} help={t("switch.devSub")} checked={s.developerMode}
           onChange={(v) => update({ developerMode: v })} />
-        <Row title={t("switch.manual")} sub={t("switch.manualSub")}
+        <Row title={t("switch.manual")} help={t("switch.manualSub")}
           control={<HotkeyPicker target="manual" value={s.hotkey} label={t("switch.manual")}
             onChange={(hotkey) => update({ hotkey })} />} />
-        <SwitchRow title={t("switch.learn")} sub={t("switch.learnSub")} checked={s.learnOnUndoEnabled}
+        <SwitchRow title={t("switch.learn")} help={t("switch.learnSub")} checked={s.learnOnUndoEnabled}
           onChange={(v) => update({ learnOnUndoEnabled: v })} />
-        <SwitchRow title={t("switch.learnSwitch")} sub={t("switch.learnSwitchSub")} checked={s.learnOnSwitchEnabled}
+        <SwitchRow title={t("switch.learnSwitch")} help={t("switch.learnSwitchSub")} checked={s.learnOnSwitchEnabled}
           onChange={(v) => update({ learnOnSwitchEnabled: v })} />
       </Card>
 
@@ -85,24 +85,24 @@ export function SwitchingPage() {
             <CheckPill checked={s.triggerTab} onChange={(v) => update({ triggerTab: v })}>{t("keys.tab")}</CheckPill>
           </div>
         } />
-        <SwitchRow title={t("switch.arrows")} sub={t("switch.arrowsSub")} checked={s.arrowsCancel}
+        <SwitchRow title={t("switch.arrows")} help={t("switch.arrowsSub")} checked={s.arrowsCancel}
           onChange={(v) => update({ arrowsCancel: v })} />
       </Card>
 
       <SectionTitle>{t("switch.fixSection")}</SectionTitle>
       <Card>
-        <SwitchRow title={t("switch.typoFix")} sub={t("switch.typoFixSub")} checked={s.typoFix}
+        <SwitchRow title={t("switch.typoFix")} help={t("switch.typoFixSub")} checked={s.typoFix}
           onChange={(v) => update({ typoFix: v })} />
-        <SwitchRow title={t("switch.twoCaps")} sub={t("switch.twoCapsSub")} checked={s.twoCapsFix}
+        <SwitchRow title={t("switch.twoCaps")} help={t("switch.twoCapsSub")} checked={s.twoCapsFix}
           onChange={(v) => update({ twoCapsFix: v })} />
-        <SwitchRow title={t("switch.chatter")} sub={t("switch.chatterSub")} checked={s.dedupeChatter}
+        <SwitchRow title={t("switch.chatter")} help={t("switch.chatterSub")} checked={s.dedupeChatter}
           onChange={(v) => update({ dedupeChatter: v })} />
-        <OptionalHotkey title={t("switch.caseTitle")} sub={t("switch.caseSub")} target="caseChange" field="caseChangeHotkey" />
+        <OptionalHotkey title={t("switch.caseTitle")} help={t("switch.caseSub")} target="caseChange" field="caseChangeHotkey" />
       </Card>
 
       <SectionTitle>{t("switch.pasteSection")}</SectionTitle>
       <Card>
-        <SwitchRow title={t("switch.plain")} sub={t("switch.plainSub")} checked={s.plainPaste}
+        <SwitchRow title={t("switch.plain")} help={t("switch.plainSub")} checked={s.plainPaste}
           onChange={(v) => update({ plainPaste: v })} />
         {s.plainPaste && (
           <Row title={t("common.shortcut")}
@@ -123,13 +123,13 @@ export function SwitchingPage() {
             ]} />
         } />
         {s.sound === "custom" && (
-          <Row title={s.soundFile || t("switch.soundNoFile")} sub={t("switch.soundFileSub")}
+          <Row title={s.soundFile || t("switch.soundNoFile")} help={t("switch.soundFileSub")}
             control={<Button onClick={chooseFile}>{t("switch.soundChoose")}</Button>} />
         )}
         <Row id={volId} title={t("switch.volume")} disabled={s.sound === "off"} control={
           <div className="flex items-center gap-3">
             <input type="range" min={0} max={1} step={0.05} value={s.soundVolume} aria-labelledby={volId}
-              disabled={s.sound === "off"} className="w-44 cursor-pointer"
+              disabled={s.sound === "off"} className="w-36 cursor-pointer"
               onChange={(e) => { volumeMoved.current = true; update({ soundVolume: Number(e.target.value) }); }}
               onPointerUp={previewVolume} onKeyUp={previewVolume} />
             <span className="w-9 text-right text-[12px] text-fg/70 tabular-nums">{Math.round(s.soundVolume * 100)}%</span>

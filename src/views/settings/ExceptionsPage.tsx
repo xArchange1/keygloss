@@ -39,7 +39,7 @@ function DismissedList() {
     <Card>
       {rows.length === 0 && <p className="px-3.5 py-3 text-[12px] text-fg/60">{t("exc.dismissedEmpty")}</p>}
       {rows.map((r) => (
-        <div key={`${r.list}:${r.word}`} className="flex min-h-[42px] items-center gap-2 px-3.5 py-1.5">
+        <div key={`${r.list}:${r.word}`} className="flex min-h-9 items-center gap-1.5 px-3 py-1.5">
           <div className="min-w-0 flex-1 truncate text-[12.5px]">
             <span className="font-medium">{r.from ?? "…"}</span>
             <span className="mx-1.5 text-fg/45" aria-label={t("exc.dismissedTo")}>→</span>
@@ -112,11 +112,11 @@ export function ExceptionsPage({ onOpenAmbiguous }: { onOpenAmbiguous: () => voi
 
   return (
     <>
-      <PageTitle title={t("exc.appsTitle")} sub={t("exc.appsSub")} />
+      <PageTitle title={t("exc.appsTitle")} help={t("exc.appsSub")} />
       <Card>
         {apps.length === 0 && <p className="px-3.5 py-3 text-[12px] text-fg/60">{t("exc.appsEmpty")}</p>}
         {apps.map((id) => (
-          <div key={id} className="flex min-h-[42px] items-center gap-2.5 px-3.5 py-1.5">
+          <div key={id} className="flex min-h-9 items-center gap-2 px-3 py-1.5">
             <div className="min-w-0 flex-1 truncate">
               <span className="font-medium">{names[id] ?? id}</span>
               {names[id] && <span className="ml-2 text-[11.5px] text-fg/60">{id}</span>}
@@ -146,7 +146,7 @@ export function ExceptionsPage({ onOpenAmbiguous }: { onOpenAmbiguous: () => voi
       <BlockTitle title={t("amb.title")} sub={t("amb.openSub")} />
       <Button onClick={onOpenAmbiguous}><ArrowLeftRight size={14} />{t("amb.open")}</Button>
 
-      <BlockTitle title={t("exc.ignoredTitle")} sub={t("exc.ignoredSub")} />
+      <BlockTitle title={t("exc.ignoredTitle")} help={t("exc.ignoredSub")} />
       <WordAdder list={s.ignoredWords}
         onAdd={(w) => update({ ignoredWords: [...s.ignoredWords, w], forceSwapWords: without(s.forceSwapWords, w) })} />
       <Chips words={sorted(s.ignoredWords)} empty={t("exc.empty")}
@@ -158,7 +158,7 @@ export function ExceptionsPage({ onOpenAmbiguous }: { onOpenAmbiguous: () => voi
       <Chips words={sorted(s.forceSwapWords)} empty={t("exc.empty")}
         onRemove={(w) => update({ forceSwapWords: without(s.forceSwapWords, w) })} />
 
-      <BlockTitle title={t("exc.dismissedTitle")} sub={t("exc.dismissedSub")} />
+      <BlockTitle title={t("exc.dismissedTitle")} help={t("exc.dismissedSub")} />
       <DismissedList />
     </>
   );

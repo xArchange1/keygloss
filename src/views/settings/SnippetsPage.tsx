@@ -33,9 +33,9 @@ export function SnippetsPage() {
       {allOff && <Hint tone="warn">{t("snip.disabled")}</Hint>}
       <Hint>{t("snip.hint")}</Hint>
 
-      <BlockTitle title={t("snip.textsTitle")} sub={t("snip.textsSub")} />
+      <BlockTitle title={t("snip.textsTitle")} help={t("snip.textsSub")} />
       <Card>
-        <OptionalHotkey title={t("snip.pickOn")} sub={t("snip.pickHint")} target="snippetPick" field="snippetPickHotkey" />
+        <OptionalHotkey title={t("snip.pickOn")} help={t("snip.pickHint")} target="snippetPick" field="snippetPickHotkey" />
       </Card>
       <div className="mt-2.5">
         <PairEditor pairs={s.textSnippets} onChange={(textSnippets) => update({ textSnippets })}
