@@ -149,7 +149,6 @@ const en = {
     themeLight: "Light",
     themeDark: "Dark",
     language: "Interface language",
-    langAuto: "System",
     login: "Launch at login",
   },
   upd: {

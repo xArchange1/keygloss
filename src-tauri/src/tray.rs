@@ -1,4 +1,4 @@
-//! Tray icon and menu. The menu is a pure function of (status, settings language, OS language),
+//! Tray icon and menu. The menu is a pure function of (status, settings language),
 //! rebuilt whenever its model changes.
 
 use keygloss_core::engine::EngineStatus;
@@ -29,8 +29,6 @@ impl Lang {
         match setting {
             UiLanguage::Ru => Lang::Ru,
             UiLanguage::En => Lang::En,
-            UiLanguage::Auto if keygloss_windows::shell::ui_language_is_russian() => Lang::Ru,
-            UiLanguage::Auto => Lang::En,
         }
     }
 }

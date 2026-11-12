@@ -32,7 +32,7 @@ export type Hotkey =
 
 export type AppMode = "off" | "soft";
 export type Theme = "system" | "light" | "dark";
-export type UiLanguage = "auto" | "ru" | "en";
+export type UiLanguage = "ru" | "en";
 export type Sound = "off" | "beep" | "whoosh" | "custom";
 /** "beta" also gets pre-releases. */
 export type UpdateChannel = "stable" | "beta";
@@ -196,7 +196,7 @@ let memSettings: Settings = {
   seededDefaultApps: [], snippetsOrdered: [], snippetExpandSpace: false, snippetExpandEnter: false,
   snippetExpandTab: true, textSnippets: [], undoDeclinedWords: [], undoStrikeCount: {},
   undoStrikeTime: {}, switchDeclinedWords: [], switchStrikeCount: {}, switchStrikeTime: {}, typoPersonalWords: {}, lastLayoutCyr: "", lastLayoutLat: "",
-  language: "auto", appTheme: "system", didInitialSetup: false, didShowWelcome: false, rescuedCount: 0,
+  language: "en", appTheme: "system", didInitialSetup: false, didShowWelcome: false, rescuedCount: 0,
   updateCheckOnStartup: true, autoUpdate: false, updateChannel: "stable",
   showWhatsNew: true, historyKeepDays: 0, lastSeenVersion: "",
 };

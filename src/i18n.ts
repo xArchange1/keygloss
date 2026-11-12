@@ -13,9 +13,8 @@ i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 
-/** Applies the `language` setting: auto follows the OS locale (ru -> Russian, else English). */
-export function applyLanguage(lang: UiLanguage) {
-  const lng = lang === "auto" ? systemLanguage() : lang;
+/** Applies the `language` setting. */
+export function applyLanguage(lng: UiLanguage) {
   if (i18n.language !== lng) i18n.changeLanguage(lng);
   document.documentElement.lang = lng;
 }
