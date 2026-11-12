@@ -17,6 +17,8 @@ use tauri::{AppHandle, Manager};
 const CUSTOM_FILE: &str = "custom-sound";
 /// A custom sound is cut off after this long.
 const CUSTOM_LIMIT: Duration = Duration::from_secs(5);
+/// The output gain at 100% volume: full gain was far too loud, so the slider spans 0..=20% of it.
+const MAX_GAIN: f64 = 0.2;
 
 struct Cue {
     sound: Sound,
@@ -31,6 +33,11 @@ pub fn custom_file(app: &AppHandle) -> Option<PathBuf> {
 /// The file as audio; `None` if it is missing or not WAV or MP3.
 pub fn decode(path: &Path) -> Option<Decoder<BufReader<File>>> {
     Decoder::try_from(File::open(path).ok()?).ok()
+}
+
+/// The player gain for a volume setting (0..=1).
+fn gain(volume: f64) -> f32 {
+    (volume.clamp(0.0, 1.0) * MAX_GAIN) as f32
 }
 
 /// Queues what `cue` plays; `None` plays nothing.
@@ -49,7 +56,7 @@ fn run(cue: &Cue, next: &Receiver<Cue>) -> Result<Cue, RecvError> {
     if let Ok(mut out) = DeviceSinkBuilder::open_default_sink() {
         out.log_on_drop(false);
         let player = Player::connect_new(out.mixer());
-        player.set_volume(cue.volume.clamp(0.0, 1.0) as f32);
+        player.set_volume(gain(cue.volume));
         if append(&player, cue).is_some() {
             // One more round after the queue empties lets the device play out its buffer.
             let mut done = false;
@@ -90,6 +97,14 @@ pub fn play(app: &AppHandle, sound: Sound, volume: f64) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn full_volume_plays_at_a_fifth_of_full_gain() {
+        assert_eq!(gain(1.0), 0.2);
+        assert_eq!(gain(0.5), 0.1);
+        assert_eq!(gain(2.0), 0.2);
+        assert_eq!(gain(-1.0), 0.0);
+    }
 
     #[test]
     fn decodes_the_built_in_sounds_and_refuses_other_files() {
