@@ -127,50 +127,58 @@ impl TypoFixer {
         table.get(w).cloned()
     }
 
-    /// Adjacent transposition (not in the last two positions) or a letter typed twice (not at
-    /// either end) that yields exactly one dictionary word. Words of 5+ letters only.
+    /// Mechanical typo that yields exactly one dictionary word, in tiers; the first tier with a
+    /// candidate decides, and two different candidates in it mean "leave it":
+    /// 1. adjacent transposition (not in the last two positions) or a letter typed twice (not at
+    ///    either end);
+    /// 2. one of the pair's commonly confused letters swapped (`превет` → `привет`), not in the
+    ///    last three positions (endings);
+    /// 3. one missing letter (`tlephone` → `telephone`), not first and not in the last two
+    ///    positions; words of 6+ letters.
+    ///
+    /// Words of 5+ letters only.
     fn mechanical(data: &LangData, w: &str) -> Option<String> {
-        let mut chars: Vec<char> = w.chars().collect();
+        let chars: Vec<char> = w.chars().collect();
         let n = chars.len();
         if n < 5 {
             return None;
         }
-        let dict = if data.pair.has_alt(w) { &data.words_alt } else { &data.words_latin };
-        let mut found: Option<String> = None;
-        // Returns true when a second, different candidate appears (stop: ambiguous).
-        let mut offer = |s: String| -> bool {
-            if !dict.contains(&s) {
-                return false;
-            }
-            match &found {
-                Some(f) if *f != s => {
-                    found = None;
-                    true
+        let alt = data.pair.has_alt(w);
+        let dict = if alt { &data.words_alt } else { &data.words_latin };
+        // None: no candidate in the tier. Some(None): two different ones (ambiguous).
+        let pick = |cands: &mut dyn Iterator<Item = Vec<char>>| -> Option<Option<String>> {
+            let mut found: Option<String> = None;
+            for c in cands {
+                let s: String = c.into_iter().collect();
+                if !dict.contains(&s) {
+                    continue;
                 }
-                _ => {
-                    found = Some(s);
-                    false
+                match &found {
+                    Some(f) if *f != s => return Some(None),
+                    _ => found = Some(s),
                 }
             }
+            found.map(Some)
         };
-        for i in 0..n - 2 {
-            chars.swap(i, i + 1);
-            let s: String = chars.iter().collect();
-            chars.swap(i, i + 1);
-            if offer(s) {
-                return None;
-            }
-        }
-        for i in 1..n - 2 {
-            if chars[i] == chars[i + 1] && !data.pair.typo_keep_doubled.contains(&chars[i]) {
-                let mut c = chars.clone();
-                c.remove(i);
-                if offer(c.into_iter().collect()) {
-                    return None;
-                }
-            }
-        }
-        found
+        let edited = |f: &dyn Fn(&mut Vec<char>)| {
+            let mut c = chars.clone();
+            f(&mut c);
+            c
+        };
+        let mut swapped_or_doubled = (0..n - 2)
+            .map(|i| edited(&|c| c.swap(i, i + 1)))
+            .chain((1..n - 2).filter(|&i| chars[i] == chars[i + 1] && !data.pair.typo_keep_doubled.contains(&chars[i])).map(|i| edited(&|c| _ = c.remove(i))));
+        let mut confused = (0..n - 3).filter_map(|i| {
+            let other = data.pair.typo_confused_letters.iter().find_map(|&(a, b)| match chars[i] {
+                x if x == a => Some(b),
+                x if x == b => Some(a),
+                _ => None,
+            })?;
+            Some(edited(&|c| c[i] = other))
+        });
+        let alphabet: Vec<char> = data.pair.base_pairs.iter().map(|&(l, a)| if alt { a } else { l }).filter(|c| c.is_alphabetic()).collect();
+        let mut missing = (1..n - 1).filter(|_| n >= 6).flat_map(|i| alphabet.iter().map(move |&l| (i, l))).map(|(i, l)| edited(&|c| c.insert(i, l)));
+        pick(&mut swapped_or_doubled).or_else(|| pick(&mut confused)).or_else(|| pick(&mut missing)).flatten()
     }
 
     /// The known fix of a lowercase word, ignoring settings and protections.
@@ -276,6 +284,20 @@ mod tests {
         assert_eq!(TypoFixer::mechanical(d, "ввода"), None);
         assert_eq!(TypoFixer::mechanical(d, "ценна"), None);
         assert_eq!(t.suggest(d, "кеш", NONE), None);
+    }
+
+    #[test]
+    fn mechanical_confused_and_missing() {
+        let d = warm_up();
+        let t = TypoFixer::default();
+        assert_eq!(t.suggest(d, "превет", NONE).as_deref(), Some("привет"));
+        assert_eq!(t.suggest(d, "каторый", NONE).as_deref(), Some("который"));
+        assert_eq!(t.suggest(d, "tlephone", NONE).as_deref(), Some("telephone"));
+        assert_eq!(t.suggest(d, "Tlephone", NONE).as_deref(), Some("Telephone"));
+        assert_eq!(t.suggest(d, "пожалуста", NONE).as_deref(), Some("пожалуйста"));
+        // Endings are never touched: a missing last letter or a confused vowel near the end.
+        assert_eq!(TypoFixer::mechanical(d, "telephon"), None);
+        assert_eq!(TypoFixer::mechanical(d, "сделаеш"), None);
     }
 
     #[test]

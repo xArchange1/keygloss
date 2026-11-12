@@ -1233,6 +1233,15 @@ fn typo_fix_and_its_undo() {
     assert_eq!(h.text(), "address ");
     h.manual();
     assert_eq!(h.text(), "adress ");
+    // A missing letter and a confused vowel.
+    let mut h = H::boundary();
+    h.keys("tlephone ");
+    h.advance(100);
+    assert_eq!(h.text(), "telephone ");
+    h.set_layout(RU);
+    h.type_with(&ru(), "превет ");
+    h.advance(100);
+    assert_eq!(h.text(), "telephone привет ");
     // Off: left alone.
     let mut h = H::with(|s| {
         s.live_fix_enabled = false;
