@@ -84,6 +84,8 @@ export function GeneralPage() {
           onChange={(updateCheckOnStartup) => update({ updateCheckOnStartup })} />
         <SwitchRow title={t("upd.auto")} sub={t("upd.autoSub")} disabled={!s.updateCheckOnStartup}
           checked={s.autoUpdate} onChange={(autoUpdate) => update({ autoUpdate })} />
+        <SwitchRow title={t("upd.whatsNew")} sub={t("upd.whatsNewSub")} checked={s.showWhatsNew}
+          onChange={(showWhatsNew) => update({ showWhatsNew })} />
       </Card>
     </>
   );

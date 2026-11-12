@@ -11,6 +11,7 @@ import { SnippetsPage } from "./SnippetsPage";
 import { GeneralPage } from "./GeneralPage";
 import { HistoryPage } from "./HistoryPage";
 import { AboutPage } from "./InfoPages";
+import { WhatsNew } from "../../components/WhatsNew";
 
 const SECTIONS = [
   { id: "general", icon: Gear },
@@ -54,6 +55,8 @@ export function SettingsView() {
   const scroller = useRef<HTMLDivElement>(null);
   useEffect(() => { scroller.current?.scrollTo(0, 0); }, [page]);
   const active = page === "ambiguous" ? "exceptions" : page;
+  const [whatsNew, setWhatsNew] = useState(false);
+  useEffect(() => { ipc.takeWhatsNew().then((v) => v && setWhatsNew(true)).catch(console.error); }, []);
 
   return (
     <div className="flex h-full">
@@ -89,6 +92,7 @@ export function SettingsView() {
           {page === "about" && <AboutPage />}
         </div>
       </main>
+      {whatsNew && <WhatsNew onClose={() => setWhatsNew(false)} />}
     </div>
   );
 }

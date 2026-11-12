@@ -104,10 +104,14 @@ export interface Settings {
   /** Install what the startup check finds without asking. */
   autoUpdate: boolean;
   updateChannel: UpdateChannel;
+  /** Show the release notes on the first start after an update. */
+  showWhatsNew: boolean;
   // App state
   didInitialSetup: boolean;
   didShowWelcome: boolean;
   rescuedCount: number;
+  /** App version of the last start. */
+  lastSeenVersion: string;
 }
 
 export interface AppInfo {
@@ -183,6 +187,7 @@ let memSettings: Settings = {
   undoStrikeTime: {}, typoPersonalWords: {}, lastLayoutCyr: "", lastLayoutLat: "",
   language: "auto", appTheme: "system", didInitialSetup: false, didShowWelcome: false, rescuedCount: 0,
   updateCheckOnStartup: true, autoUpdate: false, updateChannel: "stable",
+  showWhatsNew: true, lastSeenVersion: "",
 };
 
 function browserInvoke(cmd: string, args?: Record<string, unknown>): unknown {
@@ -198,6 +203,7 @@ function browserInvoke(cmd: string, args?: Record<string, unknown>): unknown {
     case "set_launch_at_login": return args!.enabled;
     case "app_version": return "dev";
     case "check_for_update": case "pending_update": case "clear_history": return null;
+    case "take_whats_new": return false;
     case "get_history": return [{ at: Date.now() / 1000 - 60, from: "ghbdtn", to: "привет" }, { at: Date.now() / 1000 - 3600, from: "vbh", to: "мир" }];
   }
 }
@@ -243,6 +249,8 @@ export const appVersion = () => invoke<string>("app_version");
 export const checkForUpdate = () => invoke<string | null>("check_for_update");
 /** Version found by the last check (the startup one too), or null. */
 export const pendingUpdate = () => invoke<string | null>("pending_update");
+/** True once after an update with `showWhatsNew` on: show the release notes. */
+export const takeWhatsNew = () => invoke<boolean>("take_whats_new");
 /** Downloads and installs the update found by the last check; the app restarts. */
 export const installUpdate = () => invoke<void>("install_update");
 /** Opens the GitHub bug form (`bug`) or feature form in the browser, prefilled with the app version, the Windows version and (bug form) the newest log lines. */

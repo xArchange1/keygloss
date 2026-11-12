@@ -167,12 +167,16 @@ pub struct Settings {
     /// Install what the startup check finds without asking.
     pub auto_update: bool,
     pub update_channel: UpdateChannel,
+    /// Show the release notes on the first start after an update.
+    pub show_whats_new: bool,
 
     // App state
     pub did_initial_setup: bool,
     pub did_show_welcome: bool,
     /// Words fixed so far (shown in About).
     pub rescued_count: u64,
+    /// App version of the last start; a different one means the app was updated.
+    pub last_seen_version: String,
 }
 
 impl Default for Settings {
@@ -238,10 +242,12 @@ impl Default for Settings {
             update_check_on_startup: true,
             auto_update: false,
             update_channel: UpdateChannel::Stable,
+            show_whats_new: true,
 
             did_initial_setup: false,
             did_show_welcome: false,
             rescued_count: 0,
+            last_seen_version: String::new(),
         }
     }
 }

@@ -162,6 +162,8 @@ const en = {
     startup: "Check for updates on startup",
     auto: "Install updates automatically",
     autoSub: "An update found on startup is installed right away, then Keygloss restarts",
+    whatsNew: "Show what’s new after an update",
+    whatsNewSub: "Opens the release notes on the first start of a new version",
   },
   hist: {
     title: "History",
@@ -188,12 +190,17 @@ const en = {
     basedOn: "A Windows rewrite of Keyboop — MIT License, Copyright (c) 2026 Keyboop contributors.",
     data: "Language data from keyswitcher — MIT License, Copyright (c) 2026 Ilya Granin.",
     welcome: "Welcome tour",
+    whatsNew: "What’s new",
     support: "Support development",
     feedback: "Feedback",
     reportBug: "Report a problem",
     requestFeature: "Suggest a feature",
     openLogs: "Open the log folder",
     feedbackHint: "Opens a GitHub form in your browser with the app version, the Windows version and the latest log lines filled in. Nothing is sent until you submit it. The log has no typed text: only lengths, app names and layouts.",
+  },
+  whatsNew: {
+    title: "What’s new",
+    close: "Got it",
   },
   hkrec: {
     title: "New shortcut",

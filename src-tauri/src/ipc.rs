@@ -248,6 +248,12 @@ pub fn pending_update(state: State<AppState>) -> Option<String> {
     state.pending_update().map(|u| u.version)
 }
 
+/// True once after an update with "show what's new" on: Settings then shows the release notes.
+#[tauri::command]
+pub fn take_whats_new(state: State<AppState>) -> bool {
+    state.whats_new.swap(false, std::sync::atomic::Ordering::Relaxed)
+}
+
 /// Downloads and runs the installer of the update found by the last check; the app restarts.
 #[tauri::command]
 pub async fn install_update(app: AppHandle) -> Result<(), String> {
@@ -380,7 +386,8 @@ mod tests {
             "appForcedLayouts", "seededDefaultApps", "snippetsOrdered", "snippetExpandSpace", "snippetExpandEnter",
             "snippetExpandTab", "textSnippets", "undoDeclinedWords", "undoStrikeCount", "undoStrikeTime",
             "typoPersonalWords", "lastLayoutCyr", "lastLayoutLat", "language", "appTheme", "didInitialSetup",
-            "didShowWelcome", "rescuedCount", "updateCheckOnStartup", "autoUpdate", "updateChannel",
+            "didShowWelcome", "rescuedCount", "updateCheckOnStartup", "autoUpdate", "updateChannel", "showWhatsNew",
+            "lastSeenVersion",
         ];
         ts.sort();
         assert_eq!(keys(&v), ts);
