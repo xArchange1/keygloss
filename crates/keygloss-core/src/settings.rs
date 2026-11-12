@@ -111,7 +111,7 @@ pub struct Settings {
     pub sound_file: String,
 
     // Hotkeys
-    /// Manual convert / undo. Default: Pause/Break.
+    /// Manual convert / undo. Default: double Shift.
     pub hotkey: Hotkey,
     /// Case toggle of the selection; `None` = off.
     pub case_change_hotkey: Option<Hotkey>,
@@ -211,7 +211,7 @@ impl Default for Settings {
             sound_volume: 0.6,
             sound_file: String::new(),
 
-            hotkey: Hotkey::Key { key: KeyCode::Pause, mods: Modifiers::NONE },
+            hotkey: Hotkey::DoubleTap { key: KeyCode::ShiftLeft },
             case_change_hotkey: None,
             plain_paste: false,
             plain_paste_hotkey: Hotkey::Key {
@@ -297,11 +297,7 @@ mod tests {
         assert_eq!(v["appTheme"], "system");
         assert_eq!(
             v["hotkey"],
-            serde_json::json!({
-                "mode": "key",
-                "key": "Pause",
-                "mods": { "ctrl": false, "alt": false, "shift": false, "meta": false }
-            })
+            serde_json::json!({ "mode": "doubletap", "key": "ShiftLeft" })
         );
         assert_eq!(v["caseChangeHotkey"], serde_json::Value::Null);
     }

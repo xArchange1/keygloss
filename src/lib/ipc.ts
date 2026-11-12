@@ -200,7 +200,7 @@ let memSettings: Settings = {
   triggerEnter: true, triggerTab: false, enterPreConvert: true, arrowsCancel: true,
   developerMode: false, dedupeChatter: false, groupConvert: true, learnOnUndoEnabled: true, learnOnSwitchEnabled: true,
   typoFix: true, twoCapsFix: true, sound: "beep", soundVolume: 0.6, soundFile: "",
-  hotkey: { mode: "key", key: "Pause", mods: NO_MODS }, caseChangeHotkey: null, plainPaste: false,
+  hotkey: { mode: "doubletap", key: "ShiftLeft" }, caseChangeHotkey: null, plainPaste: false,
   plainPasteHotkey: { mode: "key", key: "KeyV", mods: { ...NO_MODS, ctrl: true, shift: true } },
   snippetPickHotkey: null, pauseMinutes: 15, pausedUntil: 0, ignoredWords: ["вк", "тг", "vk"],
   forceSwapWords: [], appExceptionModes: {}, appForcedLayouts: {},
