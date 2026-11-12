@@ -57,6 +57,9 @@ export function SwitchingPage() {
           onChange={(v) => update({ autoEnabled: v })} />
         <SwitchRow title={t("switch.live")} sub={t("switch.liveSub")} disabled={!s.autoEnabled}
           checked={s.autoEnabled && s.liveFixEnabled} onChange={(v) => update({ liveFixEnabled: v })} />
+        <SwitchRow title={t("switch.group")} disabled={s.autoEnabled}
+          sub={s.autoEnabled ? t("switch.groupAutoOff") : t("switch.groupSub")}
+          checked={!s.autoEnabled && s.groupConvert} onChange={(v) => update({ groupConvert: v })} />
         <Row title={t("switch.minLetters")} sub={t("switch.minLettersSub")} disabled={!s.autoEnabled} control={
           <Select value={String(s.autoMinLetters)} label={t("switch.minLetters")} className="w-[64px]"
             onChange={(v) => update({ autoMinLetters: Number(v) })}
@@ -67,9 +70,6 @@ export function SwitchingPage() {
         <Row title={t("switch.manual")} sub={t("switch.manualSub")}
           control={<HotkeyPicker target="manual" value={s.hotkey} label={t("switch.manual")}
             onChange={(hotkey) => update({ hotkey })} />} />
-        <SwitchRow title={t("switch.group")} disabled={s.autoEnabled}
-          sub={s.autoEnabled ? t("switch.groupAutoOff") : t("switch.groupSub")}
-          checked={!s.autoEnabled && s.groupConvert} onChange={(v) => update({ groupConvert: v })} />
         <SwitchRow title={t("switch.learn")} sub={t("switch.learnSub")} checked={s.learnOnUndoEnabled}
           onChange={(v) => update({ learnOnUndoEnabled: v })} />
       </Card>
