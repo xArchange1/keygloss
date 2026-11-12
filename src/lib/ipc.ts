@@ -209,6 +209,7 @@ function browserInvoke(cmd: string, args?: Record<string, unknown>): unknown {
       return { running: false, pausedUntil: null, autoEnabled: memSettings.autoEnabled, layout: null, hookHealthy: false };
     case "check_hotkey": return { verdict: "ok", reason: null, conflictsWith: null };
     case "list_apps": return [{ id: "notepad.exe", name: "Notepad" }];
+    case "swap_layout": return args!.words;
     case "get_ambiguous_pairs": return [{ en: "yt", ru: "не" }, { en: "vs", ru: "мы" }];
     case "get_launch_at_login": return false;
     case "set_launch_at_login": return args!.enabled;
@@ -242,6 +243,8 @@ export const checkHotkey = (target: HotkeyTarget, hotkey: Hotkey) =>
   invoke<HotkeyCheck>("check_hotkey", { target, hotkey });
 export const listApps = () => invoke<AppInfo[]>("list_apps");
 export const getAmbiguousPairs = () => invoke<AmbiguousPair[]>("get_ambiguous_pairs");
+/** Each word as typed in the other layout ("ghbdtn" ↔ "привет"). */
+export const swapLayout = (words: string[]) => invoke<string[]>("swap_layout", { words });
 export const answerLearnBanner = (word: string, keep: boolean) =>
   invoke<void>("answer_learn_banner", { word, keep });
 /** `add` puts `word` (the switched-to form) into "Always switch"; otherwise it is never asked about again. */

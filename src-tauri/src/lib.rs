@@ -232,6 +232,7 @@ pub fn run() {
             ipc::answer_learn_banner,
             ipc::dismiss_learn_banner,
             ipc::answer_switch_banner,
+            ipc::swap_layout,
             ipc::dismiss_switch_banner,
             ipc::snippet_picker_choose,
             ipc::snippet_picker_close,

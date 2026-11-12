@@ -9,6 +9,59 @@ import { BlockTitle, Button, Card, Chips, PageTitle, Segmented, Select, TextInpu
 const sorted = (words: string[]) => [...words].sort((a, b) => a.localeCompare(b));
 const without = (words: string[], w: string) => words.filter((x) => x !== w);
 
+type DeclinedList = "undoDeclinedWords" | "switchDeclinedWords";
+
+/** "No thanks" answers: undo ones hold the typed word, switch ones the switched-to word. Shown as `from → to`. */
+function DismissedList() {
+  const { t } = useTranslation();
+  const s = useSettings();
+  const update = useUpdate();
+  const words = [...s.undoDeclinedWords, ...s.switchDeclinedWords];
+  const [swapped, setSwapped] = useState<Record<string, string>>({});
+  useEffect(() => {
+    ipc.swapLayout(words).then((out) => setSwapped(Object.fromEntries(words.map((w, i) => [w, out[i]])))).catch(console.error);
+  }, [words.join("\n")]);
+
+  const rows = [
+    ...s.undoDeclinedWords.map((w) => ({ list: "undoDeclinedWords" as DeclinedList, word: w, from: w, to: swapped[w] })),
+    ...s.switchDeclinedWords.map((w) => ({ list: "switchDeclinedWords" as DeclinedList, word: w, from: swapped[w], to: w })),
+  ].sort((a, b) => a.word.localeCompare(b.word));
+  type Row = (typeof rows)[number];
+  const drop = (r: Row) => ({ [r.list]: without(s[r.list], r.word) });
+  const toNever = (r: Row) => update({
+    ...drop(r), ignoredWords: [...without(s.ignoredWords, r.from), r.from], forceSwapWords: without(s.forceSwapWords, r.from),
+  });
+  const toAlways = (r: Row) => update({
+    ...drop(r), forceSwapWords: [...without(s.forceSwapWords, r.to), r.to], ignoredWords: without(s.ignoredWords, r.to),
+  });
+
+  return (
+    <Card>
+      {rows.length === 0 && <p className="px-3.5 py-3 text-[12px] text-fg/60">{t("exc.dismissedEmpty")}</p>}
+      {rows.map((r) => (
+        <div key={`${r.list}:${r.word}`} className="flex min-h-[42px] items-center gap-2 px-3.5 py-1.5">
+          <div className="min-w-0 flex-1 truncate text-[12.5px]">
+            <span className="font-medium">{r.from ?? "…"}</span>
+            <span className="mx-1.5 text-fg/45" aria-label={t("exc.dismissedTo")}>→</span>
+            <span>{r.to ?? "…"}</span>
+          </div>
+          <Button disabled={!r.from} title={t("exc.toNeverHelp", { word: r.from })} onClick={() => toNever(r)}>
+            {t("exc.toNever")}
+          </Button>
+          <Button disabled={!r.to} title={t("exc.toAlwaysHelp", { from: r.from, to: r.to })} onClick={() => toAlways(r)}>
+            {t("exc.toAlways")}
+          </Button>
+          <button type="button" aria-label={t("exc.dismissedRemove", { word: r.word })} title={t("exc.dismissedRemove", { word: r.word })}
+            onClick={() => update(drop(r))}
+            className="grid size-7 cursor-pointer place-items-center rounded-md text-fg/50 hover:bg-fg/[0.08] hover:text-fg">
+            <X size={14} />
+          </button>
+        </div>
+      ))}
+    </Card>
+  );
+}
+
 /** Input + Add button; reports why a word was not added. */
 function WordAdder({ list, onAdd }: { list: string[]; onAdd: (w: string) => void }) {
   const { t } = useTranslation();
@@ -104,6 +157,9 @@ export function ExceptionsPage({ onOpenAmbiguous }: { onOpenAmbiguous: () => voi
         onAdd={(w) => update({ forceSwapWords: [...s.forceSwapWords, w], ignoredWords: without(s.ignoredWords, w) })} />
       <Chips words={sorted(s.forceSwapWords)} empty={t("exc.empty")}
         onRemove={(w) => update({ forceSwapWords: without(s.forceSwapWords, w) })} />
+
+      <BlockTitle title={t("exc.dismissedTitle")} sub={t("exc.dismissedSub")} />
+      <DismissedList />
     </>
   );
 }

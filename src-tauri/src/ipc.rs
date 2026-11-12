@@ -2,6 +2,8 @@
 //! Payload types are the core's where they serialize as ipc.ts expects.
 
 use keygloss_core::data;
+use keygloss_core::keymap::Keymap;
+use keygloss_core::pair::{RU_EN, Side};
 use keygloss_core::engine::{EngineEvent, EngineStatus, HotkeyCheck, HotkeyTarget, check_hotkey as core_check_hotkey};
 use keygloss_core::platform::{AppId, AppInfo};
 use keygloss_core::settings::{Hotkey, Settings, Sound};
@@ -165,6 +167,13 @@ pub async fn get_ambiguous_pairs() -> Vec<AmbiguousPair> {
         .iter()
         .map(|p| AmbiguousPair { en: p.latin.clone(), ru: p.alt.clone() })
         .collect()
+}
+
+/// Each word as typed in the other layout (`ghbdtn` ↔ `привет`), for the "Dismissed" list.
+#[tauri::command]
+pub fn swap_layout(words: Vec<String>) -> Vec<String> {
+    let keymap = Keymap::fallback(&RU_EN);
+    words.iter().map(|w| keymap.convert(w, if RU_EN.has_alt(w) { Side::Latin } else { Side::Alt })).collect()
 }
 
 /// `keep` adds the word to "Never switch", otherwise it is declined.
@@ -415,6 +424,11 @@ mod tests {
         ];
         ts.sort();
         assert_eq!(keys(&v), ts);
+    }
+
+    #[test]
+    fn swap_layout_goes_both_ways() {
+        assert_eq!(swap_layout(vec!["ghbdtn".into(), "мы".into()]), vec!["привет".to_string(), "vs".to_string()]);
     }
 
     #[test]
