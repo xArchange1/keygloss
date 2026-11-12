@@ -6,7 +6,25 @@ on:
     branches: [main]
 
 jobs:
+  # A docs-only change skips `ci`; a skipped required check counts as passing.
+  # (paths-ignore would leave the required check pending forever instead.)
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          predicate-quantifier: every
+          filters: |
+            code:
+              - '!**/*.md'
+
   ci:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
