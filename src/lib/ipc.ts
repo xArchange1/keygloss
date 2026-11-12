@@ -193,7 +193,7 @@ let memSettings: Settings = {
   plainPasteHotkey: { mode: "key", key: "KeyV", mods: { ...NO_MODS, ctrl: true, shift: true } },
   snippetPickHotkey: null, pauseMinutes: 15, pausedUntil: 0, ignoredWords: ["вк", "тг", "vk"],
   forceSwapWords: [], appExceptionModes: {}, appForcedLayouts: {},
-  seededDefaultApps: [], snippetsOrdered: [], snippetExpandSpace: true, snippetExpandEnter: true,
+  seededDefaultApps: [], snippetsOrdered: [], snippetExpandSpace: false, snippetExpandEnter: false,
   snippetExpandTab: true, textSnippets: [], undoDeclinedWords: [], undoStrikeCount: {},
   undoStrikeTime: {}, switchDeclinedWords: [], switchStrikeCount: {}, switchStrikeTime: {}, typoPersonalWords: {}, lastLayoutCyr: "", lastLayoutLat: "",
   language: "auto", appTheme: "system", didInitialSetup: false, didShowWelcome: false, rescuedCount: 0,

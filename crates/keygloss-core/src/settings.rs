@@ -231,8 +231,8 @@ impl Default for Settings {
             seeded_default_apps: Vec::new(),
 
             snippets_ordered: Vec::new(),
-            snippet_expand_space: true,
-            snippet_expand_enter: true,
+            snippet_expand_space: false,
+            snippet_expand_enter: false,
             snippet_expand_tab: true,
             text_snippets: Vec::new(),
 
