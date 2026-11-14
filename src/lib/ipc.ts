@@ -289,6 +289,8 @@ export const openUpdate = () => invoke<void>("open_update");
 export const reportIssue = (bug: boolean) => invoke<void>("report_issue", { bug });
 /** Shows the folder with the log files in Explorer (Finder on macOS). */
 export const openLogs = () => invoke<void>("open_logs");
+/** Opens the Sponsor section of the README in the browser. */
+export const openSponsor = () => invoke<void>("open_sponsor");
 /** macOS: opens System Settings at Privacy & Security > Accessibility. */
 export const openAccessibilitySettings = () => invoke<void>("open_accessibility_settings");
 /** Running on macOS (the hook there needs the Accessibility permission; shortcuts use Command). */

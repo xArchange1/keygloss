@@ -78,8 +78,17 @@ fn into_panel(w: WebviewWindow) -> tauri::Result<WebviewWindow> {
     Ok(w)
 }
 
+/// Settings size for a screen `height` logical pixels tall: 680×680 on 1080p, the same share of
+/// the height on taller screens (about 907 on 2K or 4K at 150 %), and at most 90 % of shorter ones.
+fn settings_size(height: f64) -> (f64, f64) {
+    let side = 680.0 * (height / 1080.0).max(1.0);
+    (side, side.min(height * 0.9))
+}
+
 pub fn create_settings(app: &AppHandle) -> tauri::Result<WebviewWindow> {
-    builder(app, SETTINGS).inner_size(680.0, 560.0).min_inner_size(680.0, 420.0).visible(false).center().build().and_then(lock_down)
+    let height = app.primary_monitor().ok().flatten().map_or(1080.0, |m| m.size().height as f64 / m.scale_factor());
+    let (w, h) = settings_size(height);
+    builder(app, SETTINGS).inner_size(w, h).min_inner_size(680.0, 420.0).visible(false).center().build().and_then(lock_down)
 }
 
 /// A transparent, undecorated, topmost, non-activating, hidden window.
@@ -232,5 +241,20 @@ pub fn release_picker_focus(app: &AppHandle) {
     let back = state.picker_return_to();
     if activated && back != 0 {
         crate::os::shell::set_foreground_window(back);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::settings_size;
+
+    #[test]
+    fn settings_size_follows_screen_height() {
+        assert_eq!(settings_size(1080.0), (680.0, 680.0)); // 1080p at 100 %, 4K at 200 %
+        let (w, h) = settings_size(1440.0); // 2K at 100 %, 4K at 150 %
+        assert!((w - 906.7).abs() < 0.1 && w == h);
+        assert_eq!(settings_size(2160.0), (1360.0, 1360.0)); // 4K at 100 %
+        assert_eq!(settings_size(864.0), (680.0, 680.0)); // 1080p at 125 %
+        assert_eq!(settings_size(720.0), (680.0, 648.0)); // 1080p at 150 %
     }
 }

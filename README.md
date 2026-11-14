@@ -49,6 +49,10 @@ Keygloss processes your typing only on this computer and collects no usage data 
 - to check GitHub for a newer release on startup, and to download it. Turn this off in Settings → General ("Check for updates on startup").
 - when you click a link, which opens your web browser.
 
+## Sponsor
+
+If Keygloss saves you some retyping, you can support its development on [Boosty](https://boosty.to/xarchange1/donate).
+
 ## Credits
 
 Inspired by [Keyboop](https://keyboop.com) ([GitHub](https://github.com/iffuno/keyboop)). Its author doesn't plan Windows or Linux versions, so Keygloss fills the gap.
