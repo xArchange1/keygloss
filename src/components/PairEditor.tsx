@@ -46,7 +46,7 @@ export function PairEditor({ pairs, onChange, cols, placeholders }: {
     apply(n);
   };
 
-  const cell = "h-8 min-w-0 rounded-md border border-transparent bg-transparent px-2 text-[12.5px] placeholder:text-fg/45 hover:border-fg/15 focus:border-detail focus:bg-raised";
+  const cell = "min-w-0 rounded-md border border-transparent bg-transparent px-2 text-[12.5px] placeholder:text-fg/45 hover:border-fg/15 focus:border-detail focus:bg-raised";
   return (
     <div className="rounded-xl border border-fg/10 bg-fg/[0.035] p-1.5">
       <div className="grid grid-cols-[22px_minmax(0,2fr)_minmax(0,3fr)_28px] gap-1.5 px-0.5 pt-1 pb-1.5 text-[11px] font-semibold tracking-[0.06em] text-fg/65 uppercase">
@@ -60,7 +60,7 @@ export function PairEditor({ pairs, onChange, cols, placeholders }: {
           <div key={r.id}
             onDragOver={(e) => { if (drag && !isTrailing) { e.preventDefault(); setDrag({ ...drag, over: i }); } }}
             onDrop={(e) => { e.preventDefault(); if (drag) move(drag.from, drag.over); setDrag(null); }}
-            className={`grid grid-cols-[22px_minmax(0,2fr)_minmax(0,3fr)_28px] items-center gap-1.5 rounded-lg px-0.5 transition-colors ${
+            className={`grid grid-cols-[22px_minmax(0,2fr)_minmax(0,3fr)_28px] items-start gap-1.5 rounded-lg px-0.5 transition-colors ${
               drag?.from === i ? "opacity-40" : ""} ${drag && drag.over === i && drag.from !== i ? "bg-detail/10" : ""}`}>
             {isTrailing ? <span /> : (
               <button type="button" draggable aria-label={t("common.moveRow")} title={t("common.moveRow")}
@@ -83,9 +83,10 @@ export function PairEditor({ pairs, onChange, cols, placeholders }: {
                 <GripVertical size={14} />
               </button>
             )}
-            <input className={cell} value={r.a} placeholder={isTrailing ? placeholders[0] : undefined} aria-label={cols[0]}
+            <input className={`${cell} h-8`} value={r.a} placeholder={isTrailing ? placeholders[0] : undefined} aria-label={cols[0]}
               onChange={(e) => edit(i, "a", e.target.value)} onBlur={() => commit(rowsRef.current)} />
-            <input className={cell} value={r.b} placeholder={isTrailing ? placeholders[1] : undefined} aria-label={cols[1]}
+            <textarea className={`${cell} block resize-none py-[7px] leading-4`} rows={r.b.split("\n").length} value={r.b}
+              placeholder={isTrailing ? placeholders[1] : undefined} aria-label={cols[1]}
               onChange={(e) => edit(i, "b", e.target.value)} onBlur={() => commit(rowsRef.current)} />
             {isTrailing ? <span /> : (
               <button type="button" aria-label={t("common.deleteRow")} title={t("common.deleteRow")} onClick={() => remove(i)}
