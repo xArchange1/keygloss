@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type TextareaHTMLAttributes } from "react";
 import { GripVertical, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -9,6 +9,19 @@ let nextId = 0;
 const blank = (): RowData => ({ id: nextId++, a: "", b: "" });
 const toRows = (pairs: Pair[]) => [...pairs.map(([a, b]) => ({ id: nextId++, a, b })), blank()];
 const toPairs = (rows: RowData[]): Pair[] => rows.filter((r) => r.a || r.b).map((r) => [r.a, r.b]);
+
+/** Textarea that grows to fit its text, including soft-wrapped lines. */
+function AutoTextarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current!;
+    const fit = () => { el.style.height = "0"; el.style.height = `${el.scrollHeight + 2}px`; };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [props.value]);
+  return <textarea ref={ref} rows={1} {...props} />;
+}
 
 /** Two-column list editor that always keeps one trailing empty row; rows reorder by drag or Alt+↑/↓. */
 export function PairEditor({ pairs, onChange, cols, placeholders }: {
@@ -85,7 +98,7 @@ export function PairEditor({ pairs, onChange, cols, placeholders }: {
             )}
             <input className={`${cell} h-8`} value={r.a} placeholder={isTrailing ? placeholders[0] : undefined} aria-label={cols[0]}
               onChange={(e) => edit(i, "a", e.target.value)} onBlur={() => commit(rowsRef.current)} />
-            <textarea className={`${cell} block resize-none py-[7px] leading-4`} rows={r.b.split("\n").length} value={r.b}
+            <AutoTextarea className={`${cell} block resize-none overflow-hidden py-[7px] leading-4`} value={r.b}
               placeholder={isTrailing ? placeholders[1] : undefined} aria-label={cols[1]}
               onChange={(e) => edit(i, "b", e.target.value)} onBlur={() => commit(rowsRef.current)} />
             {isTrailing ? <span /> : (
