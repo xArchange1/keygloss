@@ -104,7 +104,7 @@ export function BannerView() {
     <div className="p-3">
       <div key={item.id} role={item.kind === "toast" ? "status" : "alertdialog"} aria-live="polite"
         className={`${leaving ? "kg-out" : "kg-in"} flex gap-3 rounded-[14px] border border-fg/10 bg-raised p-3.5 shadow-[0_10px_30px_rgb(0_0_0/0.25)]`}>
-        <Brand size={30} />
+        <Brand size={20} />
         <div className="min-w-0 flex-1">
           {item.kind === "toast" ? (
             <p className="pt-1 text-[13px] leading-snug">{t(item.key, item.params)}</p>

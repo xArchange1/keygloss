@@ -25,7 +25,7 @@ export function WelcomeView() {
       {/* Instructions */}
       <div className="kg-in min-w-0 flex-1 overflow-y-auto px-8 py-7">
         <div className="flex items-center gap-3.5">
-          <Brand size={44} />
+          <Brand size={28} />
           <h1 className="text-[24px] font-semibold tracking-tight">{t("wel.hi")}</h1>
         </div>
         <p className="mt-4 text-[14px] text-fg/80">{t("wel.tagline")}</p>

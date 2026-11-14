@@ -67,7 +67,7 @@ export function SettingsView() {
     <div className="flex h-full">
       <nav aria-label="Keygloss" className="flex w-[180px] shrink-0 flex-col border-r border-fg/[0.08] bg-fg/[0.03]">
         <div className="flex items-center gap-2 px-3.5 pt-4 pb-3">
-          <Brand size={24} />
+          <Brand size={16} />
           <span className="text-[15px] font-semibold tracking-tight">Keygloss</span>
         </div>
         <div className="mr-1.5 mb-2 ml-2 h-px bg-fg/[0.08]" />
