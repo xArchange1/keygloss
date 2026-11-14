@@ -216,9 +216,9 @@ impl TextOutput for FakeOs {
     fn send_chord(&self, key: KeyCode, mods: Modifiers) -> Result<(), PlatformError> {
         let mut os = self.os();
         os.chords.push((key, mods));
-        if mods.ctrl && key == KeyCode::KeyC {
+        if mods == Modifiers::SHORTCUT && key == KeyCode::KeyC {
             Self::copy(&mut os);
-        } else if mods.ctrl && key == KeyCode::KeyV {
+        } else if mods == Modifiers::SHORTCUT && key == KeyCode::KeyV {
             Self::paste(&mut os);
         }
         Ok(())
