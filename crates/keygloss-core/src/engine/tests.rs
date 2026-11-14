@@ -165,7 +165,7 @@ impl FakeOs {
     fn app_key(&self, ev: &KeyEvent) {
         use KeyCode::*;
         let mut os = self.os();
-        if ev.mods.ctrl {
+        if ev.mods == Modifiers::SHORTCUT {
             match ev.key {
                 KeyV => Self::paste(&mut os),
                 KeyC => Self::copy(&mut os),
@@ -173,7 +173,7 @@ impl FakeOs {
             }
             return;
         }
-        if ev.mods.alt || ev.mods.meta {
+        if ev.mods.ctrl || ev.mods.alt || ev.mods.meta {
             return;
         }
         let f = &mut os.field;
@@ -294,9 +294,9 @@ impl Clipboard for FakeOs {
     }
     fn snapshot(&self) -> ClipboardSnapshot {
         let os = self.os();
-        let mut formats = vec![(13, os.clipboard.as_bytes().to_vec())];
+        let mut formats = vec![("13".to_string(), os.clipboard.as_bytes().to_vec())];
         if os.rich {
-            formats.push((49_000, b"rich".to_vec()));
+            formats.push(("49000".to_string(), b"rich".to_vec()));
         }
         ClipboardSnapshot { formats }
     }

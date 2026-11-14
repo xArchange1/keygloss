@@ -13,6 +13,8 @@ const en = {
     paused: "Not disturbing you until {{time}}",
     autoOff: "Auto-switch is off",
     down: "Engine is not running",
+    noAccess: "Waiting for Accessibility access",
+    grantAccess: "Open Accessibility settings",
     resume: "Resume now",
   },
   common: {
@@ -198,7 +200,7 @@ const en = {
     license: "License",
     licenseVal: "MIT · free and open source",
     credits: "Acknowledgements",
-    basedOn: "A Windows rewrite of Keyboop — MIT License, Copyright (c) 2026 Keyboop contributors.",
+    basedOn: "A rewrite of Keyboop — MIT License, Copyright (c) 2026 Keyboop contributors.",
     data: "Language data from keyswitcher — MIT License, Copyright (c) 2026 Ilya Granin.",
     welcome: "Welcome tour",
     whatsNew: "What’s new",
@@ -207,7 +209,7 @@ const en = {
     reportBug: "Report a problem",
     requestFeature: "Suggest a feature",
     openLogs: "Open the log folder",
-    feedbackHint: "Opens a GitHub form in your browser with the app version, the Windows version and the latest log lines filled in. Nothing is sent until you submit it. The log has no typed text: only lengths, app names and layouts.",
+    feedbackHint: "Opens a GitHub form in your browser with the app version, the system version and the latest log lines filled in. Nothing is sent until you submit it. The log has no typed text: only lengths, app names and layouts.",
   },
   updDialog: {
     title: "Keygloss {{version}} is available",
@@ -238,9 +240,9 @@ const en = {
     reason: {
       bare: "A key with no modifiers gets taken from every app at once, including the one you’re reading this in.",
       needMods: "At least one modifier is needed: a bare key would steal ordinary typing.",
-      critical: "Windows and every app already rely on this one (copy, paste, undo…). We won’t take it, you need it too.",
-      system: "This shortcut is already taken by Windows. You can still assign it, but then both will fire.",
-      layoutSwitch: "Windows switches the input language with this. You can still assign it, but turn the Windows shortcut off in language settings, or both will fire.",
+      critical: "Your system and every app already rely on this one (copy, paste, undo…). We won’t take it, you need it too.",
+      system: "This shortcut is already taken by the system. You can still assign it, but then both will fire.",
+      layoutSwitch: "The system switches the input language with this. You can still assign it, but turn the system shortcut off in its keyboard settings, or both will fire.",
     },
   },
   wel: {

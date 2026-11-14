@@ -122,7 +122,7 @@ impl Clipboard for WindowsClipboard {
             if !is_handle_format(format)
                 && let Some(bytes) = read_format(format)
             {
-                snapshot.formats.push((format, bytes));
+                snapshot.formats.push((format.to_string(), bytes));
             }
         }
         snapshot
@@ -135,7 +135,9 @@ impl Clipboard for WindowsClipboard {
         unsafe { EmptyClipboard() }.map_err(|e| PlatformError(format!("EmptyClipboard: {}", e.message())))?;
         for (format, bytes) in &snapshot.formats {
             // A format may refuse (e.g. one synthesized from another); keep restoring the rest.
-            let _ = write_format(*format, bytes);
+            if let Ok(format) = format.parse() {
+                let _ = write_format(format, bytes);
+            }
         }
         write_exclusion_formats();
         Ok(())

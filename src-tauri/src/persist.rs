@@ -62,7 +62,7 @@ pub fn load(store: &Store<Wry>) -> Settings {
     // On install (or over the old "auto"), the interface takes the OS language if it is
     // translated, else English.
     if store.get("language").and_then(|v| serde_json::from_value::<UiLanguage>(v).ok()).is_none() {
-        s.language = if keygloss_windows::shell::ui_language_is_russian() { UiLanguage::Ru } else { UiLanguage::En };
+        s.language = if crate::os::shell::ui_language_is_russian() { UiLanguage::Ru } else { UiLanguage::En };
         changed = true;
     }
     if changed {

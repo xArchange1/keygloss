@@ -228,7 +228,7 @@ fn copy_selection(p: &Platform, clock: &dyn Clock) -> Option<String> {
     let cb = &p.clipboard;
     let snapshot = cb.snapshot();
     let before = cb.change_count();
-    p.output.send_chord(KeyCode::KeyC, Modifiers { ctrl: true, ..Modifiers::NONE }).ok()?;
+    p.output.send_chord(KeyCode::KeyC, Modifiers::SHORTCUT).ok()?;
     let mut copied = None;
     for _ in 0..COPY_POLLS {
         clock.sleep(COPY_POLL_EVERY);
@@ -250,7 +250,7 @@ fn plain_paste(p: &Platform) -> Option<(crate::platform::ClipboardSnapshot, u64)
     let snapshot = cb.snapshot();
     cb.set_text(&text).ok()?;
     let ours = cb.change_count();
-    let _ = p.output.send_chord(KeyCode::KeyV, Modifiers { ctrl: true, ..Modifiers::NONE });
+    let _ = p.output.send_chord(KeyCode::KeyV, Modifiers::SHORTCUT);
     Some((snapshot, ours))
 }
 

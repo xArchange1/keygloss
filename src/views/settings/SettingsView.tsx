@@ -31,6 +31,7 @@ function StatusLine() {
   const time = paused ? new Date(status.pausedUntil! * 1000).toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" }) : "";
   const [text, live] = paused ? [t("status.paused", { time }), false]
     : !status.running ? [t("status.down"), false]
+    : ipc.IS_MAC && !status.hookHealthy ? [t("status.noAccess"), false]
     : !status.autoEnabled ? [t("status.autoOff"), false]
     : [t("status.working"), true];
   return (
@@ -39,6 +40,12 @@ function StatusLine() {
         <span className={`size-2 shrink-0 rounded-full ${live ? "bg-detail shadow-[0_0_0_3px] shadow-detail/20" : "bg-fg/35"}`} />
         <span>{text}</span>
       </div>
+      {ipc.IS_MAC && status.running && !status.hookHealthy && (
+        <button type="button" className="mt-1 ml-4 cursor-pointer text-left text-detail underline-offset-2 hover:underline"
+          onClick={() => ipc.openAccessibilitySettings().catch(console.error)}>
+          {t("status.grantAccess")}
+        </button>
+      )}
       {paused && (
         <button type="button" className="mt-1 ml-4 cursor-pointer text-detail underline-offset-2 hover:underline"
           onClick={() => ipc.resume().then((s) => useStore.setState({ status: s })).catch(console.error)}>

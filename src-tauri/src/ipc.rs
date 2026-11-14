@@ -158,7 +158,7 @@ pub async fn list_apps() -> Vec<AppInfo> {
     let own = std::env::current_exe()
         .ok()
         .and_then(|p| p.file_name().map(|n| AppId::from_exe(&n.to_string_lossy())));
-    let mut apps = keygloss_windows::WindowsForegroundApp.running_apps();
+    let mut apps = crate::os::OsForegroundApp.running_apps();
     apps.retain(|a| Some(&a.id) != own.as_ref());
     apps
 }
@@ -307,20 +307,29 @@ pub async fn install_update(app: AppHandle) -> Result<(), String> {
 }
 
 /// Opens the GitHub bug form (`bug`) or feature form in the browser, with the app version, the
-/// Windows version and (bug form) the newest log lines filled in.
+/// OS version and (bug form) the newest log lines filled in.
 #[tauri::command]
 pub fn report_issue(app: AppHandle, bug: bool) -> Result<(), String> {
     let version = app.package_info().version.to_string();
-    let url = report::url(bug, &version, &keygloss_windows::shell::os_version(), &log::read());
+    let url = report::url(bug, &version, &crate::os::shell::os_version(), &log::read());
     log::write(&format!("report issue bug={bug} url_len={}", url.len()));
-    keygloss_windows::shell::open(&url).then_some(()).ok_or("could not open the browser".into())
+    crate::os::shell::open(&url).then_some(()).ok_or("could not open the browser".into())
 }
 
-/// Shows the folder with the log files in Explorer.
+/// macOS: opens System Settings at Privacy & Security > Accessibility, which the keyboard hook needs.
+#[tauri::command]
+pub fn open_accessibility_settings() -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    return crate::os::shell::open_accessibility_settings().then_some(()).ok_or("could not open System Settings".into());
+    #[cfg(not(target_os = "macos"))]
+    Err("macOS only".into())
+}
+
+/// Shows the folder with the log files in Explorer (Finder on macOS).
 #[tauri::command]
 pub fn open_logs() -> Result<(), String> {
     let dir = log::dir().ok_or("no log dir")?;
-    keygloss_windows::shell::open(&dir.to_string_lossy()).then_some(()).ok_or("could not open the folder".into())
+    crate::os::shell::open(&dir.to_string_lossy()).then_some(()).ok_or("could not open the folder".into())
 }
 
 /// An error a page caught (uncaught exception or promise rejection).

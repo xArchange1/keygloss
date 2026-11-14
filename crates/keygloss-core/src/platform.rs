@@ -1,6 +1,6 @@
 //! OS-agnostic contracts between the engine and the operating system.
 //!
-//! `keygloss-windows` implements these traits; the engine in `src-tauri` drives them.
+//! `keygloss-windows` and `keygloss-macos` implement these traits; the engine in `src-tauri` drives them.
 //! Nothing here depends on OS types.
 
 use std::collections::HashMap;
@@ -77,6 +77,12 @@ pub struct Modifiers {
 
 impl Modifiers {
     pub const NONE: Modifiers = Modifiers { ctrl: false, alt: false, shift: false, meta: false };
+    /// The modifier of the standard editing shortcuts (copy, paste): Ctrl, or Command on macOS.
+    pub const SHORTCUT: Modifiers = if cfg!(target_os = "macos") {
+        Modifiers { meta: true, ..Modifiers::NONE }
+    } else {
+        Modifiers { ctrl: true, ..Modifiers::NONE }
+    };
 
     /// True when no modifier is held.
     pub fn is_empty(self) -> bool {
@@ -148,7 +154,8 @@ pub trait TextOutput: Send + Sync {
     fn send_mask_key(&self) -> Result<(), PlatformError>;
 }
 
-/// Opaque OS identifier of an installed keyboard layout (Windows: the HKL as hex, e.g. `"04190419"`).
+/// Opaque OS identifier of an installed keyboard layout (Windows: the HKL as hex, e.g. `"04190419"`;
+/// macOS: the input source id, e.g. `"com.apple.keylayout.Russian"`).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct LayoutId(pub String);
 
@@ -180,12 +187,13 @@ pub trait Layouts: Send + Sync {
     fn key_table(&self, id: &LayoutId) -> KeyTable;
 }
 
-/// Identity of an application, by process executable name.
+/// Identity of an application: lowercase process executable name on Windows (`"code.exe"`),
+/// lowercase bundle identifier on macOS (`"com.microsoft.vscode"`).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct AppId(pub String);
 
 impl AppId {
-    /// Normalizes an executable name to the stored form: lowercase file name, e.g. `"code.exe"`.
+    /// Normalizes an executable name or bundle id to the stored form: lowercase, e.g. `"code.exe"`.
     pub fn from_exe(name: &str) -> AppId {
         AppId(name.to_lowercase())
     }
@@ -222,7 +230,7 @@ pub enum SelectionRead {
     Unavailable,
 }
 
-/// Focused-element text access (Windows: UI Automation).
+/// Focused-element text access (Windows: UI Automation; macOS: Accessibility API).
 /// Must not be called from [`InputHandler::on_key`]: calls can block for up to ~0.5 s.
 pub trait FocusedText: Send + Sync {
     /// Reads the selected text of the focused element.
@@ -235,7 +243,7 @@ pub trait FocusedText: Send + Sync {
 #[derive(Clone, Debug, Default)]
 pub struct ClipboardSnapshot {
     /// (OS format id, raw bytes). Never interpreted by the core.
-    pub formats: Vec<(u32, Vec<u8>)>,
+    pub formats: Vec<(String, Vec<u8>)>,
 }
 
 /// Clipboard access.

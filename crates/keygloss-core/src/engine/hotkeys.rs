@@ -308,6 +308,7 @@ fn m(ctrl: bool, alt: bool, shift: bool, meta: bool) -> Modifiers {
 }
 
 /// Shortcuts Windows and every app rely on: never taken.
+#[cfg(not(target_os = "macos"))]
 fn is_critical(key: KeyCode, mods: Modifiers) -> bool {
     use KeyCode::*;
     let ctrl = m(true, false, false, false);
@@ -320,6 +321,7 @@ fn is_critical(key: KeyCode, mods: Modifiers) -> bool {
 }
 
 /// Combos Windows uses to switch the input language.
+#[cfg(not(target_os = "macos"))]
 fn is_layout_switch(hk: &Hotkey) -> bool {
     match *hk {
         Hotkey::Combo { mods } => mods == m(false, true, true, false) || mods == m(true, false, true, false),
@@ -330,6 +332,7 @@ fn is_layout_switch(hk: &Hotkey) -> bool {
 
 /// Known system shortcuts: Win key combinations (and the Win key alone opens Start), plus a few
 /// window-management keys.
+#[cfg(not(target_os = "macos"))]
 fn is_system(hk: &Hotkey) -> bool {
     use KeyCode::*;
     match *hk {
@@ -343,6 +346,38 @@ fn is_system(hk: &Hotkey) -> bool {
         }
         Hotkey::Combo { mods } => mods.meta,
         Hotkey::ModKey { key } | Hotkey::DoubleTap { key } => matches!(key, MetaLeft | MetaRight),
+    }
+}
+
+/// Shortcuts macOS and every app rely on: never taken.
+#[cfg(target_os = "macos")]
+fn is_critical(key: KeyCode, mods: Modifiers) -> bool {
+    use KeyCode::*;
+    let cmd = m(false, false, false, true);
+    (mods == cmd && matches!(key, KeyC | KeyV | KeyX | KeyZ | KeyA | KeyS | KeyW | KeyN | KeyO | KeyP | KeyF | KeyQ | KeyT | KeyH | KeyM | Tab))
+        || (key == KeyZ && mods == m(false, false, true, true))
+        || (key == Escape && mods == m(false, true, false, true))
+}
+
+/// Combos macOS uses to switch the input source: Control+Space, Control+Option+Space.
+#[cfg(target_os = "macos")]
+fn is_layout_switch(hk: &Hotkey) -> bool {
+    matches!(*hk, Hotkey::Key { key: KeyCode::Space, mods } if mods.ctrl && !mods.meta)
+}
+
+/// Known system shortcuts: Command+Space (Spotlight), Control+arrows (Mission Control and Spaces),
+/// screenshots, the lock screen.
+#[cfg(target_os = "macos")]
+fn is_system(hk: &Hotkey) -> bool {
+    use KeyCode::*;
+    match *hk {
+        Hotkey::Key { key, mods } => {
+            (key == Space && mods.meta)
+                || (mods == m(true, false, false, false) && matches!(key, ArrowLeft | ArrowRight | ArrowUp | ArrowDown))
+                || (mods == m(false, false, true, true) && matches!(key, Digit3 | Digit4 | Digit5))
+                || (key == KeyQ && mods == m(true, false, false, true))
+        }
+        _ => false,
     }
 }
 
@@ -422,6 +457,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(target_os = "macos"))]
     fn verdicts() {
         use HotkeyVerdict::*;
         let s = Settings::default();
@@ -444,6 +480,20 @@ mod tests {
         assert_eq!(check(HotkeyTarget::Manual, Hotkey::ModKey { key: KeyCode::KeyA }, &s).0, Blocked);
         assert_eq!(check(HotkeyTarget::Manual, Hotkey::DoubleTap { key: KeyCode::ShiftLeft }, &s).0, Ok);
         assert_eq!(check(HotkeyTarget::CaseChange, key(KeyCode::KeyU, m(true, true, false, false)), &s).0, Ok);
+    }
+
+    #[test]
+    #[cfg(target_os = "macos")]
+    fn mac_verdicts() {
+        use HotkeyVerdict::*;
+        let s = Settings::default();
+        let r = |x: &str| Some(x.to_string());
+        let cmd = m(false, false, false, true);
+        assert_eq!(check(HotkeyTarget::CaseChange, key(KeyCode::KeyC, cmd), &s), (Blocked, r("hkrec.reason.critical"), None));
+        assert_eq!(check(HotkeyTarget::CaseChange, key(KeyCode::KeyC, m(true, false, false, false)), &s).0, Ok);
+        assert_eq!(check(HotkeyTarget::CaseChange, key(KeyCode::Space, m(true, false, false, false)), &s).1, r("hkrec.reason.layoutSwitch"));
+        assert_eq!(check(HotkeyTarget::CaseChange, key(KeyCode::Space, cmd), &s).1, r("hkrec.reason.system"));
+        assert_eq!(check(HotkeyTarget::Manual, Hotkey::DoubleTap { key: KeyCode::ShiftLeft }, &s).0, Ok);
     }
 
     #[test]

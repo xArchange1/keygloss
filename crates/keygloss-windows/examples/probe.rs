@@ -66,7 +66,7 @@ fn main() {
         let before = clipboard.get_text().map(|t| t.chars().count());
         let snapshot = clipboard.snapshot();
         let bytes: usize = snapshot.formats.iter().map(|f| f.1.len()).sum();
-        let ids: Vec<u32> = snapshot.formats.iter().map(|f| f.0).collect();
+        let ids: Vec<&str> = snapshot.formats.iter().map(|f| f.0.as_str()).collect();
         println!("Clipboard snapshot: {} formats {ids:?}, {bytes} bytes, text len {before:?}", ids.len());
         let result = clipboard.restore(&snapshot);
         let after = clipboard.get_text().map(|t| t.chars().count());

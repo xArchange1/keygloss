@@ -16,7 +16,7 @@ export interface Modifiers {
   ctrl: boolean;
   alt: boolean;
   shift: boolean;
-  /** Windows key. */
+  /** Windows key; Command on macOS. */
   meta: boolean;
 }
 
@@ -285,10 +285,14 @@ export const takeWhatsNew = () => invoke<boolean>("take_whats_new");
 export const installUpdate = () => invoke<void>("install_update");
 /** Opens Settings on the pending update's notes (`show-update`). */
 export const openUpdate = () => invoke<void>("open_update");
-/** Opens the GitHub bug form (`bug`) or feature form in the browser, prefilled with the app version, the Windows version and (bug form) the newest log lines. */
+/** Opens the GitHub bug form (`bug`) or feature form in the browser, prefilled with the app version, the OS version and (bug form) the newest log lines. */
 export const reportIssue = (bug: boolean) => invoke<void>("report_issue", { bug });
-/** Shows the folder with the log files in Explorer. */
+/** Shows the folder with the log files in Explorer (Finder on macOS). */
 export const openLogs = () => invoke<void>("open_logs");
+/** macOS: opens System Settings at Privacy & Security > Accessibility. */
+export const openAccessibilitySettings = () => invoke<void>("open_accessibility_settings");
+/** Running on macOS (the hook there needs the Accessibility permission; shortcuts use Command). */
+export const IS_MAC = navigator.userAgent.includes("Mac");
 /** Automatic fixes, newest first. Stored on this computer only. */
 export const getHistory = () => invoke<HistoryEntry[]>("get_history");
 export const clearHistory = () => invoke<void>("clear_history");

@@ -55,7 +55,7 @@ fn tr(lang: Lang, key: &str) -> &'static str {
 
 /// Local "HH:mm" of a Unix time.
 pub fn hh_mm(unix: f64) -> String {
-    match keygloss_windows::shell::local_hour_minute(unix.round() as i64) {
+    match crate::os::shell::local_hour_minute(unix.round() as i64) {
         Some((h, m)) => format!("{h:02}:{m:02}"),
         None => String::new(),
     }

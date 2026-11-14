@@ -52,6 +52,12 @@ fn utf16_to_string(buf: &[u16]) -> String {
 #[derive(Clone, Copy, Debug, Default)]
 pub struct WindowsLayouts;
 
+impl WindowsLayouts {
+    pub fn new() -> Self {
+        WindowsLayouts
+    }
+}
+
 impl Layouts for WindowsLayouts {
     fn current_layout(&self) -> Option<LayoutId> {
         let hkl = foreground_hkl();
