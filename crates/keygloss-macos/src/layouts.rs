@@ -170,9 +170,9 @@ impl Layouts for MacLayouts {
         on_main(move || {
             let Some(list) = enabled_sources() else { return };
             if let Some(&source) = array(list.0).iter().find(|&&s| source_id(s).as_ref() == Some(&id)) {
+                // Accepted is not switched yet: the "selected changed" notification refreshes the cache.
                 unsafe { TISSelectInputSource(source) };
             }
-            refresh_current();
         });
         Ok(())
     }

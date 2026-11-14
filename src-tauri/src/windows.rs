@@ -95,6 +95,8 @@ fn create_floating(app: &AppHandle, label: &str, (w, h): (f64, f64)) -> tauri::R
         .focused(false)
         .focusable(false)
         .visible(false)
+        // macOS: the panel never becomes key, so every click is a first click.
+        .accept_first_mouse(true)
         .build()
         .and_then(lock_down)
         .and_then(into_panel)

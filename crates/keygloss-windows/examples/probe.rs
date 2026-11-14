@@ -4,13 +4,21 @@
 //! `probe --hook`     also installs the hook for 3 s and logs key codes and down/up only
 //! `probe --clipboard` also snapshots and restores the clipboard (contents unchanged)
 
+#![cfg_attr(not(windows), allow(unused_imports))]
+
 use std::time::{Duration, Instant};
 
 use keygloss_core::platform::*;
+#[cfg(windows)]
 use keygloss_windows::*;
 
+#[cfg(not(windows))]
+fn main() {}
+
+#[cfg(windows)]
 struct LogHandler(Instant);
 
+#[cfg(windows)]
 impl InputHandler for LogHandler {
     fn on_key(&mut self, e: &KeyEvent) -> HookDecision {
         let dir = if e.down { "down" } else { "up" };
@@ -23,6 +31,7 @@ impl InputHandler for LogHandler {
     }
 }
 
+#[cfg(windows)]
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let layouts = WindowsLayouts;
