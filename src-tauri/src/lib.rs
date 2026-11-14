@@ -251,6 +251,7 @@ pub fn run() {
             ipc::take_whats_new,
             ipc::report_issue,
             ipc::open_logs,
+            ipc::open_sponsor,
             ipc::open_accessibility_settings,
             ipc::log_error,
             ipc::open_settings,

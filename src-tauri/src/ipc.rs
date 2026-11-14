@@ -316,6 +316,12 @@ pub fn report_issue(app: AppHandle, bug: bool) -> Result<(), String> {
     crate::os::shell::open(&url).then_some(()).ok_or("could not open the browser".into())
 }
 
+/// Opens the Sponsor section of the README in the browser.
+#[tauri::command]
+pub fn open_sponsor() -> Result<(), String> {
+    crate::os::shell::open("https://github.com/xArchange1/keygloss#sponsor").then_some(()).ok_or("could not open the browser".into())
+}
+
 /// macOS: opens System Settings at Privacy & Security > Accessibility, which the keyboard hook needs.
 #[tauri::command]
 pub fn open_accessibility_settings() -> Result<(), String> {

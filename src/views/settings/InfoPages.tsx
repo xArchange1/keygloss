@@ -44,7 +44,7 @@ export function AboutPage() {
       </Card>
       <div className="mt-3 flex flex-wrap gap-2">
         <Button onClick={() => ipc.openWelcome().catch(console.error)}><Sparkles size={14} />{t("about.welcome")}</Button>
-        <Button><Heart size={14} />{t("about.support")}</Button>
+        <Button onClick={() => ipc.openSponsor().catch(console.error)}><Heart size={14} className="text-red-500" fill="currentColor" />{t("about.support")}</Button>
       </div>
       <BlockTitle title={t("priv.title")} />
       <Card>

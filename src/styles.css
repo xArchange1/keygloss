@@ -90,8 +90,15 @@ input[type="range"] {
 ::-webkit-scrollbar {
   width: 10px;
 }
+/* The thumb shows only while the pointer is over its scroll area. */
+* {
+  --kg-thumb: transparent;
+}
+:hover {
+  --kg-thumb: color-mix(in srgb, var(--kg-text) 18%, transparent);
+}
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--kg-text) 18%, transparent);
+  background: var(--kg-thumb);
   border-radius: 5px;
   border: 3px solid transparent;
   background-clip: padding-box;
