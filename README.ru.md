@@ -24,6 +24,17 @@
 
 ## Скриншоты
 
+<table>
+  <tr>
+    <td width="50%"><img src="docs/media/layout-switching.webp" alt="Настройки переключения раскладки в светлой теме"></td>
+    <td width="50%"><img src="docs/media/snippets.webp" alt="Страница сниппетов в тёмной теме"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Переключение раскладки: автоисправление, триггеры и исправления текста</sub></td>
+    <td align="center"><sub>Сниппеты: сокращения, которые разворачиваются в текст</sub></td>
+  </tr>
+</table>
+
 ## Установка
 
 | Система | Команда |
