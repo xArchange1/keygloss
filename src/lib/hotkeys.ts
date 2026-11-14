@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import type { Hotkey, HotkeyTarget, KeyCode, Modifiers } from "./ipc";
+import { IS_MAC, type Hotkey, type HotkeyTarget, type KeyCode, type Modifiers } from "./ipc";
 
 const mods = (m: Partial<Modifiers>): Modifiers => ({ ctrl: false, alt: false, shift: false, meta: false, ...m });
 const key = (k: KeyCode, m: Partial<Modifiers> = {}): Hotkey => ({ mode: "key", key: k, mods: mods(m) });
@@ -8,7 +8,8 @@ const key = (k: KeyCode, m: Partial<Modifiers> = {}): Hotkey => ({ mode: "key", 
 export const PRESETS: Record<HotkeyTarget, Hotkey[]> = {
   manual: [
     { mode: "doubletap", key: "ShiftLeft" },
-    key("ScrollLock"),
+    // Macs have no Scroll Lock key.
+    ...(IS_MAC ? [] : [key("ScrollLock")]),
     { mode: "modkey", key: "ControlRight" },
     { mode: "modkey", key: "AltRight" },
     { mode: "combo", mods: mods({ ctrl: true, alt: true }) },
@@ -30,7 +31,9 @@ export const PRESETS: Record<HotkeyTarget, Hotkey[]> = {
   ],
 };
 
-const MOD_NAMES: Record<string, string> = { Control: "Ctrl", Alt: "Alt", Shift: "Shift", Meta: "Win" };
+const MOD_NAMES: Record<string, string> = IS_MAC
+  ? { Control: "Control", Alt: "Option", Shift: "Shift", Meta: "Cmd" }
+  : { Control: "Ctrl", Alt: "Alt", Shift: "Shift", Meta: "Win" };
 const SYMBOLS: Record<string, string> = {
   Backquote: "`", Minus: "-", Equal: "=", BracketLeft: "[", BracketRight: "]", Backslash: "\\",
   IntlBackslash: "\\", Semicolon: ";", Quote: "'", Comma: ",", Period: ".", Slash: "/",
@@ -58,7 +61,7 @@ export function keyName(code: KeyCode, t: TFunction): string {
 }
 
 function modParts(m: Modifiers) {
-  return [m.ctrl && "Ctrl", m.alt && "Alt", m.shift && "Shift", m.meta && "Win"].filter(Boolean) as string[];
+  return [m.ctrl && MOD_NAMES.Control, m.alt && MOD_NAMES.Alt, m.shift && MOD_NAMES.Shift, m.meta && MOD_NAMES.Meta].filter(Boolean) as string[];
 }
 
 /** Key-cap labels for a hotkey, in press order. */

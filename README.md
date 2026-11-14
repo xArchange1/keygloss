@@ -29,11 +29,13 @@ Type `ghbdtn`, get `привет`, and the layout switches to match. RU ↔ EN, 
 | Platform | Command |
 | --- | --- |
 | Windows | `winget install xArchange1.keygloss` |
-| macOS | `brew install keygloss` |
+| macOS | `brew install --cask xArchange1/tap/keygloss`, or the `.dmg` from [Releases](https://github.com/xArchange1/keygloss/releases) |
+
+On macOS, allow Keygloss in System Settings > Privacy & Security > Accessibility on first launch.
 
 ## Development
 
-Requires Rust (MSVC), Node and pnpm.
+Requires Rust (MSVC on Windows, Xcode Command Line Tools on macOS), Node and pnpm.
 
 ```
 pnpm install

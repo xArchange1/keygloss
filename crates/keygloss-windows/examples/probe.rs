@@ -4,13 +4,21 @@
 //! `probe --hook`     also installs the hook for 3 s and logs key codes and down/up only
 //! `probe --clipboard` also snapshots and restores the clipboard (contents unchanged)
 
+#![cfg_attr(not(windows), allow(unused_imports))]
+
 use std::time::{Duration, Instant};
 
 use keygloss_core::platform::*;
+#[cfg(windows)]
 use keygloss_windows::*;
 
+#[cfg(not(windows))]
+fn main() {}
+
+#[cfg(windows)]
 struct LogHandler(Instant);
 
+#[cfg(windows)]
 impl InputHandler for LogHandler {
     fn on_key(&mut self, e: &KeyEvent) -> HookDecision {
         let dir = if e.down { "down" } else { "up" };
@@ -23,6 +31,7 @@ impl InputHandler for LogHandler {
     }
 }
 
+#[cfg(windows)]
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let layouts = WindowsLayouts;
@@ -66,7 +75,7 @@ fn main() {
         let before = clipboard.get_text().map(|t| t.chars().count());
         let snapshot = clipboard.snapshot();
         let bytes: usize = snapshot.formats.iter().map(|f| f.1.len()).sum();
-        let ids: Vec<u32> = snapshot.formats.iter().map(|f| f.0).collect();
+        let ids: Vec<&str> = snapshot.formats.iter().map(|f| f.0.as_str()).collect();
         println!("Clipboard snapshot: {} formats {ids:?}, {bytes} bytes, text len {before:?}", ids.len());
         let result = clipboard.restore(&snapshot);
         let after = clipboard.get_text().map(|t| t.chars().count());

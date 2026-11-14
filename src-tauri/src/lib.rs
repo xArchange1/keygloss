@@ -1,6 +1,7 @@
 mod history;
 mod ipc;
 mod log;
+mod os;
 mod persist;
 mod report;
 mod sound;
@@ -14,12 +15,10 @@ use std::sync::{Arc, Mutex};
 
 use keygloss_core::engine::{self, EngineEvent, EngineHandle, Platform};
 use keygloss_core::settings::Settings;
-use keygloss_windows::{
-    WindowsClipboard, WindowsFocusedText, WindowsForegroundApp, WindowsHook, WindowsLayouts, WindowsOutput,
-};
 use tauri::{AppHandle, DeviceEventFilter, Emitter, Manager, WindowEvent, Wry};
 use tauri_plugin_store::Store;
 
+use os::{OsClipboard, OsFocusedText, OsForegroundApp, OsHook, OsLayouts, OsOutput};
 use state::{AppState, idle_status};
 
 /// Runs `f` on the main thread without waiting (the engine's event thread must never block on it).
@@ -86,15 +85,15 @@ fn start_engine(
     settings: Settings,
 ) -> Option<EngineHandle> {
     let platform = Platform {
-        output: Arc::new(log::LoggedOutput(WindowsOutput)),
-        layouts: Arc::new(log::LoggedLayouts(WindowsLayouts)),
-        foreground: Arc::new(WindowsForegroundApp),
-        focused: Arc::new(WindowsFocusedText),
-        clipboard: Arc::new(WindowsClipboard),
+        output: Arc::new(log::LoggedOutput(OsOutput)),
+        layouts: Arc::new(log::LoggedLayouts(OsLayouts::new())),
+        foreground: Arc::new(OsForegroundApp),
+        focused: Arc::new(OsFocusedText),
+        clipboard: Arc::new(OsClipboard),
     };
     let handle = app.clone();
     let sink = Arc::new(move |ev| on_engine_event(&handle, &store, &history, ev));
-    match engine::start(platform, Box::new(WindowsHook::new()), settings, sink) {
+    match engine::start(platform, Box::new(OsHook::new()), settings, sink) {
         Ok(engine) => Some(engine),
         Err(e) => {
             log::write(&format!("error engine did not start: {e}"));
@@ -149,7 +148,7 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(dir) = app.path().app_log_dir() {
         log::init(dir);
     }
-    log::write(&format!("start version={} os={}", app.package_info().version, keygloss_windows::shell::os_version()));
+    log::write(&format!("start version={} os={}", app.package_info().version, os::shell::os_version()));
     let store = persist::open(app)?;
     let history = history::open(app)?;
     let mut settings = persist::load(&store);
@@ -201,7 +200,10 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(target_os = "macos")]
+    let builder = builder.plugin(tauri_nspanel::init());
+    builder
         // No raw input: while a process registers it, Windows skips that process's own
         // low-level keyboard hook whenever one of its windows has focus (the welcome sandbox).
         .device_event_filter(DeviceEventFilter::Always)
@@ -249,6 +251,7 @@ pub fn run() {
             ipc::take_whats_new,
             ipc::report_issue,
             ipc::open_logs,
+            ipc::open_accessibility_settings,
             ipc::log_error,
             ipc::open_settings,
             ipc::open_welcome,

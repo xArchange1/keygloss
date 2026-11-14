@@ -1,0 +1,16 @@
+[package]
+name = "keygloss-macos"
+description = "macOS implementation of the keygloss-core platform traits."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+keygloss-core.workspace = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+libc = "0.2"
+block2 = "0.6"
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = ["block2", "NSArray", "NSData", "NSDictionary", "NSNotification", "NSOperation", "NSProcessInfo", "NSString", "NSLocale"] }
+objc2-app-kit = { version = "0.3", features = ["block2", "NSPasteboard", "NSPasteboardItem", "NSRunningApplication", "NSWorkspace"] }

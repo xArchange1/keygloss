@@ -6,26 +6,12 @@ on:
     branches: [main]
 
 jobs:
-  # A docs-only change skips `ci`; a skipped required check counts as passing.
-  # (paths-ignore would leave the required check pending forever instead.)
-  changes:
-    runs-on: ubuntu-latest
-    outputs:
-      code: ${{ steps.filter.outputs.code }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          predicate-quantifier: every
-          filters: |
-            code:
-              - '!**/*.md'
-
-  ci:
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: windows-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -44,3 +30,11 @@ jobs:
       - run: pnpm build
       - run: cargo clippy --workspace
       - run: cargo test --workspace
+
+  # The required check: one stable name for the whole OS matrix.
+  ci:
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.build.result }}" = success

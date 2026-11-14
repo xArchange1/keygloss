@@ -1,5 +1,6 @@
-//! The four windows. `banner` and `picker` never take focus: they are created non-focusable
-//! (`WS_EX_NOACTIVATE`) and shown with `SetWindowPos(SWP_NOACTIVATE | SWP_SHOWWINDOW)`.
+//! The four windows. `banner` and `picker` never take focus: on Windows they are created
+//! non-focusable (`WS_EX_NOACTIVATE`) and shown with `SetWindowPos(SWP_NOACTIVATE | SWP_SHOWWINDOW)`;
+//! on macOS they are non-activating `NSPanel`s shown with `orderFrontRegardless`.
 //! Everything here runs on the main thread.
 
 use std::sync::atomic::Ordering::Relaxed;
@@ -29,6 +30,7 @@ fn builder<'a>(app: &'a AppHandle, label: &'a str) -> WebviewWindowBuilder<'a, t
 
 /// Turns off WebView2's browser shortcuts (reload, print, find, back/forward, ...), its zoom
 /// keys and its default context menu. Editing shortcuts (copy, paste, undo) keep working.
+#[cfg(windows)]
 fn lock_down(w: WebviewWindow) -> tauri::Result<WebviewWindow> {
     w.with_webview(|wv| unsafe {
         use webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2Settings3;
@@ -40,6 +42,39 @@ fn lock_down(w: WebviewWindow) -> tauri::Result<WebviewWindow> {
             let _ = settings.SetAreBrowserAcceleratorKeysEnabled(false);
         }
     })?;
+    Ok(w)
+}
+
+/// WKWebView has no browser shortcuts or zoom keys to turn off.
+#[cfg(not(windows))]
+fn lock_down(w: WebviewWindow) -> tauri::Result<WebviewWindow> {
+    Ok(w)
+}
+
+#[cfg(target_os = "macos")]
+tauri_nspanel::tauri_panel! {
+    panel!(FloatingPanel {
+        config: {
+            can_become_key_window: false,
+            is_floating_panel: true
+        }
+    })
+}
+
+/// Turns a floating window into a non-activating panel that floats over full-screen apps.
+#[cfg(target_os = "macos")]
+fn into_panel(w: WebviewWindow) -> tauri::Result<WebviewWindow> {
+    use tauri_nspanel::{CollectionBehavior, PanelLevel, StyleMask, WebviewWindowExt};
+    let panel = w.to_panel::<FloatingPanel<tauri::Wry>>()?;
+    panel.set_level(PanelLevel::Status.value());
+    panel.set_style_mask(StyleMask::empty().borderless().nonactivating_panel().value());
+    panel.set_collection_behavior(CollectionBehavior::new().can_join_all_spaces().full_screen_auxiliary().value());
+    panel.set_hides_on_deactivate(false);
+    Ok(w)
+}
+
+#[cfg(not(target_os = "macos"))]
+fn into_panel(w: WebviewWindow) -> tauri::Result<WebviewWindow> {
     Ok(w)
 }
 
@@ -60,8 +95,11 @@ fn create_floating(app: &AppHandle, label: &str, (w, h): (f64, f64)) -> tauri::R
         .focused(false)
         .focusable(false)
         .visible(false)
+        // macOS: the panel never becomes key, so every click is a first click.
+        .accept_first_mouse(true)
         .build()
         .and_then(lock_down)
+        .and_then(into_panel)
 }
 
 pub fn create_banner(app: &AppHandle) -> tauri::Result<WebviewWindow> {
@@ -72,8 +110,15 @@ pub fn create_picker(app: &AppHandle) -> tauri::Result<WebviewWindow> {
     create_floating(app, PICKER, (PICKER_WIDTH, PICKER_CHROME + PICKER_ROW * 9.0))
 }
 
+#[cfg(windows)]
 pub fn hwnd(w: &WebviewWindow) -> isize {
     w.hwnd().map(|h| h.0 as isize).unwrap_or_default()
+}
+
+/// Windows only: macOS shows the floating windows through their panels.
+#[cfg(not(windows))]
+pub fn hwnd(_: &WebviewWindow) -> isize {
+    0
 }
 
 fn show_and_focus(w: &WebviewWindow) {
@@ -123,11 +168,24 @@ fn on_primary(app: &AppHandle, w: f64, h: f64, place: impl Fn(f64, f64) -> (f64,
 /// Shows a floating window at `rect` without activating it, then lets Tauri record it as
 /// visible (a plain show of an already visible window changes nothing), so the view's own
 /// `hide()` works.
+#[cfg(windows)]
 fn show_floating(app: &AppHandle, label: &str, hwnd: isize, rect: Option<(i32, i32, i32, i32)>) {
     let Some(w) = app.get_webview_window(label) else { return };
     let Some((x, y, width, height)) = rect else { return };
-    keygloss_windows::shell::show_no_activate(hwnd, x, y, width, height);
+    crate::os::shell::show_no_activate(hwnd, x, y, width, height);
     let _ = w.show();
+}
+
+/// Moves the panel to `rect` and brings it to the front without activating Keygloss.
+#[cfg(target_os = "macos")]
+fn show_floating(app: &AppHandle, label: &str, _hwnd: isize, rect: Option<(i32, i32, i32, i32)>) {
+    use tauri::{PhysicalPosition, PhysicalSize};
+    use tauri_nspanel::ManagerExt;
+    let (Some(w), Ok(panel)) = (app.get_webview_window(label), app.get_webview_panel(label)) else { return };
+    let Some((x, y, width, height)) = rect else { return };
+    let _ = w.set_size(PhysicalSize::new(width as u32, height as u32));
+    let _ = w.set_position(PhysicalPosition::new(x, y));
+    panel.show();
 }
 
 /// Top-right corner of the primary monitor's work area.
@@ -140,9 +198,12 @@ pub fn show_banner(app: &AppHandle) {
 /// Sized to `rows` entries, centred horizontally, centred on two thirds of the work area's height.
 pub fn show_picker(app: &AppHandle, rows: usize) {
     let state = app.state::<AppState>();
-    let foreground = keygloss_windows::shell::foreground_window();
-    if foreground != state.picker_hwnd.load(Relaxed) {
-        state.set_picker_return_to(foreground);
+    #[cfg(windows)]
+    {
+        let foreground = crate::os::shell::foreground_window();
+        if foreground != state.picker_hwnd.load(Relaxed) {
+            state.set_picker_return_to(foreground);
+        }
     }
     let (w, h) = (PICKER_WIDTH, PICKER_CHROME + PICKER_ROW * rows.clamp(1, PICKER_MAX_ROWS) as f64);
     let rect = on_primary(app, w, h, |aw, ah| ((aw - w) / 2.0, (ah * 2.0 / 3.0 - h / 2.0).min(ah - h).max(0.0)));
@@ -156,13 +217,20 @@ pub fn hide_picker(app: &AppHandle) {
 }
 
 /// Safety net for a click on a picker row: if the click activated the picker after all, hand
-/// the focus back to the app the snippet is meant for before it is typed.
+/// the focus back to the app the snippet is meant for before it is typed. (A macOS panel that
+/// cannot become key never takes the focus.)
+#[cfg(not(windows))]
+pub fn release_picker_focus(app: &AppHandle) {
+    hide_picker(app);
+}
+
+#[cfg(windows)]
 pub fn release_picker_focus(app: &AppHandle) {
     let state = app.state::<AppState>();
-    let activated = keygloss_windows::shell::foreground_window() == state.picker_hwnd.load(Relaxed);
+    let activated = crate::os::shell::foreground_window() == state.picker_hwnd.load(Relaxed);
     hide_picker(app);
     let back = state.picker_return_to();
     if activated && back != 0 {
-        keygloss_windows::shell::set_foreground_window(back);
+        crate::os::shell::set_foreground_window(back);
     }
 }

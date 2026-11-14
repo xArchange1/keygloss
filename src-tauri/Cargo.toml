@@ -15,18 +15,26 @@ tauri-build = { version = "2.7.4", features = [] }
 
 [dependencies]
 keygloss-core.workspace = true
-keygloss-windows.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-tauri = { version = "2.12.5", features = ["tray-icon"] }
+# macos-private-api: transparent windows on macOS (the banner and the picker).
+tauri = { version = "2.12.5", features = ["tray-icon", "macos-private-api"] }
 tauri-plugin-store = "2.5.0"
 tauri-plugin-autostart = "2.7.0"
 tauri-plugin-single-instance = "2.5.5"
-webview2-com = "0.39.1"
-windows-core = "0.62.2"
 rodio = { version = "0.23", default-features = false, features = ["playback", "wav", "mp3"] }
 rfd = { version = "0.18.0", default-features = false }
 tauri-plugin-updater = "2.14.1"
 # The client and TLS provider the updater plugin uses (for the beta channel's GitHub API call).
 reqwest = { version = "0.13", default-features = false, features = ["json"] }
 rustls = { version = "0.23", default-features = false, features = ["ring"] }
+
+[target.'cfg(windows)'.dependencies]
+keygloss-windows.workspace = true
+webview2-com = "0.39.1"
+windows-core = "0.62.2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+keygloss-macos.workspace = true
+# Non-activating panels for the banner and the picker.
+tauri-nspanel = "2.1.1"

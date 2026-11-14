@@ -57,7 +57,7 @@ pub fn write(line: &str) {
     {
         (log.file, log.size) = (file, size);
     }
-    let line = format!("{} {}\n", keygloss_windows::shell::local_timestamp(), line.replace('\n', " | "));
+    let line = format!("{} {}\n", crate::os::shell::local_timestamp(), line.replace('\n', " | "));
     if log.file.write_all(line.as_bytes()).is_ok() {
         log.size += line.len() as u64;
     }

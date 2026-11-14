@@ -1,7 +1,7 @@
 name: Release
 
-# Pushing a tag v<version> publishes that version: NSIS and MSI installers, their updater signatures
-# (.sig) and the updater manifest (latest.json) the app reads. A version with a suffix
+# Pushing a tag v<version> publishes that version: NSIS and MSI installers, a universal macOS .dmg,
+# their updater artifacts and signatures (.sig) and the updater manifest (latest.json) the app reads. A version with a suffix
 # (v0.2.0-beta.1) is a pre-release, built as NSIS only: WiX rejects non-numeric pre-release versions.
 on:
   push:
@@ -47,3 +47,72 @@ jobs:
           # Installed copies update through the NSIS installer, not the MSI.
           updaterJsonPreferNsis: true
           args: --config src-tauri/tauri.release.conf.json${{ contains(github.ref_name, '-') && ' --bundles nsis' || '' }}
+
+  # A universal (Apple Silicon + Intel) .app and .dmg, plus the updater's .app.tar.gz, added to the
+  # same release and manifest. After the Windows job: both jobs edit latest.json.
+  # Signed with a Developer ID and notarized when the APPLE_* secrets exist; ad-hoc signed
+  # otherwise (Gatekeeper then blocks the first launch, and macOS asks for the Accessibility
+  # permission again after every update).
+  release-macos:
+    needs: release
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+      - run: pnpm install --frozen-lockfile
+      - id: notes
+        shell: bash
+        run: |
+          {
+            echo 'body<<NOTES_EOF'
+            node --experimental-strip-types scripts/release-notes.ts "${GITHUB_REF_NAME#v}"
+            echo NOTES_EOF
+          } >> "$GITHUB_OUTPUT"
+      # Exported only when set: the bundler treats an empty APPLE_CERTIFICATE as a certificate.
+      - name: Apple signing and notarization (when configured)
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          for v in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID; do
+            if [ -n "${!v}" ]; then
+              { echo "$v<<APPLE_EOF"; echo "${!v}"; echo APPLE_EOF; } >> "$GITHUB_ENV"
+            fi
+          done
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: Keygloss ${{ github.ref_name }}
+          releaseBody: ${{ steps.notes.outputs.body }}
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          args: --target universal-apple-darwin --config src-tauri/tauri.release.macos.conf.json
+      # The values for the Homebrew cask (packaging/homebrew/keygloss.rb).
+      - name: Homebrew cask values
+        shell: bash
+        run: |
+          dmg=$(ls target/universal-apple-darwin/release/bundle/dmg/*.dmg)
+          {
+            echo "### Homebrew cask"
+            echo "- dmg: \`$(basename "$dmg")\`"
+            echo "- version: \`${GITHUB_REF_NAME#v}\`"
+            echo "- sha256: \`$(shasum -a 256 "$dmg" | cut -d' ' -f1)\`"
+          } >> "$GITHUB_STEP_SUMMARY"
