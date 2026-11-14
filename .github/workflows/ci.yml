@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 jobs:
-  ci:
+  build:
     strategy:
       fail-fast: false
       matrix:
@@ -30,3 +30,11 @@ jobs:
       - run: pnpm build
       - run: cargo clippy --workspace
       - run: cargo test --workspace
+
+  # The required check: one stable name for the whole OS matrix.
+  ci:
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.build.result }}" = success

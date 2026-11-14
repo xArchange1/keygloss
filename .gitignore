@@ -1,4 +1,5 @@
 reference/
+.claude/worktrees/
 
 # Rust
 /target/
