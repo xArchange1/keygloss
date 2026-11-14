@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type TextareaHTMLAttributes } from "react";
 import { GripVertical, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -9,6 +9,19 @@ let nextId = 0;
 const blank = (): RowData => ({ id: nextId++, a: "", b: "" });
 const toRows = (pairs: Pair[]) => [...pairs.map(([a, b]) => ({ id: nextId++, a, b })), blank()];
 const toPairs = (rows: RowData[]): Pair[] => rows.filter((r) => r.a || r.b).map((r) => [r.a, r.b]);
+
+/** Textarea that grows to fit its text, including soft-wrapped lines. */
+function AutoTextarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current!;
+    const fit = () => { el.style.height = "0"; el.style.height = `${el.scrollHeight + 2}px`; };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [props.value]);
+  return <textarea ref={ref} rows={1} {...props} />;
+}
 
 /** Two-column list editor that always keeps one trailing empty row; rows reorder by drag or Alt+↑/↓. */
 export function PairEditor({ pairs, onChange, cols, placeholders }: {
@@ -46,7 +59,7 @@ export function PairEditor({ pairs, onChange, cols, placeholders }: {
     apply(n);
   };
 
-  const cell = "h-8 min-w-0 rounded-md border border-transparent bg-transparent px-2 text-[12.5px] placeholder:text-fg/45 hover:border-fg/15 focus:border-detail focus:bg-raised";
+  const cell = "min-w-0 rounded-md border border-transparent bg-transparent px-2 text-[12.5px] placeholder:text-fg/45 hover:border-fg/15 focus:border-detail focus:bg-raised";
   return (
     <div className="rounded-xl border border-fg/10 bg-fg/[0.035] p-1.5">
       <div className="grid grid-cols-[22px_minmax(0,2fr)_minmax(0,3fr)_28px] gap-1.5 px-0.5 pt-1 pb-1.5 text-[11px] font-semibold tracking-[0.06em] text-fg/65 uppercase">
@@ -60,7 +73,7 @@ export function PairEditor({ pairs, onChange, cols, placeholders }: {
           <div key={r.id}
             onDragOver={(e) => { if (drag && !isTrailing) { e.preventDefault(); setDrag({ ...drag, over: i }); } }}
             onDrop={(e) => { e.preventDefault(); if (drag) move(drag.from, drag.over); setDrag(null); }}
-            className={`grid grid-cols-[22px_minmax(0,2fr)_minmax(0,3fr)_28px] items-center gap-1.5 rounded-lg px-0.5 transition-colors ${
+            className={`grid grid-cols-[22px_minmax(0,2fr)_minmax(0,3fr)_28px] items-start gap-1.5 rounded-lg px-0.5 transition-colors ${
               drag?.from === i ? "opacity-40" : ""} ${drag && drag.over === i && drag.from !== i ? "bg-detail/10" : ""}`}>
             {isTrailing ? <span /> : (
               <button type="button" draggable aria-label={t("common.moveRow")} title={t("common.moveRow")}
@@ -83,9 +96,10 @@ export function PairEditor({ pairs, onChange, cols, placeholders }: {
                 <GripVertical size={14} />
               </button>
             )}
-            <input className={cell} value={r.a} placeholder={isTrailing ? placeholders[0] : undefined} aria-label={cols[0]}
+            <input className={`${cell} h-8`} value={r.a} placeholder={isTrailing ? placeholders[0] : undefined} aria-label={cols[0]}
               onChange={(e) => edit(i, "a", e.target.value)} onBlur={() => commit(rowsRef.current)} />
-            <input className={cell} value={r.b} placeholder={isTrailing ? placeholders[1] : undefined} aria-label={cols[1]}
+            <AutoTextarea className={`${cell} block resize-none overflow-hidden py-[7px] leading-4`} value={r.b}
+              placeholder={isTrailing ? placeholders[1] : undefined} aria-label={cols[1]}
               onChange={(e) => edit(i, "b", e.target.value)} onBlur={() => commit(rowsRef.current)} />
             {isTrailing ? <span /> : (
               <button type="button" aria-label={t("common.deleteRow")} title={t("common.deleteRow")} onClick={() => remove(i)}
