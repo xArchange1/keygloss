@@ -24,6 +24,17 @@ Type `ghbdtn`, get `привет`, and the layout switches to match. RU ↔ EN, 
 
 ## Screenshots
 
+<table>
+  <tr>
+    <td width="50%"><img src="docs/media/layout-switching.webp" alt="Layout switching settings in the light theme"></td>
+    <td width="50%"><img src="docs/media/snippets.webp" alt="Snippets page in the dark theme"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Layout switching: auto-correction, triggers and text fixes</sub></td>
+    <td align="center"><sub>Snippets: shortcuts that expand into text</sub></td>
+  </tr>
+</table>
+
 ## Install
 
 | Platform | Command |
