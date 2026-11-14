@@ -20,6 +20,9 @@ Type `ghbdtn`, get `привет`, and the layout switches to match. RU ↔ EN, 
 - Typo fixes, snippets and per-app exceptions.
 - History of recent automatic fixes, stored only on this computer.
 - Updates from GitHub, stable or beta.
+- Supported languages: English and Russian.
+
+## Screenshots
 
 ## Install
 
@@ -28,7 +31,7 @@ Type `ghbdtn`, get `привет`, and the layout switches to match. RU ↔ EN, 
 | Windows | `winget install xArchange1.keygloss` |
 | macOS | `brew install keygloss` |
 
-## Build from source
+## Development
 
 Requires Rust (MSVC), Node and pnpm.
 
@@ -36,6 +39,13 @@ Requires Rust (MSVC), Node and pnpm.
 pnpm install
 pnpm tauri dev
 ```
+
+## Privacy
+
+Keygloss processes your typing only on this computer and collects no usage data or telemetry. It connects to the internet only:
+
+- to check GitHub for a newer release on startup, and to download it. Turn this off in Settings → General ("Check for updates on startup").
+- when you click a link, which opens your web browser.
 
 ## Credits
 
