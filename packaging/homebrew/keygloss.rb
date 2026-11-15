@@ -21,6 +21,11 @@ cask "keygloss" do
 
   app "Keygloss.app"
 
+  # Without a Developer ID the app is ad-hoc signed: Gatekeeper would block its first launch.
+  postflight do
+    system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{appdir}/Keygloss.app"]
+  end
+
   uninstall quit:      "com.keygloss.app",
             launchctl: "Keygloss"
 

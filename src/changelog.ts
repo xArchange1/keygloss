@@ -8,6 +8,27 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.1.1",
+    en: [
+      "macOS support: a universal app for Apple Silicon and Intel, installable with Homebrew.",
+      "Experimental Linux support for KDE Plasma 6, as .deb and .rpm packages.",
+      "German, French and Spanish layout pairs, converted with the shortcut.",
+      "Double Shift is the default convert/undo shortcut again.",
+      "Snippets have an on/off switch, and the Snippets page offers ready-made examples.",
+      "History is off by default; auto-clear takes any period from 1 to 30 days.",
+      "Ctrl+Tab switches settings categories, and Settings sizes itself to the screen.",
+    ],
+    ru: [
+      "Поддержка macOS: универсальное приложение для Apple Silicon и Intel, ставится через Homebrew.",
+      "Экспериментальная поддержка Linux для KDE Plasma 6, пакеты .deb и .rpm.",
+      "Пары раскладок для немецкого, французского и испанского, конвертация по сочетанию клавиш.",
+      "Двойной Shift снова стандартное сочетание для конвертации и отмены.",
+      "Автозамену можно выключить, а на её странице есть готовые примеры.",
+      "История выключена по умолчанию; автоочистка принимает любой срок от 1 до 30 дней.",
+      "Ctrl+Tab переключает разделы настроек, а окно настроек подстраивается под экран.",
+    ],
+  },
+  {
     version: "0.1.0",
     en: [
       "Fixes words typed in the wrong layout, RU ↔ EN, as you type or with a shortcut.",
