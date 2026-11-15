@@ -62,8 +62,10 @@ fn on_engine_event(app: &AppHandle, store: &Store<Wry>, history: &Store<Wry>, ev
         EngineEvent::PlaySound { sound, volume } => sound::play(app, sound, volume),
         EngineEvent::Log(line) => log::write(&line),
         EngineEvent::Converted { from, to } => {
-            let keep_days = app.try_state::<AppState>().map_or(0, |s| s.settings().history_keep_days);
-            let list = history::add(history, history::Entry { at: state::unix_now(), from, to }, keep_days);
+            let Some(s) = app.try_state::<AppState>().map(|s| s.settings()).filter(|s| s.history_enabled) else {
+                return;
+            };
+            let list = history::add(history, history::Entry { at: state::unix_now(), from, to }, s.history_keep_days);
             let _ = app.emit(ipc::EVENT_HISTORY_CHANGED, list);
         }
     }

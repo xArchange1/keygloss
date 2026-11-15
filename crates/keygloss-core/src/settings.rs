@@ -181,6 +181,8 @@ pub struct Settings {
     pub show_whats_new: bool,
 
     // History
+    /// Automatic fixes are recorded in the history.
+    pub history_enabled: bool,
     /// History entries older than this many days are removed; 0 = keep them (up to the 200 newest).
     pub history_keep_days: u32,
 
@@ -263,6 +265,7 @@ impl Default for Settings {
             update_channel: UpdateChannel::Stable,
             show_whats_new: true,
 
+            history_enabled: false,
             history_keep_days: 0,
 
             did_initial_setup: false,

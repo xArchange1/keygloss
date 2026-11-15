@@ -455,7 +455,7 @@ mod tests {
             "switchDeclinedWords", "switchStrikeCount", "switchStrikeTime",
             "typoPersonalWords", "lastLayoutCyr", "lastLayoutLat", "language", "appTheme", "didInitialSetup",
             "didShowWelcome", "rescuedCount", "updateCheckOnStartup", "autoUpdate", "updateChannel", "showWhatsNew",
-            "historyKeepDays",
+            "historyEnabled", "historyKeepDays",
             "lastSeenVersion",
         ];
         ts.sort();

@@ -113,6 +113,8 @@ export interface Settings {
   /** Show the release notes on the first start after an update. */
   showWhatsNew: boolean;
   // History
+  /** Automatic fixes are recorded in the history. */
+  historyEnabled: boolean;
   /** Entries older than this many days are removed; 0 = keep. */
   historyKeepDays: number;
   // App state
@@ -215,7 +217,7 @@ let memSettings: Settings = {
   undoStrikeTime: {}, switchDeclinedWords: [], switchStrikeCount: {}, switchStrikeTime: {}, typoPersonalWords: {}, lastLayoutCyr: "", lastLayoutLat: "",
   language: "en", appTheme: "system", didInitialSetup: false, didShowWelcome: false, rescuedCount: 0,
   updateCheckOnStartup: true, autoUpdate: false, updateChannel: "stable",
-  showWhatsNew: true, historyKeepDays: 0, lastSeenVersion: "",
+  showWhatsNew: true, historyEnabled: false, historyKeepDays: 0, lastSeenVersion: "",
 };
 
 function browserInvoke(cmd: string, args?: Record<string, unknown>): unknown {

@@ -1,19 +1,23 @@
-import { useEffect, useState } from "react";
-import { Ban, Lock } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Ban, Lock, Minus, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import * as ipc from "../../lib/ipc";
 import type { HistoryEntry } from "../../lib/ipc";
 import { useSettings, useUpdate } from "../../store";
-import { Button, Card, PageTitle, Row, Segmented } from "../../components/ui";
+import { Button, Card, PageTitle, Row, SwitchRow, Toggle } from "../../components/ui";
 
 const without = (words: string[], w: string) => words.filter((x) => x !== w);
-const KEEP_DAYS = [0, 3, 7, 30];
+const MAX_DAYS = 30;
+const clampDays = (n: number) => Math.min(MAX_DAYS, Math.max(1, n));
 
 export function HistoryPage() {
   const { t, i18n } = useTranslation();
   const s = useSettings();
   const update = useUpdate();
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
+  // The last period, restored when automatic clearing is turned back on.
+  const lastDays = useRef(7);
+  if (s.historyKeepDays) lastDays.current = s.historyKeepDays;
   useEffect(() => {
     const off = ipc.on("history-changed", setEntries);
     return () => { off.then((f) => f()); };
@@ -33,16 +37,21 @@ export function HistoryPage() {
     <>
       <div className="flex items-start justify-between gap-4">
         <PageTitle title={t("hist.title")} />
-        <Button className="mt-1" disabled={!entries.length} onClick={clear}>{t("hist.clear")}</Button>
+        <Button className={s.historyEnabled ? "mt-1" : "mt-1 opacity-50"} disabled={!entries.length} onClick={clear}>{t("hist.clear")}</Button>
       </div>
       <p className="-mt-2.5 mb-[18px] flex items-start gap-1.5 text-fg/70">
         <Lock size={13} className="mt-[3px] shrink-0 text-detail" />{t("hist.local")}
       </p>
       <Card className="mb-3">
-        <Row title={t("hist.auto")} help={t("hist.autoSub")} control={
-          <Segmented value={String(s.historyKeepDays)} label={t("hist.auto")}
-            onChange={(v) => update({ historyKeepDays: Number(v) })}
-            options={KEEP_DAYS.map((d) => ({ value: String(d), label: d ? t("hist.days", { count: d }) : t("hist.autoOff") }))} />
+        <SwitchRow title={t("hist.enabled")} checked={s.historyEnabled} onChange={(historyEnabled) => update({ historyEnabled })} />
+        <Row title={t("hist.auto")} help={t("hist.autoSub")} disabled={!s.historyEnabled} control={
+          <div className="flex items-center gap-3">
+            {s.historyKeepDays > 0 && (
+              <DaysStepper value={s.historyKeepDays} onChange={(historyKeepDays) => update({ historyKeepDays })} />
+            )}
+            <Toggle label={t("hist.auto")} checked={s.historyKeepDays > 0}
+              onChange={(on) => update({ historyKeepDays: on ? lastDays.current : 0 })} />
+          </div>
         } />
       </Card>
       <Card>
@@ -72,5 +81,35 @@ export function HistoryPage() {
         })}
       </Card>
     </>
+  );
+}
+
+/** 1 to 30 days: the buttons step by one, typed input applies on Enter or blur. */
+function DaysStepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const { t } = useTranslation();
+  const [draft, setDraft] = useState<string | null>(null);
+  const commit = () => {
+    const n = Number.parseInt(draft ?? "", 10);
+    if (n && clampDays(n) !== value) onChange(clampDays(n));
+    setDraft(null);
+  };
+  const step = "grid size-6 cursor-pointer place-items-center rounded-md text-fg/65 hover:bg-fg/10 hover:text-fg disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent";
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="inline-flex items-center rounded-lg bg-fg/[0.08] p-0.5">
+        <button type="button" className={step} aria-label={t("hist.fewer")} disabled={value <= 1}
+          onClick={() => onChange(clampDays(value - 1))}><Minus size={13} /></button>
+        <input inputMode="numeric" aria-label={t("hist.auto")} value={draft ?? String(value)}
+          onChange={(e) => setDraft(e.target.value.replace(/\D/g, "").slice(0, 2))} onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commit();
+            else if (e.key === "Escape") setDraft(null);
+          }}
+          className="h-6 w-7 bg-transparent text-center text-[12px] font-semibold tabular-nums" />
+        <button type="button" className={step} aria-label={t("hist.more")} disabled={value >= MAX_DAYS}
+          onClick={() => onChange(clampDays(value + 1))}><Plus size={13} /></button>
+      </div>
+      <span className="text-[12px] text-fg/75">{t("hist.days", { count: value })}</span>
+    </div>
   );
 }
