@@ -1854,3 +1854,24 @@ fn switching_the_pair_takes_effect_at_once() {
     h.manual();
     assert_eq!((h.text().as_str(), h.lang()), ("yes", "de".to_string()));
 }
+
+#[test]
+fn manual_pair_group_undoes_on_the_next_press() {
+    let mut h = H::latin_pair("fr");
+    h.keys("qwerty qwerty");
+    h.manual();
+    assert_eq!((h.text().as_str(), h.lang()), ("azerty azerty", "fr".to_string()));
+    h.manual();
+    assert_eq!((h.text().as_str(), h.lang()), ("qwerty qwerty", "en".to_string()));
+}
+
+#[test]
+fn manual_pair_group_stops_at_a_layout_switch() {
+    let mut h = H::latin_pair("de");
+    h.keys("zes ");
+    h.set_layout(DE);
+    h.advance(1000);
+    h.type_with(&de(), "yes");
+    h.manual();
+    assert_eq!((h.text().as_str(), h.lang()), ("zes zes", "en".to_string()));
+}

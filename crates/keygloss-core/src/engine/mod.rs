@@ -297,6 +297,9 @@ pub(crate) struct Engine {
     /// A dead key was typed in the current word: what reaches the screen depends on the next
     /// key, so nothing is tracked until the next word boundary or reset.
     dead_key_word: bool,
+    /// The last manual-only group conversion: (characters typed, original text, original side),
+    /// put back by the next hotkey press if nothing happened in between.
+    group_undo: Option<(usize, String, Side)>,
     pending_context_clear: bool,
     context_reset_at: Option<Instant>,
     pending_soft_reset: bool,
@@ -374,6 +377,7 @@ impl Engine {
             held: Modifiers::NONE,
             chatter: None,
             dead_key_word: false,
+            group_undo: None,
             pending_context_clear: false,
             context_reset_at: None,
             pending_soft_reset: false,
@@ -600,6 +604,10 @@ impl Engine {
         if user_choice && let Some(&side) = self.sides.get(&id) {
             self.remember(&id, side);
         }
+        // Without a detector a manual-only group converts every word: none typed before a switch.
+        if user_choice && self.lang_pair.is_manual_only() && self.belief.as_ref() != Some(&id) {
+            self.buffer.invalidate_group_history();
+        }
         self.belief = Some(id);
         self.wake = true;
     }
@@ -645,7 +653,7 @@ impl Engine {
             self.tables.insert(info.id.clone(), table);
             self.layouts.push(info);
         }
-        if self.settings.layout_pair == "auto" {
+        if self.settings.layout_pair == "auto" && !self.layouts.is_empty() {
             self.settings.layout_pair = pick_pair(&self.layouts).to_string();
             self.lang_pair = pair::by_code(&self.settings.layout_pair);
             self.log(format!("layout pair auto={}", self.settings.layout_pair));
@@ -764,6 +772,7 @@ impl Engine {
 
     pub(crate) fn on_foreground_change(&mut self, app: AppId, now: Instant) {
         self.pending_soft_reset = true;
+        self.group_undo = None;
         // Every window has its own layout on Windows: re-read it.
         self.own_switch_at = None;
         if let Some(real) = self.layouts_api.current_layout()
@@ -945,12 +954,14 @@ impl Engine {
         self.live_fix_last.clear();
         self.word_edited = false;
         self.dead_key_word = false;
+        self.group_undo = None;
         self.buffer.clear();
     }
 
     /// `Engine.handleKeyDown`: one non-modifier key-down that is not a hotkey.
     fn typing_key(&mut self, ev: &KeyEvent, now: Instant) -> HookDecision {
         use KeyCode::*;
+        self.group_undo = None;
         if self.job_in_flight {
             self.in_flight_real_keys += 1;
         }
@@ -1152,6 +1163,7 @@ impl Engine {
         }
         self.context_reset_at = Some(now);
         self.buffer.invalidate_group_history();
+        self.group_undo = None;
         self.pending_context_clear = true;
         self.request_password_check();
     }
@@ -1511,7 +1523,7 @@ impl Engine {
         }
         self.apply_pending_context_clear();
         self.live_fix_last.clear();
-        if self.undo_last_text_fix(now) {
+        if self.undo_last_text_fix(now) || self.undo_manual_group(now) {
             return;
         }
         self.selection_refused = false;
@@ -1675,6 +1687,10 @@ impl Engine {
         self.log_fix("group", group.delete_count, len(&plan.text), Some(plan.last_to));
         self.count_rescued(plan.converted as u64);
         self.buffer.clear();
+        if self.lang_pair.is_manual_only() {
+            let original = group.words.iter().map(|(w, t)| format!("{w}{t}")).collect();
+            self.group_undo = Some((len(&plan.text), original, plan.last_to.other()));
+        }
         self.select_layout(plan.last_to, now);
         self.mute(now, MUTE_DRAIN);
         self.play_sound();
@@ -1693,6 +1709,19 @@ impl Engine {
             text.push_str(tail);
         }
         (converted > 0).then_some(GroupPlan { text, converted, last_to: to })
+    }
+
+    /// The hotkey right after a manual-only group conversion puts the phrase back.
+    fn undo_manual_group(&mut self, now: Instant) -> bool {
+        let Some((typed, original, side)) = self.group_undo.take() else { return false };
+        if self.output.replace_text(typed, &original).is_err() {
+            return true;
+        }
+        self.log_fix("group", typed, len(&original), Some(side));
+        self.select_layout(side, now);
+        self.mute(now, MUTE_DRAIN);
+        self.play_sound();
+        true
     }
 
     /// `undoLastTextFix`: the manual hotkey right after a typo/caps fix puts the original back.
