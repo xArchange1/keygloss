@@ -1,0 +1,80 @@
+<!doctype html>
+<!-- README banner source. ?lang=en|ru, rendered at 1280x640 @2x to banner-{en,ru}.webp. -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --bg-from: #2b2d30; --bg-to: #0b0c0d; --text: #f3eee7;
+    --accent: #f5c84c; --detail: #8e9bff; --raised: #34363a;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1280px; height: 640px; overflow: hidden; }
+  body {
+    position: relative; color: var(--text);
+    font-family: "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI", sans-serif;
+    background:
+      radial-gradient(620px 420px at 82% 46%, rgb(245 200 76 / 0.10), transparent 70%),
+      radial-gradient(520px 380px at 8% 0%, rgb(142 155 255 / 0.10), transparent 70%),
+      linear-gradient(160deg, var(--bg-from), var(--bg-to) 78%);
+    -webkit-font-smoothing: antialiased;
+  }
+  .left { position: absolute; left: 80px; top: 0; bottom: 0; width: 600px; display: flex; flex-direction: column; justify-content: center; }
+  .brand { display: flex; align-items: center; gap: 16px; font-size: 44px; font-weight: 700; letter-spacing: -0.5px; }
+  .brand i { width: 64px; height: 64px; background: var(--accent); -webkit-mask: url(../../src-tauri/icons/icon.svg) center / contain no-repeat; }
+  h1 em { font-style: normal; color: var(--accent); }
+  h1 { margin-top: 40px; font-size: 68px; line-height: 1.06; font-weight: 700; letter-spacing: -1.5px; }
+  .sub { margin-top: 24px; font-size: 26px; line-height: 1.35; color: rgb(243 238 231 / 0.66); max-width: 540px; text-wrap: balance; }
+  .pills { margin-top: 40px; display: flex; gap: 12px; }
+  .pill { padding: 9px 20px 11px; border-radius: 999px; border: 1px solid rgb(142 155 255 / 0.35); background: rgb(142 155 255 / 0.12); color: var(--detail); font-size: 21px; font-weight: 600; box-shadow: 0 6px 18px rgb(0 0 0 / 0.3); }
+  .url { position: absolute; right: 44px; bottom: 30px; font-size: 24px; font-weight: 700; color: var(--accent); }
+
+  /* text hero */
+  .hero { position: absolute; right: 72px; top: 50%; transform: translateY(-54%); width: 470px; }
+  .card { border-radius: 22px; border: 1px solid rgb(243 238 231 / 0.10); background: var(--raised); box-shadow: 0 24px 60px rgb(0 0 0 / 0.45); padding: 34px 40px; }
+  .wrong { opacity: 0.9; transform: rotate(-2.5deg); width: 86%; margin-left: 2%; background: #26282b; }
+  .wrong span { font-size: 64px; font-weight: 600; letter-spacing: -1px; color: rgb(243 238 231 / 0.34); text-decoration: line-through; text-decoration-thickness: 4px; text-decoration-color: rgb(243 238 231 / 0.34); }
+  .arrow { position: relative; z-index: 2; width: 68px; height: 68px; margin: -16px 0 -16px 62%; border-radius: 50%; background: var(--accent); display: grid; place-items: center; box-shadow: 0 10px 26px rgb(0 0 0 / 0.45); }
+  .right { position: relative; z-index: 1; display: flex; align-items: center; }
+  .right span { font-size: 96px; line-height: 1.1; font-weight: 700; letter-spacing: -2px; }
+  .caret { width: 6px; height: 96px; margin-left: 10px; border-radius: 3px; background: var(--accent); }
+
+</style>
+</head>
+<body>
+  <div class="left">
+    <div class="brand"><i></i>Keygloss</div>
+    <h1 id="title"></h1>
+    <p class="sub" id="sub"></p>
+    <div class="pills" id="pills"></div>
+  </div>
+  <div id="hero"></div>
+  <div class="url">keygloss.app</div>
+<script>
+  const q = new URLSearchParams(location.search);
+  const lang = q.get("lang") || "en";
+  const copy = {
+    en: {
+      title: "Wrong layout?<br><em>Already fixed.</em>",
+      sub: "The free layout switcher that fixes your text as you type.",
+      pills: ["Snippets", "Exceptions", "Local"],
+    },
+    ru: {
+      title: "Хватит писать<br><em>Ghbdtn</em>",
+      sub: "Keygloss сам исправит текст и переключит раскладку, пока вы печатаете.",
+      pills: ["Сниппеты", "Исключения", "Локально"],
+    },
+  }[lang];
+  document.documentElement.lang = lang;
+  document.getElementById("title").innerHTML = copy.title;
+  document.getElementById("sub").textContent = copy.sub;
+  document.getElementById("pills").innerHTML = copy.pills.map((p) => `<span class="pill">${p}</span>`).join("");
+  document.getElementById("hero").innerHTML = `
+      <div class="hero">
+        <div class="card wrong"><span>ghbdtn</span></div>
+        <div class="arrow"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#171819" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M5 13l7 7 7-7"/></svg></div>
+        <div class="card right"><span>привет</span><i class="caret"></i></div>
+      </div>`;
+</script>
+</body>
+</html>
