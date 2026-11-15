@@ -1,5 +1,6 @@
 reference/
 .claude/worktrees/
+assets/
 
 # Rust
 /target/
