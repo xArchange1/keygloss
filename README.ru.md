@@ -7,8 +7,8 @@
 <p align="center">Приватная современная альтернатива Punto Switcher</p>
 
 <p align="center">
-  <a href="https://github.com/xArchange1/keygloss/releases/latest">Скачать</a> ·
-  <a href="https://github.com/xArchange1/keygloss/blob/main/README.md">English</a>
+  <a href="../../README.md">English</a> ·
+  <b>Русский</b>
 </p>
 
 <p align="center">
@@ -44,8 +44,8 @@
 | Система | Команда |
 | --- | --- |
 | Windows | `winget install xArchange1.keygloss` |
-| macOS | `brew install keygloss` |
-| Linux (экспериментально) | `curl -fsSL https://raw.githubusercontent.com/xArchange1/keygloss/main/packaging/linux/install.sh | sh` |
+| macOS | `brew install keygloss`<br><br>Не работает. [Отблагодарите](https://github.com/xArchange1/keygloss#sponsor) на покупку Apple Developer ID. |
+| Linux | <code>curl -fsSL https://raw.githubusercontent.com/xArchange1/keygloss/main/packaging/linux/install.sh | sh</code> |
 
 ### Linux
 
