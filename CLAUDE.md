@@ -12,7 +12,7 @@ Windows, macOS and (experimental) Linux Tauri 2 rewrite of Keyboop (macOS-only, 
 - **No voice features of any kind**: no dictation, microphone, voice settings or strings.
 - No Keyboop name, icon or copy, and none of Keyboop's endpoints or links (keyboop.com, its Telegram or donation pages). The app makes no network calls except the updater's requests to GitHub (`src-tauri/src/update.rs`). Links open in the browser: the two GitHub issue forms (`report.rs`) and the README's Sponsor section (Boosty), all on the About page.
 - Logs never contain typed text, only lengths. The log is `%LOCALAPPDATA%\com.keygloss.app\logs\keygloss.log` (macOS: `~/Library/Logs/com.keygloss.app/keygloss.log`; `src-tauri/src/log.rs`); the engine writes to it through `EngineEvent::Log`. The bug form gets its newest lines in the URL, so they become public once submitted.
-- The only typed text kept is the History page: the last 200 automatic fixes in `%APPDATA%\com.keygloss.app\history.json` (macOS: `~/Library/Application Support/com.keygloss.app/`) (`src-tauri/src/history.rs`, fed by `EngineEvent::Converted`). It stays local: never log it or put it in a report.
+- The only typed text kept is the History page (off by default, `historyEnabled`): the last 200 automatic fixes in `%APPDATA%\com.keygloss.app\history.json` (macOS: `~/Library/Application Support/com.keygloss.app/`) (`src-tauri/src/history.rs`, fed by `EngineEvent::Converted`). It stays local: never log it or put it in a report.
 - The original is MIT licensed: keep its copyright notice and license text in this project's licensing/attribution. Keep `LICENSE` (MIT, xArchange1) and `THIRD_PARTY.md` (Keyboop and keyswitcher MIT notices).
 
 ## Layout
