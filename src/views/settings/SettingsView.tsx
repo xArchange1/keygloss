@@ -70,6 +70,19 @@ export function SettingsView() {
     const sub = ipc.on("show-update", () => ipc.pendingUpdate().then(setUpdate).catch(console.error));
     return () => void sub.then((u) => u());
   }, []);
+  // Ctrl+Tab / Ctrl+Shift+Tab step through the categories; plain Tab stays within the page.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Tab" || !e.ctrlKey || e.altKey || e.metaKey || document.querySelector("[aria-modal=true]")) return;
+      e.preventDefault();
+      setPage((p) => {
+        const i = SECTIONS.findIndex((s) => s.id === (p === "ambiguous" ? "exceptions" : p));
+        return SECTIONS[(i + (e.shiftKey ? SECTIONS.length - 1 : 1)) % SECTIONS.length].id;
+      });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
     <div className="flex h-full">
@@ -82,7 +95,7 @@ export function SettingsView() {
         <ul className="flex flex-1 flex-col gap-0.5 px-2">
           {SECTIONS.map(({ id, icon: Icon }) => (
             <li key={id}>
-              <button type="button" aria-current={active === id ? "page" : undefined} onClick={() => setPage(id)}
+              <button type="button" tabIndex={-1} aria-current={active === id ? "page" : undefined} onClick={() => setPage(id)}
                 className={`relative flex h-8 w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 text-left transition-colors ${
                   active === id ? "bg-fg/[0.08] font-semibold" : "text-fg/80 hover:bg-fg/[0.05] hover:text-fg"}`}>
                 {active === id && <span className="absolute top-1.5 bottom-1.5 left-0 w-[3px] rounded-full bg-accent" />}
