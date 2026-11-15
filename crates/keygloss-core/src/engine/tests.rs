@@ -1288,6 +1288,19 @@ fn snippet_expands_only_on_tab_by_default() {
 }
 
 #[test]
+fn snippet_does_not_expand_when_disabled() {
+    let mut h = H::boundary();
+    h.shared.with(|e| {
+        let mut s = e.settings().clone();
+        s.snippets_enabled = false;
+        s.snippets_ordered.push(("!br".into(), "Best regards".into()));
+        e.set_settings(s, Instant::now());
+    });
+    h.keys("!br\t");
+    assert_eq!(h.text(), "!br\t");
+}
+
+#[test]
 fn snippet_picker_digits_escape_and_other_keys() {
     let mut h = H::with(|s| {
         s.text_snippets = vec![("a".into(), "Alpha".into()), ("b".into(), "Beta".into())];

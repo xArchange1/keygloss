@@ -7,7 +7,7 @@ import { useSettings, useUpdate } from "../../store";
 import { HotkeyPicker } from "../../components/HotkeyPicker";
 import { Button, Card, CheckPill, Hint, PageTitle, Row, SectionTitle, Select, SwitchRow } from "../../components/ui";
 
-/** Toggle row for an optional hotkey (null = off) plus its picker row while on. */
+/** Toggle row for an optional hotkey (null = off) plus its picker row, grayed out while off. */
 export function OptionalHotkey({ title, help, target, field }: {
   title: string; help: string; target: HotkeyTarget; field: "caseChangeHotkey" | "snippetPickHotkey";
 }) {
@@ -19,11 +19,9 @@ export function OptionalHotkey({ title, help, target, field }: {
     <>
       <SwitchRow title={title} help={help} checked={!!value}
         onChange={(on) => update({ [field]: on ? PRESETS[target][0] : null } as Partial<Settings>)} />
-      {value && (
-        <Row title={t("common.shortcut")}
-          control={<HotkeyPicker target={target} value={value} label={title}
-            onChange={(h: Hotkey) => update({ [field]: h } as Partial<Settings>)} />} />
-      )}
+      <Row title={t("common.shortcut")} disabled={!value}
+        control={<div inert={!value}><HotkeyPicker target={target} value={value ?? PRESETS[target][0]} label={title}
+          onChange={(h: Hotkey) => update({ [field]: h } as Partial<Settings>)} /></div>} />
     </>
   );
 }

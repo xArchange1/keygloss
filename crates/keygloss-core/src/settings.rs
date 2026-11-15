@@ -142,6 +142,8 @@ pub struct Settings {
     pub seeded_default_apps: Vec<String>,
 
     // Snippets
+    /// Autoreplace expands triggers; off leaves the picker working.
+    pub snippets_enabled: bool,
     /// Autoreplace pairs `[trigger, expansion]`, in order.
     pub snippets_ordered: Vec<(String, String)>,
     pub snippet_expand_space: bool,
@@ -235,6 +237,7 @@ impl Default for Settings {
             app_forced_layouts: BTreeMap::new(),
             seeded_default_apps: Vec::new(),
 
+            snippets_enabled: true,
             snippets_ordered: Vec::new(),
             snippet_expand_space: false,
             snippet_expand_enter: false,

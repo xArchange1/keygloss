@@ -83,6 +83,7 @@ export interface Settings {
   appForcedLayouts: Record<string, string>;
   seededDefaultApps: string[];
   // Snippets
+  snippetsEnabled: boolean;
   /** [trigger, expansion] */
   snippetsOrdered: [string, string][];
   snippetExpandSpace: boolean;
@@ -209,7 +210,7 @@ let memSettings: Settings = {
   plainPasteHotkey: { mode: "key", key: "KeyV", mods: { ...NO_MODS, ctrl: true, shift: true } },
   snippetPickHotkey: null, pauseMinutes: 15, pausedUntil: 0, ignoredWords: ["вк", "тг", "vk"],
   forceSwapWords: [], appExceptionModes: {}, appForcedLayouts: {},
-  seededDefaultApps: [], snippetsOrdered: [], snippetExpandSpace: false, snippetExpandEnter: false,
+  seededDefaultApps: [], snippetsEnabled: true, snippetsOrdered: [], snippetExpandSpace: false, snippetExpandEnter: false,
   snippetExpandTab: true, textSnippets: [], undoDeclinedWords: [], undoStrikeCount: {},
   undoStrikeTime: {}, switchDeclinedWords: [], switchStrikeCount: {}, switchStrikeTime: {}, typoPersonalWords: {}, lastLayoutCyr: "", lastLayoutLat: "",
   language: "en", appTheme: "system", didInitialSetup: false, didShowWelcome: false, rescuedCount: 0,

@@ -1077,7 +1077,7 @@ impl Engine {
             _ => ("\n", false, false, true),
         };
         let s = &self.settings;
-        let snip_key = (space && s.snippet_expand_space) || (enter && s.snippet_expand_enter) || (tab && s.snippet_expand_tab);
+        let snip_key = s.snippets_enabled && ((space && s.snippet_expand_space) || (enter && s.snippet_expand_enter) || (tab && s.snippet_expand_tab));
         let dev_off = s.developer_mode && self.app_is_dev;
         let snip_allowed = self.app_mode != Some(AppMode::Off) && !dev_off;
         if snip_key && snip_allowed && !self.muted(now) && !self.is_paused(now) && !self.buffer.current_word().is_empty() {
