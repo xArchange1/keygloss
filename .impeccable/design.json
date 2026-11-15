@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-16T00:00:00Z",
+  "title": "Design System: Keygloss",
+  "extensions": {
+    "colorMeta": {
+      "gold": { "role": "primary", "displayName": "Ledger Gold", "tonalRamp": ["#2e2100", "#4a3600", "#6b4e00", "#8a6500", "#b08a2a", "#d1ad5a", "#e9d39a", "#f7ecd2"] },
+      "night-gold": { "role": "primary", "displayName": "Ledger Gold (night)" },
+      "indigo": { "role": "secondary", "displayName": "Fountain-Pen Indigo", "tonalRamp": ["#141844", "#222a74", "#2f3a9a", "#3d48b8", "#5f6acc", "#8892dc", "#b7bdec", "#e3e6f8"] },
+      "night-indigo": { "role": "secondary", "displayName": "Fountain-Pen Indigo (night)" },
+      "paper": { "role": "neutral", "displayName": "Desk Paper", "tonalRamp": ["#2b2a28", "#4a4743", "#6e6a64", "#948f88", "#b9b3ab", "#d7d0c7", "#e9e3db", "#f3eee7"] },
+      "paper-shade": { "role": "neutral", "displayName": "Desk Paper (bottom)" },
+      "ink": { "role": "neutral", "displayName": "Ink" },
+      "raised": { "role": "neutral", "displayName": "Raised Card" },
+      "on-gold": { "role": "neutral", "displayName": "On-Gold" },
+      "night-paper": { "role": "neutral", "displayName": "Night Desk (top)" },
+      "night-floor": { "role": "neutral", "displayName": "Night Desk (bottom)" },
+      "night-ink": { "role": "neutral", "displayName": "Night Ink" },
+      "night-on-gold": { "role": "neutral", "displayName": "On-Gold (night)" },
+      "night-raised": { "role": "neutral", "displayName": "Raised Card (night)" }
+    },
+    "typographyMeta": {
+      "site-display": { "displayName": "Site Display", "purpose": "Hero headline only." },
+      "site-headline": { "displayName": "Site Headline", "purpose": "Section heads." },
+      "site-title": { "displayName": "Site Title", "purpose": "Feature row heads." },
+      "site-body": { "displayName": "Site Body", "purpose": "All site prose; feature copy capped at 40ch." },
+      "site-label": { "displayName": "Eyebrow", "purpose": "Uppercase pill eyebrows above section heads." },
+      "mono": { "displayName": "Mono", "purpose": "Install commands in the terminal." },
+      "app-title": { "displayName": "App Page Title", "purpose": "Settings page headers." },
+      "app-body": { "displayName": "App Body", "purpose": "All settings text." },
+      "app-label": { "displayName": "App Section Label", "purpose": "Uppercase indigo group labels." }
+    },
+    "shadows": [
+      { "name": "desk", "value": "0 1px 2px color-mix(in srgb,var(--kg-text) 10%,transparent),0 10px 28px -10px color-mix(in srgb,var(--kg-text) 30%,transparent)", "purpose": "Windows, stickers, terminal, popovers." },
+      { "name": "pill-bevel", "value": "inset 0 1px 0 color-mix(in srgb,var(--kg-on-accent) 50%,transparent),0 1px 2px color-mix(in srgb,var(--kg-text) 14%,transparent),0 6px 14px -8px color-mix(in srgb,var(--kg-text) 40%,transparent)", "purpose": "Secondary pill buttons." },
+      { "name": "pill-primary", "value": "inset 0 1px 0 color-mix(in srgb,var(--kg-on-accent) 35%,transparent),0 1px 2px color-mix(in srgb,var(--kg-text) 20%,transparent),0 8px 16px -8px color-mix(in srgb,var(--kg-accent) 70%,transparent)", "purpose": "Primary gold pill." },
+      { "name": "app-popover", "value": "0 8px 24px rgb(0 0 0 / 0.22)", "purpose": "App tooltips and popovers." }
+    ],
+    "motion": [
+      { "name": "kg-in", "value": "0.22s ease-out, from opacity 0 translateY(8px)", "purpose": "App panels and tooltips entering." },
+      { "name": "kg-out", "value": "0.18s ease-in, to opacity 0", "purpose": "App panels leaving." },
+      { "name": "toggle", "value": "150ms", "purpose": "Toggle knob and colour transitions." }
+    ],
+    "breakpoints": [
+      { "name": "collage-86", "value": "1399px" },
+      { "name": "collage-74", "value": "1239px" },
+      { "name": "stack", "value": "999px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Pill",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main call to action (download).",
+      "html": "<button class=\"ds-pill ds-pill-primary\">Download</button>",
+      "css": ".ds-pill{display:inline-flex;align-items:center;gap:11px;height:40px;padding:0 20px;border-radius:99px;font:17px Libron,Georgia,serif;cursor:pointer;color:var(--kg-text,#171819);border:1px solid color-mix(in srgb,var(--kg-text,#171819) 24%,transparent);background:linear-gradient(180deg,var(--kg-raised,#fbf9f5),color-mix(in oklab,var(--kg-text,#171819) 7%,var(--kg-raised,#fbf9f5)));box-shadow:0 1px 2px color-mix(in srgb,var(--kg-text,#171819) 14%,transparent),0 6px 14px -8px color-mix(in srgb,var(--kg-text,#171819) 40%,transparent)}.ds-pill-primary{color:var(--kg-on-accent,#fffdf8);border-color:color-mix(in oklab,var(--kg-accent,#8a6500) 70%,var(--kg-text,#171819));background:linear-gradient(180deg,color-mix(in oklab,var(--kg-accent,#8a6500) 88%,var(--kg-on-accent,#fffdf8)),var(--kg-accent,#8a6500));box-shadow:0 1px 2px color-mix(in srgb,var(--kg-text,#171819) 20%,transparent),0 8px 16px -8px color-mix(in srgb,var(--kg-accent,#8a6500) 70%,transparent)}.ds-pill-primary:hover{background:var(--kg-accent,#8a6500)}.ds-pill:focus-visible{outline:2px solid var(--kg-detail,#3d48b8);outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Pill",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary action (GitHub, other platforms).",
+      "html": "<button class=\"ds-pill2\">View on GitHub</button>",
+      "css": ".ds-pill2{display:inline-flex;align-items:center;height:40px;padding:0 20px;border-radius:99px;font:17px Libron,Georgia,serif;cursor:pointer;color:var(--kg-text,#171819);border:1px solid color-mix(in srgb,var(--kg-text,#171819) 24%,transparent);background:linear-gradient(180deg,var(--kg-raised,#fbf9f5),color-mix(in oklab,var(--kg-text,#171819) 7%,var(--kg-raised,#fbf9f5)));box-shadow:0 1px 2px color-mix(in srgb,var(--kg-text,#171819) 14%,transparent),0 6px 14px -8px color-mix(in srgb,var(--kg-text,#171819) 40%,transparent)}.ds-pill2:hover{background:var(--kg-raised,#fbf9f5)}.ds-pill2:focus-visible{outline:2px solid var(--kg-detail,#3d48b8);outline-offset:2px}"
+    },
+    {
+      "name": "Keycap",
+      "kind": "chip",
+      "refersTo": "keycap",
+      "description": "Inline key chord, e.g. a hotkey.",
+      "html": "<span class=\"ds-kc\">Ctrl</span> <span class=\"ds-kc\">Alt</span>",
+      "css": ".ds-kc{display:inline-block;padding:1px 6px;border:1px solid color-mix(in srgb,var(--kg-detail,#3d48b8) 40%,transparent);border-bottom-width:2px;border-radius:5px;background:var(--kg-raised,#fbf9f5);color:var(--kg-detail,#3d48b8);font-weight:700;font-size:11.5px;line-height:1.5}"
+    },
+    {
+      "name": "Toggle",
+      "kind": "custom",
+      "refersTo": "toggle-on",
+      "description": "On/off switch: gold when on.",
+      "html": "<button class=\"ds-tg\" role=\"switch\" aria-checked=\"true\"><span></span></button>",
+      "css": ".ds-tg{position:relative;width:38px;height:22px;border:0;border-radius:99px;background:var(--kg-accent,#8a6500);cursor:pointer;transition:background .15s}.ds-tg span{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--kg-on-accent,#fffdf8);transform:translateX(16px);transition:transform .15s}.ds-tg[aria-checked=false]{background:color-mix(in srgb,var(--kg-text,#171819) 20%,transparent)}.ds-tg[aria-checked=false] span{transform:none;background:var(--kg-raised,#fbf9f5)}.ds-tg:focus-visible{outline:2px solid var(--kg-detail,#3d48b8);outline-offset:2px}"
+    },
+    {
+      "name": "Window",
+      "kind": "card",
+      "refersTo": "window",
+      "description": "App-window frame that stages UI on the desk.",
+      "html": "<div class=\"ds-win\"><div class=\"ds-win-bar\"><i></i><i></i><i></i><span>history</span></div><div class=\"ds-win-body\">ghbdtn → привет</div></div>",
+      "css": ".ds-win{width:260px;background:var(--kg-raised,#fbf9f5);border:1px solid color-mix(in srgb,var(--kg-text,#171819) 24%,transparent);border-radius:9px;box-shadow:0 1px 2px color-mix(in srgb,var(--kg-text,#171819) 10%,transparent),0 10px 28px -10px color-mix(in srgb,var(--kg-text,#171819) 30%,transparent);font:13px Libron,Georgia,serif;color:var(--kg-text,#171819)}.ds-win-bar{height:26px;display:flex;align-items:center;gap:5px;padding:0 9px;background:color-mix(in oklab,var(--kg-text,#171819) 8%,var(--kg-raised,#fbf9f5));border-bottom:1px solid color-mix(in srgb,var(--kg-text,#171819) 13%,transparent);border-radius:8px 8px 0 0;font-size:11.5px;color:color-mix(in oklab,var(--kg-text,#171819) 58%,var(--kg-bg-from,#f3eee7))}.ds-win-bar i{width:9px;height:9px;border-radius:50%;background:var(--kg-accent,#8a6500)}.ds-win-bar i:nth-child(2){background:color-mix(in oklab,var(--kg-accent,#8a6500) 45%,var(--kg-raised,#fbf9f5))}.ds-win-bar i:nth-child(3){background:color-mix(in oklab,var(--kg-detail,#3d48b8) 70%,var(--kg-raised,#fbf9f5))}.ds-win-bar span{flex:1;text-align:center;padding-right:30px}.ds-win-body{padding:14px}"
+    },
+    {
+      "name": "Terminal",
+      "kind": "input",
+      "refersTo": "terminal",
+      "description": "Install command with copy pill.",
+      "html": "<div class=\"ds-term\"><code>winget install xArchange1.keygloss</code></div>",
+      "css": ".ds-term{display:inline-flex;padding:10px 16px;border-radius:9px;background:var(--kg-text,#171819);color:var(--kg-bg-from,#f3eee7);font:14.5px/1.4 ui-monospace,'Cascadia Mono',Consolas,monospace}.ds-term code::before{content:'$ ';opacity:.6}"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Indigo status pill with a dot.",
+      "html": "<span class=\"ds-badge\">fixed</span>",
+      "css": ".ds-badge{display:inline-flex;align-items:center;gap:7px;padding:2px 10px;border-radius:99px;border:1px solid color-mix(in srgb,var(--kg-detail,#3d48b8) 40%,transparent);color:var(--kg-detail,#3d48b8);font-weight:700;font-size:13px;background:var(--kg-raised,#fbf9f5)}.ds-badge::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--kg-detail,#3d48b8)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Writer's Desk",
+    "overview": "Keygloss looks like a warm paper desk with real objects on it: keycaps with a bottom bevel, a sticky note, a luggage tag, small app windows with title bars, a terminal. Everything is something you could press or pick up. The paper is never cold white and the night mode is never pure black; both are gentle vertical gradients, so the surface feels lit rather than flat.\n\nTwo typefaces share one palette. The marketing site speaks in Libron, a bookish serif (Cyrillic is filled by Literata under the same family name), and stages the app's UI as tactile objects on the desk. The app itself uses the OS system sans (Segoe UI Variable on Windows) at a compact 13px, because it is a settings window people open rarely and should feel native. The site may be expressive; the app stays quiet and lets brand show only in the gold toggles, the indigo focus rings and the paper gradient.",
+    "keyCharacteristics": [
+      "A warm paper gradient behind everything, light and dark.",
+      "Gold is the single \"on\" colour: primary buttons, active toggles, the caret.",
+      "Indigo marks keys, focus, badges and links, sparingly.",
+      "Objects carry real physicality: bevels, soft drop shadows, slight rotation on the site.",
+      "Bilingual by construction: every crop and string has an RU twin."
+    ],
+    "rules": [
+      { "name": "The Gold-Is-Never-Prose Rule", "body": "Gold is an accent only. Never use it for light-theme body text; at 8px+ fills, borders and glyph accents only.", "section": "colors" },
+      { "name": "The Derive-Don't-Add Rule", "body": "A new tint, line or surface is a color-mix of the existing tokens (--muted, --line, --hl, --panel). Don't introduce a new hex.", "section": "colors" },
+      { "name": "The Sparing Indigo Rule", "body": "Indigo appears on status dots, badges, keys, focus rings and links. It never fills a large surface.", "section": "colors" },
+      { "name": "The Two-Voices Rule", "body": "The serif belongs to the site and the system sans to the app. Never put Libron in the app or Segoe on the site.", "section": "typography" },
+      { "name": "The Bevel-Not-Glow Rule", "body": "Depth comes from bottom borders and soft drop shadows. No glows, no coloured blur halos.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do build every new colour as a color-mix of the --kg-* tokens.",
+      "Do give pressable objects a bevel (thicker bottom border) and the desk shadow.",
+      "Do ship every image crop and string in both English and Russian.",
+      "Do use the indigo 2px outline at 2px offset for every focus state.",
+      "Do keep the app compact (13px body) and native-feeling."
+    ],
+    "donts": [
+      "Don't use gold for light-theme body text.",
+      "Don't use pure white or pure black backgrounds; use the paper gradients.",
+      "Don't put the serif in the app or the system sans on the site.",
+      "Don't add glows, neon or coloured blur shadows.",
+      "Don't use Keyboop's name, icon or visual assets."
+    ]
+  }
+}
