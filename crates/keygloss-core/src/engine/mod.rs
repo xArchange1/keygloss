@@ -928,6 +928,9 @@ impl Engine {
 
     fn fire(&mut self, target: HotkeyTarget, now: Instant) {
         self.log(format!("hotkey {}", target.name()));
+        if !matches!(target, HotkeyTarget::Manual) {
+            self.group_undo = None;
+        }
         match target {
             HotkeyTarget::Manual => self.push_job(Job::CheckPassword(Then::Manual)),
             HotkeyTarget::CaseChange => {

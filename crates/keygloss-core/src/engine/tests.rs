@@ -1875,3 +1875,22 @@ fn manual_pair_group_stops_at_a_layout_switch() {
     h.manual();
     assert_eq!((h.text().as_str(), h.lang()), ("zes zes", "en".to_string()));
 }
+
+#[test]
+fn another_hotkey_drops_the_manual_pair_group_undo() {
+    let os = FakeOs::with_layouts(vec![(EN, "en-US", us()), latin_layout("fr")]);
+    let mut h = H::with_os(os, |s| {
+        s.layout_pair = "fr".into();
+        s.plain_paste = true;
+    });
+    h.keys("qwerty qwerty");
+    h.manual();
+    assert_eq!(h.text(), "azerty azerty");
+    h.os.os().clipboard = "pasted".into();
+    h.chord(&[KeyCode::ControlLeft, KeyCode::ShiftLeft], KeyCode::KeyV);
+    h.advance(1000);
+    let outputs = h.os.os().outputs.len();
+    h.manual();
+    assert!(h.text().starts_with("azerty azertypasted"), "{}", h.text());
+    assert_eq!(h.os.os().outputs.len(), outputs, "no undo over the paste");
+}
