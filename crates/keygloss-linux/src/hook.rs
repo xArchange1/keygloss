@@ -7,6 +7,9 @@
 //! udev rule gives both to the logged-in user). Without them [`LinuxHook::start`] still succeeds:
 //! the thread retries, and [`InputHook::is_healthy`] stays false until it has a keyboard.
 //!
+//! The desktop cannot set a grabbed keyboard's LEDs: it sets them on the virtual keyboard, and the
+//! hook copies them to the grabbed ones. [`CAPS_LOCK`] comes from there too.
+//!
 //! Safety nets for the grab: a crash closes the devices, which ends the grab; a watchdog thread
 //! ungrabs everything if the hook thread stalls; held keys are let go after [`HOLD_LIMIT`] even
 //! if output is still pending.
@@ -21,11 +24,11 @@ use std::thread::JoinHandle;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use evdev::raw_stream::RawDevice;
-use evdev::{EventType, InputEvent, KeyCode as EvKey, LedCode, RelativeAxisCode, SynchronizationCode};
+use evdev::{EventType, InputEvent, KeyCode as EvKey, SynchronizationCode};
 use keygloss_core::platform::{HookDecision, InputHandler, InputHook, KeyCode, KeyEvent, Modifiers, PlatformError};
 
 use crate::keymap::key_from_code;
-use crate::vkbd::{self, BUTTONS};
+use crate::vkbd::{self, BUTTONS, LED_CAPSL, LEDS, REL_AXES};
 
 /// Device rescan (hotplug) and permission retry interval.
 const RESCAN: Duration = Duration::from_secs(2);
@@ -38,7 +41,7 @@ const HOLD_LIMIT: Duration = Duration::from_secs(3);
 /// The watchdog ungrabs the keyboards when the hook thread has not looped for this long.
 const STALL_LIMIT: Duration = Duration::from_secs(3);
 
-/// Caps Lock state as of the last key event, for [`crate::output`].
+/// Caps Lock as the desktop last set it on the virtual keyboard.
 pub static CAPS_LOCK: AtomicBool = AtomicBool::new(false);
 
 fn now_ms() -> u64 {
@@ -57,8 +60,8 @@ struct Dev {
 }
 
 impl Dev {
-    fn caps_lock(&self) -> bool {
-        self.raw.get_led_state().is_ok_and(|l| l.contains(LedCode::LED_CAPSL))
+    fn set_led(&mut self, code: u16, on: bool) {
+        let _ = self.raw.send_events(&[InputEvent::new(EventType::LED.0, code, i32::from(on))]);
     }
 }
 
@@ -87,6 +90,8 @@ struct HookState {
     swallowed: [bool; 256],
     /// Real key events (code, value, Caps Lock) held while output is pending, oldest first.
     held: VecDeque<(u16, i32, bool, Instant)>,
+    /// LED states the desktop set on the virtual keyboard (Num, Caps, Scroll Lock).
+    leds: [Option<bool>; LEDS.end as usize],
 }
 
 impl HookState {
@@ -186,12 +191,30 @@ fn scan(devs: &mut Vec<Dev>) {
     }
 }
 
-/// Grabs the keyboards that are waiting for their keys to be released.
-fn grab_ready(devs: &mut [Dev], shared: &Shared) {
+/// Grabs the keyboards that are waiting for their keys to be released, and sets their LEDs.
+fn grab_ready(devs: &mut [Dev], leds: &[Option<bool>], shared: &Shared) {
     for d in devs.iter_mut().filter(|d| d.keyboard && !d.grabbed) {
         if d.raw.get_key_state().is_ok_and(|k| k.iter().next().is_none()) && d.raw.grab().is_ok() {
             d.grabbed = true;
             shared.grabbed().push(d.raw.as_raw_fd());
+            for (code, on) in LEDS.zip(leds) {
+                if let Some(on) = *on {
+                    d.set_led(code, on);
+                }
+            }
+        }
+    }
+}
+
+/// Copies the LEDs the desktop set on the virtual keyboard to the grabbed keyboards.
+fn sync_leds(st: &mut HookState, devs: &mut [Dev]) {
+    for (code, on) in vkbd::with(|k| k.read_leds()).unwrap_or_default() {
+        st.leds[usize::from(code)] = Some(on);
+        if code == LED_CAPSL {
+            CAPS_LOCK.store(on, Ordering::Relaxed);
+        }
+        for d in devs.iter_mut().filter(|d| d.grabbed) {
+            d.set_led(code, on);
         }
     }
 }
@@ -214,21 +237,11 @@ fn on_event(st: &mut HookState, dev: &mut Dev, e: InputEvent) {
         }
     } else if ty == EventType::KEY && code < 256 {
         if dev.grabbed {
-            let caps = dev.caps_lock();
-            CAPS_LOCK.store(caps, Ordering::Relaxed);
-            st.on_key(code, value, caps);
+            st.on_key(code, value, CAPS_LOCK.load(Ordering::Relaxed));
         }
     } else if dev.grabbed && ty == EventType::RELATIVE {
         // Only the axes the virtual device has.
-        let known = [
-            RelativeAxisCode::REL_X,
-            RelativeAxisCode::REL_Y,
-            RelativeAxisCode::REL_WHEEL,
-            RelativeAxisCode::REL_HWHEEL,
-            RelativeAxisCode::REL_WHEEL_HI_RES,
-            RelativeAxisCode::REL_HWHEEL_HI_RES,
-        ];
-        if known.iter().any(|a| a.0 == code) {
+        if REL_AXES.contains(&code) {
             dev.report.push(e);
         }
     } else if ty == EventType::SYNCHRONIZATION && code == SynchronizationCode::SYN_REPORT.0 && !dev.report.is_empty() {
@@ -238,7 +251,8 @@ fn on_event(st: &mut HookState, dev: &mut Dev, e: InputEvent) {
 }
 
 fn run(handler: Box<dyn InputHandler>, shared: &Shared) {
-    let mut st = HookState { handler, down: [false; 128], swallowed: [false; 256], held: VecDeque::new() };
+    let mut st =
+        HookState { handler, down: [false; 128], swallowed: [false; 256], held: VecDeque::new(), leds: Default::default() };
     let mut devs: Vec<Dev> = Vec::new();
     let mut last_scan: Option<Instant> = None;
     while !shared.stop.load(Ordering::SeqCst) && !shared.failed.load(Ordering::SeqCst) {
@@ -249,14 +263,22 @@ fn run(handler: Box<dyn InputHandler>, shared: &Shared) {
                 scan(&mut devs);
             }
         }
-        grab_ready(&mut devs, shared);
+        grab_ready(&mut devs, &st.leds, shared);
         shared.installed.store(devs.iter().any(|d| d.grabbed), Ordering::SeqCst);
 
-        let mut fds: Vec<libc::pollfd> =
-            devs.iter().map(|d| libc::pollfd { fd: d.raw.as_raw_fd(), events: libc::POLLIN, revents: 0 }).collect();
+        // The devices, then the virtual keyboard (LEDs).
+        let mut fds: Vec<libc::pollfd> = devs
+            .iter()
+            .map(|d| d.raw.as_raw_fd())
+            .chain(vkbd::with(|k| k.fd()).ok())
+            .map(|fd| libc::pollfd { fd, events: libc::POLLIN, revents: 0 })
+            .collect();
         let timeout = if st.held.is_empty() { IDLE_POLL } else { HELD_RETRY };
         let n = unsafe { libc::poll(fds.as_mut_ptr(), fds.len() as libc::nfds_t, timeout.as_millis() as i32) };
         if n > 0 {
+            if fds.len() > devs.len() && fds[devs.len()].revents & libc::POLLIN != 0 {
+                sync_leds(&mut st, &mut devs);
+            }
             // Backwards: `close` swaps the last device into the removed slot.
             for i in (0..devs.len()).rev() {
                 let revents = fds[i].revents;
@@ -351,5 +373,66 @@ impl InputHook for LinuxHook {
 impl Drop for LinuxHook {
     fn drop(&mut self) {
         self.stop();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use evdev::AttributeSet;
+    use evdev::uinput::VirtualDevice;
+
+    struct Recorder(Arc<Mutex<Vec<(KeyCode, bool, bool)>>>);
+
+    impl InputHandler for Recorder {
+        fn on_key(&mut self, e: &KeyEvent) -> HookDecision {
+            self.0.lock().unwrap().push((e.key, e.down, e.caps_lock));
+            if e.key == KeyCode::KeyQ { HookDecision::Swallow } else { HookDecision::Pass }
+        }
+        fn on_mouse_down(&mut self) {}
+    }
+
+    fn open_by_name(name: &str) -> RawDevice {
+        fs::read_dir("/dev/input")
+            .unwrap()
+            .flatten()
+            .find_map(|e| RawDevice::open(e.path()).ok().filter(|d| d.name() == Some(name)))
+            .expect("event device")
+    }
+
+    /// A fake keyboard (uinput) stands in for a physical one: its keys reach the handler, the
+    /// passed ones come out of the virtual keyboard, and its Caps Lock LED feeds the events.
+    /// Needs `/dev/uinput` and `/dev/input` access (e.g. root); grabs every real keyboard too.
+    #[test]
+    #[ignore]
+    fn grabs_keyboard_and_re_sends_passed_keys() {
+        let keys: AttributeSet<EvKey> = [EvKey::KEY_A, EvKey::KEY_Q, EvKey::KEY_Z, EvKey::KEY_SPACE].into_iter().collect();
+        let mut fake = VirtualDevice::builder().unwrap().name("Keygloss test keyboard").with_keys(&keys).unwrap().build().unwrap();
+        let seen = Arc::new(Mutex::new(Vec::new()));
+        let mut hook = LinuxHook::new();
+        hook.start(Box::new(Recorder(seen.clone()))).unwrap();
+        std::thread::sleep(Duration::from_millis(1000));
+        assert!(hook.is_healthy());
+        let mut out = open_by_name(vkbd::NAME);
+        set_nonblocking(out.as_raw_fd());
+        out.send_events(&[InputEvent::new(EventType::LED.0, LED_CAPSL, 1)]).unwrap();
+        std::thread::sleep(Duration::from_millis(200));
+        for code in [EvKey::KEY_Q, EvKey::KEY_A] {
+            fake.emit(&[InputEvent::new(EventType::KEY.0, code.0, 1)]).unwrap();
+            fake.emit(&[InputEvent::new(EventType::KEY.0, code.0, 0)]).unwrap();
+        }
+        std::thread::sleep(Duration::from_millis(300));
+        assert_eq!(
+            *seen.lock().unwrap(),
+            [(KeyCode::KeyQ, true, true), (KeyCode::KeyQ, false, true), (KeyCode::KeyA, true, true), (KeyCode::KeyA, false, true)]
+        );
+        let sent: Vec<(u16, i32)> = out
+            .fetch_events()
+            .unwrap()
+            .filter(|e| e.event_type() == EventType::KEY)
+            .map(|e| (e.code(), e.value()))
+            .collect();
+        hook.stop();
+        assert_eq!(sent, [(EvKey::KEY_A.0, 1), (EvKey::KEY_A.0, 0)]);
     }
 }

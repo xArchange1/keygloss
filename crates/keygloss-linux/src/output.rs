@@ -14,7 +14,7 @@ use crate::{hook, layouts, vkbd};
 
 /// Pause after each key press, so slow clients keep up.
 const KEY_DELAY: Duration = Duration::from_millis(2);
-/// Pause after a layout switch before typing in it.
+/// Pause around a layout switch, so no key lands in the wrong layout.
 const SWITCH_SETTLE: Duration = Duration::from_millis(30);
 /// How long the clipboard keeps pasted text before the previous content comes back.
 const PASTE_RESTORE: Duration = Duration::from_millis(500);
@@ -137,6 +137,8 @@ fn run(steps: &[Step]) -> Result<(), PlatformError> {
         match step {
             &Step::Key { code, shift, cased } => press(code, shift != (caps && cased))?,
             Step::Switch(id) => {
+                // The keys typed so far reach the desktop on another path than the switch.
+                std::thread::sleep(SWITCH_SETTLE);
                 layouts::switch(id)?;
                 std::thread::sleep(SWITCH_SETTLE);
             }

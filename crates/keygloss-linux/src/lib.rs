@@ -1,5 +1,6 @@
-//! Linux implementation of the `keygloss_core::platform` traits. The input side works on any
-//! desktop, Wayland or X11; layouts and the foreground app need KDE Plasma 6.
+//! Linux implementation of the `keygloss_core::platform` traits, for KDE Plasma 6 on Wayland: the
+//! input side works on any desktop, the clipboard needs Wayland, layouts and the foreground app
+//! need KDE.
 //!
 //! - [`LinuxHook`] (`InputHook`): evdev, keyboards grabbed and re-sent through a uinput device.
 //! - [`LinuxOutput`] (`TextOutput`): key presses through that device, in a layout that has the

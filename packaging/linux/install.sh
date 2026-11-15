@@ -49,5 +49,5 @@ echo
 echo "Keygloss is installed: start it from the application menu."
 case "${XDG_CURRENT_DESKTOP:-}" in
     *KDE*) ;;
-    *) echo "Note: Keygloss needs KDE Plasma 6, other desktops are not supported yet." ;;
+    *) echo "Note: Keygloss needs KDE Plasma 6 on Wayland, other desktops are not supported yet." ;;
 esac

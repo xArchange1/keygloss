@@ -49,7 +49,7 @@ On macOS, allow Keygloss in System Settings > Privacy & Security > Accessibility
 
 The script installs the `.deb` (Debian, Ubuntu) or `.rpm` (Fedora, openSUSE) from the latest release, for x86_64. Run it again to update: Keygloss reports new versions but does not install them itself. You can also install a package from [Releases](https://github.com/xArchange1/keygloss/releases) by hand.
 
-- Needs KDE Plasma 6 (Wayland or X11): Keygloss reads and switches layouts through it. Other desktops are not supported yet.
+- Needs KDE Plasma 6 on Wayland: Keygloss reads and switches layouts through it. Other desktops and X11 sessions are not supported yet.
 - Keygloss reads the keyboards directly (`/dev/input`) and types through a virtual keyboard (`uinput`). The package adds a udev rule that gives the user at the computer access to both. Any program you run can then read your keyboard input too.
 - Selected text is read with Ctrl+C, and password fields are not detected. Text that no installed layout can type is pasted with Ctrl+V, which terminals ignore.
 
