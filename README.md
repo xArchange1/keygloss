@@ -7,8 +7,8 @@
 <p align="center">Privacy-first modern Punto-Switcher alternative</p>
 
 <p align="center">
-  <a href="https://github.com/xArchange1/keygloss/releases/latest">Download</a> ·
-  <a href="https://github.com/xArchange1/keygloss/blob/main/README.ru.md">Русский</a>
+  <b>English</b> ·
+  <a href="docs/readme/README.ru.md">Русский</a>
 </p>
 
 <p align="center">
@@ -44,8 +44,8 @@ Type `ghbdtn`, get `привет`, and the layout switches to match. RU ↔ EN, 
 | Platform | Command |
 | --- | --- |
 | Windows | `winget install xArchange1.keygloss` |
-| macOS | `brew install --cask xArchange1/tap/keygloss`, or the `.dmg` from [Releases](https://github.com/xArchange1/keygloss/releases) |
-| Linux (experimental) | `curl -fsSL https://raw.githubusercontent.com/xArchange1/keygloss/main/packaging/linux/install.sh | sh` |
+| macOS | `brew install --cask xArchange1/tap/keygloss`<br><br>Doesn't work. [Sponsor](https://github.com/xArchange1/keygloss#sponsor) to get me an Apple Developer ID.  |
+| Linux | <code>curl -fsSL https://raw.githubusercontent.com/xArchange1/keygloss/main/packaging/linux/install.sh | sh</code> |
 
 On macOS, allow Keygloss in System Settings > Privacy & Security > Accessibility on first launch.
 
