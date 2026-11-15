@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://keygloss.app"><img src="../media/banner-ru.webp" alt="Баннер Keygloss: Хватит писать Ghbdtn. Keygloss сам исправит текст и переключит раскладку, пока вы печатаете."></a>
+  <a href="https://keygloss.com"><img src="../media/banner-ru.webp" alt="Баннер Keygloss: Больше никаких Ghbdtn. Keygloss сам исправит текст и переключит раскладку, пока вы печатаете."></a>
 </p>
 
 ---

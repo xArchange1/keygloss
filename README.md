@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://keygloss.app"><img src="docs/media/banner-en.webp" alt="Keygloss banner: Wrong layout? Already fixed. The free layout switcher that fixes your text as you type."></a>
+  <a href="https://keygloss.com"><img src="docs/media/banner-en.webp" alt="Keygloss banner: Wrong layout? Already fixed. The free layout switcher that fixes your text as you type."></a>
 </p>
 
 ---
