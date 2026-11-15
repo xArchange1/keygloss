@@ -1,8 +1,9 @@
 //! Language pair: everything specific to one pair of keyboard layouts.
 //!
 //! The generic code (keymap, detector, typo fixes, snippets) never names a language; it asks the
-//! [`LanguagePair`] instead. One side of a pair is always the ASCII Latin layout ([`Side::Latin`]),
-//! the other is the pair's own script ([`Side::Alt`]). [`RU_EN`] is the only instance.
+//! [`LanguagePair`] instead. One side of a pair is always English ([`Side::Latin`]), the other is
+//! the pair's own language ([`Side::Alt`]). [`RU_EN`] has language data and auto-detection;
+//! [`DE_EN`], [`FR_EN`] and [`ES_EN`] are manual-only (hotkey and selection conversion).
 
 /// One side of a [`LanguagePair`]. Also used as a conversion target ("convert to `Alt`").
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -75,6 +76,12 @@ pub struct ExtraKeys {
     pub ambiguous_pairs: &'static str,
 }
 
+/// Language data of a pair with auto-detection.
+pub struct PairData {
+    pub files: PairFiles,
+    pub extra: ExtraKeys,
+}
+
 /// Everything pair-specific. The generic code consults these fields; it hard-codes no language.
 pub struct LanguagePair {
     /// Language code of the Latin side (key in `typo_rules`), e.g. `"en"`.
@@ -83,7 +90,8 @@ pub struct LanguagePair {
     pub alt_lang: &'static str,
     /// Fallback key table: (Latin char, Alt char) for each key, lowercase, unshifted.
     pub base_pairs: &'static [(char, char)],
-    /// True for a character of the Alt script.
+    /// True for a character of the Alt script; for a manual-only pair, a letter only the Alt
+    /// language has (`ö`, `ñ`).
     pub is_alt_char: fn(char) -> bool,
     /// One-letter Latin words that a single Alt letter converts to (`ш` → `i`).
     pub latin_single_letters: &'static [&'static str],
@@ -100,11 +108,16 @@ pub struct LanguagePair {
     /// Latin short word that continues an Alt phrase after a Latin abbreviation with a comma
     /// (`… касается iOS, nj`). Empty disables the rule.
     pub label_bridge_word: &'static str,
-    pub files: PairFiles,
-    pub extra: ExtraKeys,
+    /// `None` for a manual-only pair: no auto-detection, live fix or typo fixes.
+    pub data: Option<PairData>,
 }
 
 impl LanguagePair {
+    /// The pair has no language data: only manual conversion.
+    pub fn is_manual_only(&self) -> bool {
+        self.data.is_none()
+    }
+
     /// Text contains a character of the Alt script.
     pub fn has_alt(&self, s: &str) -> bool {
         s.chars().any(self.is_alt_char)
@@ -165,35 +178,81 @@ pub static RU_EN: LanguagePair = LanguagePair {
     typo_keep_doubled: &['н'],
     typo_confused_letters: &[('е', 'и'), ('о', 'а')],
     label_bridge_word: "nj",
-    files: PairFiles {
-        words_latin: include_bytes!("../data/words_en.json"),
-        words_alt: include_bytes!("../data/words_ru.json"),
-        trigrams_latin: include_bytes!("../data/trigrams_en.json"),
-        trigrams_alt: include_bytes!("../data/trigrams_ru.json"),
-        typo_rules: include_bytes!("../data/typo_rules.json"),
-        extra: include_bytes!("../data/extra_words.json"),
-    },
-    extra: ExtraKeys {
-        latin_words: &["en"],
-        alt_words: &["ru", "ruDev", "ruAbbr", "ruShort", "ruCommonForms", "ruLoanNames"],
-        latin_prefix_keep: &["en", "enKeepShort"],
-        alt_prefix_keep: &["ru", "ruAbbr", "ruShort"],
-        force_alt_amb: "forceRuAmb",
-        force_latin_amb: "forceEnAmb",
-        latin_tech_tokens: "techLatinTokens",
-        tech_from_alt: "techFromCyrillic",
-        default_keep: "defaultKeep",
-        latin_hyphen_terms: "hyphenTerms",
-        alt_hyphen_terms: "ruHyphenTerms",
-        latin_label_classifiers: "labelClassifiers",
-        alt_label_classifiers: "ruLabelClassifiers",
-        latin_keep_short: "enKeepShort",
-        force_swap: "forceSwap",
-        common_latin_two_letter: "commonEnTwoLetter",
-        alt_single_letters: "ruSingleLetter",
-        ambiguous_pairs: "ambiguousPairs",
-    },
+    data: Some(PairData {
+        files: PairFiles {
+            words_latin: include_bytes!("../data/words_en.json"),
+            words_alt: include_bytes!("../data/words_ru.json"),
+            trigrams_latin: include_bytes!("../data/trigrams_en.json"),
+            trigrams_alt: include_bytes!("../data/trigrams_ru.json"),
+            typo_rules: include_bytes!("../data/typo_rules.json"),
+            extra: include_bytes!("../data/extra_words.json"),
+        },
+        extra: ExtraKeys {
+            latin_words: &["en"],
+            alt_words: &["ru", "ruDev", "ruAbbr", "ruShort", "ruCommonForms", "ruLoanNames"],
+            latin_prefix_keep: &["en", "enKeepShort"],
+            alt_prefix_keep: &["ru", "ruAbbr", "ruShort"],
+            force_alt_amb: "forceRuAmb",
+            force_latin_amb: "forceEnAmb",
+            latin_tech_tokens: "techLatinTokens",
+            tech_from_alt: "techFromCyrillic",
+            default_keep: "defaultKeep",
+            latin_hyphen_terms: "hyphenTerms",
+            alt_hyphen_terms: "ruHyphenTerms",
+            latin_label_classifiers: "labelClassifiers",
+            alt_label_classifiers: "ruLabelClassifiers",
+            latin_keep_short: "enKeepShort",
+            force_swap: "forceSwap",
+            common_latin_two_letter: "commonEnTwoLetter",
+            alt_single_letters: "ruSingleLetter",
+            ambiguous_pairs: "ambiguousPairs",
+        },
+    }),
 };
+
+fn is_german_letter(c: char) -> bool {
+    "äöüß".contains(c.to_lowercase().next().unwrap_or(c))
+}
+
+fn is_french_letter(c: char) -> bool {
+    "àâæçéèêëîïôœùûüÿ".contains(c.to_lowercase().next().unwrap_or(c))
+}
+
+fn is_spanish_letter(c: char) -> bool {
+    "ñáéíóúüç".contains(c.to_lowercase().next().unwrap_or(c))
+}
+
+/// A manual-only pair: no fallback table (conversion needs both layouts installed) and no data.
+const fn manual(alt_lang: &'static str, is_alt_char: fn(char) -> bool) -> LanguagePair {
+    LanguagePair {
+        latin_lang: "en",
+        alt_lang,
+        base_pairs: &[],
+        is_alt_char,
+        latin_single_letters: &[],
+        is_impossible_alt_spelling: |_| false,
+        decimal_alias: None,
+        typo_keep_doubled: &[],
+        typo_confused_letters: &[],
+        label_bridge_word: "",
+        data: None,
+    }
+}
+
+/// DE↔EN: German QWERTZ against English, manual only.
+pub static DE_EN: LanguagePair = manual("de", is_german_letter);
+/// FR↔EN: French AZERTY against English, manual only.
+pub static FR_EN: LanguagePair = manual("fr", is_french_letter);
+/// ES↔EN: Spanish against English, manual only.
+pub static ES_EN: LanguagePair = manual("es", is_spanish_letter);
+
+/// Every pair, by its Alt language code (the `layoutPair` setting).
+pub static PAIRS: [&LanguagePair; 4] = [&RU_EN, &DE_EN, &FR_EN, &ES_EN];
+
+/// The pair whose Alt language is `code`; RU↔EN for an unknown or empty code.
+pub fn by_code(code: &str) -> &'static LanguagePair {
+    PAIRS.iter().copied().find(|p| p.alt_lang == code).unwrap_or(&RU_EN)
+}
 
 #[cfg(test)]
 mod tests {
@@ -215,5 +274,15 @@ mod tests {
         assert!(!f("УФНС"));
         assert!(!f("ЫЫЫЫ"));
         assert!(!f("ГИБДД"));
+    }
+
+    #[test]
+    fn pairs_by_code() {
+        assert!(std::ptr::eq(by_code("de"), &DE_EN));
+        assert!(std::ptr::eq(by_code(""), &RU_EN));
+        assert!(std::ptr::eq(by_code("xx"), &RU_EN));
+        assert!(!RU_EN.is_manual_only() && FR_EN.is_manual_only());
+        assert!(DE_EN.has_alt("Schön") && !DE_EN.has_alt("schon"));
+        assert!(ES_EN.has_alt("NIÑO") && FR_EN.has_alt("ça"));
     }
 }

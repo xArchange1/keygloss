@@ -32,12 +32,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::apps;
 use crate::buffer::{WordBuffer, WordItem};
-use crate::data;
-use crate::detector::{Decision, Detector, Proposal, ProposalContext, clipboard_selection_refused};
+use crate::data::{self, LangData};
+use crate::detector::{Decision, Detector, GroupPlan, Proposal, ProposalContext, clipboard_selection_refused};
 use crate::double_space;
 use crate::exceptions::Exceptions;
 use crate::keymap::{Keymap, choose_layouts, classify_layout};
-use crate::pair::{LanguagePair, RU_EN, Side, has_latin_letter};
+use crate::pair::{self, LanguagePair, Side, has_latin_letter};
 use crate::platform::{
     AppId, ClipboardSnapshot, HookDecision, KeyCode, KeyEvent, KeyTable, LayoutId, LayoutInfo, Layouts, Modifiers,
     TextOutput,
@@ -51,9 +51,6 @@ use crate::switch_learn::SwitchLearner;
 use crate::undo::{UndoEvent, UndoLearner};
 
 use hotkeys::{Gesture, Recorder, held_after, key_matches, needs_mask};
-
-/// The language pair the engine corrects.
-const PAIR: &LanguagePair = &RU_EN;
 
 /// Boundary conversion runs this long after the boundary key …
 const BOUNDARY_DELAY: Duration = Duration::from_millis(30);
@@ -215,8 +212,8 @@ fn len(s: &str) -> usize {
     s.chars().count()
 }
 
-fn is_mixed(s: &str) -> bool {
-    PAIR.has_alt(s) && has_latin_letter(s)
+fn is_mixed(pair: &LanguagePair, s: &str) -> bool {
+    pair.has_alt(s) && has_latin_letter(s)
 }
 
 fn flip_case(c: char) -> char {
@@ -228,14 +225,27 @@ fn flip_case(c: char) -> char {
     }
 }
 
-fn side_of_lang(code: &str) -> Option<Side> {
-    if code == PAIR.latin_lang {
+fn side_of_lang(pair: &LanguagePair, code: &str) -> Option<Side> {
+    if code == pair.latin_lang {
         Some(Side::Latin)
-    } else if code == PAIR.alt_lang {
+    } else if code == pair.alt_lang {
         Some(Side::Alt)
     } else {
         None
     }
+}
+
+/// The pair for a first run ("auto"): RU↔EN if a Russian layout is installed, else the first
+/// installed layout (OS order) of another pair's language, else RU↔EN.
+fn pick_pair(layouts: &[LayoutInfo]) -> &'static str {
+    let primary = |l: &LayoutInfo| l.lang.split(['-', '_']).next().unwrap_or_default().to_lowercase();
+    if layouts.iter().any(|l| primary(l) == pair::RU_EN.alt_lang) {
+        return pair::RU_EN.alt_lang;
+    }
+    layouts
+        .iter()
+        .find_map(|l| pair::PAIRS.iter().find(|p| p.alt_lang == primary(l)).map(|p| p.alt_lang))
+        .unwrap_or(pair::RU_EN.alt_lang)
 }
 
 pub(crate) struct Engine {
@@ -254,6 +264,8 @@ pub(crate) struct Engine {
     recorder: Option<Recorder>,
 
     // Layouts
+    /// The language pair (`layout_pair`).
+    lang_pair: &'static LanguagePair,
     layouts: Vec<LayoutInfo>,
     tables: HashMap<LayoutId, KeyTable>,
     sides: HashMap<LayoutId, Side>,
@@ -282,6 +294,9 @@ pub(crate) struct Engine {
     last_real_key_at: Option<Instant>,
     held: Modifiers,
     chatter: Option<(KeyCode, Instant)>,
+    /// A dead key was typed in the current word: what reaches the screen depends on the next
+    /// key, so nothing is tracked until the next word boundary or reset.
+    dead_key_word: bool,
     pending_context_clear: bool,
     context_reset_at: Option<Instant>,
     pending_soft_reset: bool,
@@ -323,8 +338,10 @@ impl Engine {
         now: Instant,
         unix_now: f64,
     ) -> Engine {
-        let keymap = Keymap::fallback(PAIR);
+        let lang_pair = pair::by_code(&settings.layout_pair);
+        let keymap = Keymap::fallback(lang_pair);
         let mut e = Engine {
+            lang_pair,
             exceptions: Exceptions::from_settings(&settings),
             undo: UndoLearner::from_settings(&settings),
             switch: SwitchLearner::from_settings(&settings),
@@ -356,6 +373,7 @@ impl Engine {
             last_real_key_at: None,
             held: Modifiers::NONE,
             chatter: None,
+            dead_key_word: false,
             pending_context_clear: false,
             context_reset_at: None,
             pending_soft_reset: false,
@@ -433,8 +451,8 @@ impl Engine {
     /// layout switched to and the foreground app.
     fn log_fix(&mut self, kind: &str, from: usize, to: usize, lang: Option<Side>) {
         let lang = match lang {
-            Some(Side::Latin) => PAIR.latin_lang,
-            Some(Side::Alt) => PAIR.alt_lang,
+            Some(Side::Latin) => self.lang_pair.latin_lang,
+            Some(Side::Alt) => self.lang_pair.alt_lang,
             None => "-",
         };
         let app = self.app.as_ref().map_or("?", |a| a.0.as_str());
@@ -547,8 +565,13 @@ impl Engine {
         self.hook_busy.load(Ordering::SeqCst) == 0
     }
 
+    /// The pair's language data: `None` while it loads, and always for a manual-only pair.
+    fn data(&self) -> Option<&'static LangData> {
+        if self.lang_pair.is_manual_only() { None } else { data::ready() }
+    }
+
     fn detector(&self) -> Option<Detector<'_>> {
-        Some(Detector { data: data::ready()?, keymap: &self.keymap, exceptions: &self.exceptions })
+        Some(Detector { data: self.data()?, keymap: &self.keymap, exceptions: &self.exceptions })
     }
 
     // ---- Layouts (`LayoutManager.swift`) ----
@@ -618,14 +641,17 @@ impl Engine {
         self.layouts_requested = false;
         let before = (std::mem::take(&mut self.layouts), self.pair.clone());
         self.tables.clear();
-        self.sides.clear();
         for (info, table) in list {
-            if let Some(side) = classify_layout(PAIR, &table) {
-                self.sides.insert(info.id.clone(), side);
-            }
             self.tables.insert(info.id.clone(), table);
             self.layouts.push(info);
         }
+        if self.settings.layout_pair == "auto" {
+            self.settings.layout_pair = pick_pair(&self.layouts).to_string();
+            self.lang_pair = pair::by_code(&self.settings.layout_pair);
+            self.log(format!("layout pair auto={}", self.settings.layout_pair));
+            self.settings_dirty = true;
+        }
+        self.classify_layouts();
         if self.belief.is_none() {
             self.belief = self.layouts_api.current_layout();
         }
@@ -638,6 +664,14 @@ impl Engine {
         self.wake = true;
     }
 
+    fn classify_layouts(&mut self) {
+        self.sides = self
+            .layouts
+            .iter()
+            .filter_map(|l| Some((l.id.clone(), classify_layout(self.lang_pair, l, self.tables.get(&l.id)?)?)))
+            .collect();
+    }
+
     /// Rebuilds the keymap (and the snippet index that depends on it) from the user's layouts,
     /// preferring the last-used layout of each script.
     fn rebuild_keymap(&mut self) {
@@ -648,8 +682,19 @@ impl Engine {
             .pair
             .as_ref()
             .and_then(|(l, a)| Keymap::from_key_tables(self.tables.get(l)?, self.tables.get(a)?))
-            .unwrap_or_else(|| Keymap::fallback(PAIR));
-        self.snippets = SnippetIndex::new(&self.keymap, &self.settings.snippets_ordered);
+            .unwrap_or_else(|| Keymap::fallback(self.lang_pair));
+        self.snippets = SnippetIndex::new(&self.snippet_keymap(), &self.settings.snippets_ordered);
+    }
+
+    /// The keymap snippet triggers are matched with: for RU↔EN the layout keymap makes `!еуые`
+    /// match `!test`. Between two Latin layouts it would rewrite Latin triggers, so a manual-only
+    /// pair matches them as typed (ignoring case) through its empty fallback keymap.
+    fn snippet_keymap(&self) -> std::borrow::Cow<'_, Keymap> {
+        if self.lang_pair.is_manual_only() {
+            std::borrow::Cow::Owned(Keymap::fallback(self.lang_pair))
+        } else {
+            std::borrow::Cow::Borrowed(&self.keymap)
+        }
     }
 
     fn current_side(&self) -> Option<Side> {
@@ -734,7 +779,7 @@ impl Engine {
         // Forced layout, once per app switch.
         if self.forced_layout_app.as_ref() != Some(&app) {
             self.forced_layout_app = Some(app.clone());
-            let want = self.settings.app_forced_layouts.get(&app.0).and_then(|code| side_of_lang(code));
+            let want = self.settings.app_forced_layouts.get(&app.0).and_then(|code| side_of_lang(self.lang_pair, code));
             if let Some(side) = want
                 && self.current_side() != Some(side)
             {
@@ -899,6 +944,7 @@ impl Engine {
     fn clear_typing(&mut self) {
         self.live_fix_last.clear();
         self.word_edited = false;
+        self.dead_key_word = false;
         self.buffer.clear();
     }
 
@@ -970,10 +1016,19 @@ impl Engine {
                     // Numpad keys type something we cannot model: the word on screen changed.
                     if (Numpad0..=NumpadDivide).contains(&ev.key) {
                         self.clear_typing();
+                    } else if (KeyA..=IntlBackslash).contains(&ev.key)
+                        && self.belief.as_ref().is_some_and(|id| self.tables.contains_key(id))
+                    {
+                        // A character key the layout's table lacks: a dead key (´ ^ ¨), or a key
+                        // typing several characters. What reaches the screen is unknown (`´t` or
+                        // `á`), so this word is not tracked: the hotkey leaves it alone.
+                        self.clear_typing();
+                        self.undo.reset_context();
+                        self.dead_key_word = true;
                     }
                     return HookDecision::Pass;
                 };
-                if (ch as u32) < 0x20 || ch == '\u{7f}' {
+                if (ch as u32) < 0x20 || ch == '\u{7f}' || self.dead_key_word {
                     return HookDecision::Pass;
                 }
                 self.last_real_key_at = Some(now);
@@ -1000,6 +1055,7 @@ impl Engine {
     fn boundary_key(&mut self, ev: &KeyEvent, now: Instant) -> HookDecision {
         self.live_fix_last.clear();
         self.word_edited = false;
+        self.dead_key_word = false;
         self.last_real_key_at = Some(now);
         let (ws, space, tab, enter) = match ev.key {
             KeyCode::Space => (" ", true, false, false),
@@ -1012,7 +1068,7 @@ impl Engine {
         let snip_allowed = self.app_mode != Some(AppMode::Off) && !dev_off;
         if snip_key && snip_allowed && !self.muted(now) && !self.is_paused(now) && !self.buffer.current_word().is_empty() {
             let typed = self.buffer.current_word().to_string();
-            if let Some(expansion) = self.snippets.expansion_for_typed(&self.keymap, &typed).map(str::to_string)
+            if let Some(expansion) = self.snippets.expansion_for_typed(&self.snippet_keymap(), &typed).map(str::to_string)
                 && self.expand_snippet(&typed, &expansion, ws, now)
             {
                 return HookDecision::Swallow;
@@ -1059,6 +1115,7 @@ impl Engine {
             return false;
         }
         self.live_fix_last.clear();
+        self.dead_key_word = false;
         self.caret_jumped_since_clear = true;
         self.backspace_since_jump = false;
         self.buffer.clear();
@@ -1107,7 +1164,7 @@ impl Engine {
         s.live_fix_enabled
             && s.auto_enabled
             && !self.is_paused(now)
-            && data::ready().is_some()
+            && self.data().is_some()
             && !self.muted(now)
             && !self.word_edited
             && !(s.developer_mode && self.app_is_dev)
@@ -1125,7 +1182,7 @@ impl Engine {
         let on_screen = self.buffer.current_word().to_string();
         let candidate = format!("{on_screen}{ch}");
         let n = len(&candidate);
-        if !(crate::detector::LIVE_MIN_LEN..=LIVE_MAX_LEN).contains(&n) || candidate == self.live_fix_last || is_mixed(&candidate) {
+        if !(crate::detector::LIVE_MIN_LEN..=LIVE_MAX_LEN).contains(&n) || candidate == self.live_fix_last || is_mixed(self.lang_pair, &candidate) {
             return false;
         }
         let Some(det) = self.detector() else { return false };
@@ -1179,7 +1236,7 @@ impl Engine {
         let Some(word) = self.pause_fix_word(now) else { return };
         let n = len(&word);
         let Some(det) = self.detector() else { return };
-        if is_mixed(&word) {
+        if is_mixed(self.lang_pair, &word) {
             let Some(heal) = det.live_heal(&word, &self.live_fix_last) else { return };
             if !self.guard.allow(&word, &heal.word, now) {
                 self.log_guard("heal", n);
@@ -1236,7 +1293,7 @@ impl Engine {
 
     /// `autoConversionProposal`.
     fn auto_proposal(&mut self, word: &str, soft: bool, completed: bool) -> Option<Proposal> {
-        data::ready()?;
+        self.data()?;
         self.current_side()?;
         if self.undo.is_session_protected(word) {
             return None;
@@ -1314,9 +1371,9 @@ impl Engine {
 
     /// Two capitals, Caps Lock word, typo table/mechanical (`fixTwoLeadingCaps`, `fixTypo`).
     fn typo_fixes(&mut self, word: &str, item: &WordItem, now: Instant) {
-        let Some(data) = data::ready() else { return };
+        let Some(data) = self.data() else { return };
         if self.settings.two_caps_fix
-            && let Some(fixed) = typo::fix_two_leading_caps(PAIR, word, &self.exceptions)
+            && let Some(fixed) = typo::fix_two_leading_caps(self.lang_pair, word, &self.exceptions)
             && self.output.replace_text(item.delete_count, &format!("{fixed}{}", item.tail)).is_ok()
         {
             self.buffer.apply_completed_conversion(&fixed);
@@ -1324,7 +1381,7 @@ impl Engine {
             self.mute(now, MUTE_DRAIN);
         }
         if self.settings.typo_fix
-            && let Some(fixed) = typo::fix_caps_lock_word(PAIR, word, &self.exceptions)
+            && let Some(fixed) = typo::fix_caps_lock_word(self.lang_pair, word, &self.exceptions)
         {
             self.apply_text_fix(word, &fixed, item, now);
             return;
@@ -1365,7 +1422,7 @@ impl Engine {
 
     /// `convertBeforeReturn`: convert (or typo-fix) the pending word, then send Enter ourselves.
     fn convert_before_return(&mut self, ev: &KeyEvent, now: Instant) -> bool {
-        let Some(data) = data::ready() else { return false };
+        let Some(data) = self.data() else { return false };
         let s = &self.settings;
         if !(s.enter_pre_convert && s.auto_enabled && s.trigger_enter) || self.muted(now) || self.is_paused(now) {
             return false;
@@ -1483,8 +1540,16 @@ impl Engine {
             self.selection_refused = true;
             return false;
         }
-        let to = if PAIR.has_alt(&text) {
+        let to = if self.lang_pair.has_alt(&text) {
             Side::Latin
+        } else if self.lang_pair.is_manual_only() {
+            // Latin on both sides: away from the current layout (the user may have switched it
+            // without typing since).
+            self.current_layout(now);
+            match self.current_side() {
+                Some(side) => side.other(),
+                None => return false,
+            }
         } else if has_latin_letter(&text) {
             Side::Alt
         } else {
@@ -1511,12 +1576,22 @@ impl Engine {
 
     /// Group, then the current or last word, else cycle the layout.
     fn manual_word(&mut self, now: Instant) {
-        if self.settings.group_convert && !self.settings.auto_enabled && self.convert_group(now) {
+        let manual_only = self.lang_pair.is_manual_only();
+        if manual_only {
+            // The direction is away from the current layout: re-read it.
+            self.current_layout(now);
+        }
+        if self.settings.group_convert && (!self.settings.auto_enabled || manual_only) && self.convert_group(now) {
             return;
         }
         let Some(item) = self.buffer.word_for_conversion(false) else {
             // A refused selection existed: touch nothing, not even the layout.
             if std::mem::take(&mut self.selection_refused) {
+                return;
+            }
+            // The word has a dead key: it is not tracked, so neither it nor the layout changes.
+            if self.dead_key_word {
+                self.toast("toast.nothingToConvert", &[]);
                 return;
             }
             if !self.cycle_layout(now) {
@@ -1525,7 +1600,16 @@ impl Engine {
             return;
         };
         let word = item.word.clone();
-        let to = if PAIR.has_alt(&word) {
+        let to = if manual_only {
+            // Latin on both sides: away from the current layout, so a second press undoes.
+            match self.current_side() {
+                Some(side) => side.other(),
+                None => {
+                    self.toast("toast.nothingToConvert", &[]);
+                    return;
+                }
+            }
+        } else if self.lang_pair.has_alt(&word) {
             Side::Latin
         } else if has_latin_letter(&word) {
             Side::Alt
@@ -1544,13 +1628,16 @@ impl Engine {
         }
         self.log_fix("manual", len(&word), len(&converted), Some(to));
         self.buffer.apply_conversion(&converted);
-        let unix = self.unix(now);
-        let undid = self.undo.reverses_last_conversion(&word, &converted, unix);
-        if let Some(ev) = self.undo.note_manual_convert(&word, &converted, unix, &self.exceptions.ignored) {
-            self.on_undo_event(ev);
-        }
-        if !undid {
-            self.note_switch(&word, &converted, unix);
+        // The learned lists feed auto-detection, which a manual-only pair does not have.
+        if !manual_only {
+            let unix = self.unix(now);
+            let undid = self.undo.reverses_last_conversion(&word, &converted, unix);
+            if let Some(ev) = self.undo.note_manual_convert(&word, &converted, unix, &self.exceptions.ignored) {
+                self.on_undo_event(ev);
+            }
+            if !undid {
+                self.note_switch(&word, &converted, unix);
+            }
         }
         self.undo.protect(&converted);
         self.count_rescued(1);
@@ -1575,7 +1662,13 @@ impl Engine {
     /// `convertGroup`: false only when there is no group.
     fn convert_group(&mut self, now: Instant) -> bool {
         let Some(group) = self.buffer.group_for_conversion(now) else { return false };
-        let Some(plan) = self.detector().and_then(|d| d.plan_group(&group.words)) else { return true };
+        let plan = if self.lang_pair.is_manual_only() {
+            let Some(plan) = self.manual_group_plan(&group.words) else { return false };
+            plan
+        } else {
+            let Some(plan) = self.detector().and_then(|d| d.plan_group(&group.words)) else { return true };
+            plan
+        };
         if self.output.replace_text(group.delete_count, &plan.text).is_err() {
             return true;
         }
@@ -1586,6 +1679,20 @@ impl Engine {
         self.mute(now, MUTE_DRAIN);
         self.play_sound();
         true
+    }
+
+    /// Group plan of a manual-only pair (no language data): every word goes away from the
+    /// current layout. `None` when the layout is not one of the pair's or nothing changes.
+    fn manual_group_plan(&self, words: &[(String, String)]) -> Option<GroupPlan> {
+        let to = self.current_side()?.other();
+        let (mut text, mut converted) = (String::new(), 0);
+        for (word, tail) in words {
+            let out = self.keymap.convert(word, to);
+            converted += usize::from(out != *word);
+            text.push_str(&out);
+            text.push_str(tail);
+        }
+        (converted > 0).then_some(GroupPlan { text, converted, last_to: to })
     }
 
     /// `undoLastTextFix`: the manual hotkey right after a typo/caps fix puts the original back.
@@ -1886,6 +1993,11 @@ impl Engine {
     /// Replaces the settings (a UI patch already merged) and rebuilds what depends on them.
     pub(crate) fn set_settings(&mut self, new: Settings, now: Instant) {
         let old = std::mem::replace(&mut self.settings, new);
+        if old.layout_pair != self.settings.layout_pair {
+            self.lang_pair = pair::by_code(&self.settings.layout_pair);
+            self.classify_layouts();
+            self.clear_typing();
+        }
         let s = &self.settings;
         self.exceptions = Exceptions::from_settings(s);
         if old.undo_strike_count != s.undo_strike_count

@@ -91,6 +91,7 @@ function WordAdder({ list, onAdd }: { list: string[]; onAdd: (w: string) => void
 export function ExceptionsPage({ onOpenAmbiguous }: { onOpenAmbiguous: () => void }) {
   const { t } = useTranslation();
   const s = useSettings();
+  const lang = ipc.pairLang(s);
   const update = useUpdate();
   const [running, setRunning] = useState<AppInfo[]>([]);
   useEffect(() => { ipc.listApps().then(setRunning).catch(console.error); }, []);
@@ -123,7 +124,7 @@ export function ExceptionsPage({ onOpenAmbiguous }: { onOpenAmbiguous: () => voi
             </div>
             <Select value={s.appForcedLayouts[id] ?? ""} label={`${t("exc.layout")}: ${names[id] ?? id}`} title={t("exc.layoutHelp")}
               className="w-[68px]" onChange={(v) => setLayout(id, v)}
-              options={[{ value: "", label: "—" }, { value: "en", label: "EN" }, { value: "ru", label: "RU" }]} />
+              options={[{ value: "", label: "—" }, { value: "en", label: "EN" }, { value: lang, label: lang.toUpperCase() }]} />
             <Segmented value={s.appExceptionModes[id]} label={`${t("exc.mode")}: ${names[id] ?? id}`}
               onChange={(m) => setMode(id, m)}
               options={[{ value: "off", label: t("exc.off") }, { value: "soft", label: t("exc.soft") }]} />

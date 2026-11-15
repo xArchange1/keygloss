@@ -108,6 +108,8 @@ fn layout_id(layout: &str, variant: &str) -> LayoutId {
 fn lang_of(layout: &str) -> String {
     match layout {
         "us" | "gb" | "au" | "ie" | "nz" | "za" => "en",
+        "at" | "ch" => "de",
+        "latam" => "es",
         "ua" => "uk",
         "by" => "be",
         "kz" => "kk",
