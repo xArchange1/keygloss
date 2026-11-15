@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src-tauri/icons/128x128@2x.png" width="96" alt="Keygloss">
+  <img src="../../src-tauri/icons/128x128@2x.png" width="96" alt="Keygloss">
 </p>
 
 <h1 align="center">Keygloss</h1>
@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://keygloss.app"><img src="docs/media/banner-ru.webp" alt="Баннер Keygloss: Хватит писать Ghbdtn. Keygloss сам исправит текст и переключит раскладку, пока вы печатаете."></a>
+  <a href="https://keygloss.app"><img src="../media/banner-ru.webp" alt="Баннер Keygloss: Хватит писать Ghbdtn. Keygloss сам исправит текст и переключит раскладку, пока вы печатаете."></a>
 </p>
 
 ---
@@ -30,8 +30,8 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/media/layout-switching-ru.webp" alt="Настройки переключения раскладки в светлой теме"></td>
-    <td width="50%"><img src="docs/media/snippets-ru.webp" alt="Страница автозамены в тёмной теме"></td>
+    <td width="50%"><img src="../media/layout-switching-ru.webp" alt="Настройки переключения раскладки в светлой теме"></td>
+    <td width="50%"><img src="../media/snippets-ru.webp" alt="Страница автозамены в тёмной теме"></td>
   </tr>
   <tr>
     <td align="center"><sub>Переключение раскладки: автоисправление, триггеры и исправления текста</sub></td>
@@ -77,4 +77,4 @@ Keygloss обрабатывает ввод только на этом компь
 
 ## Лицензия
 
-MIT, см. [LICENSE](LICENSE).
+MIT, см. [LICENSE](../../LICENSE).
