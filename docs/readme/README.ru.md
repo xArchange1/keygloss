@@ -44,7 +44,7 @@
 | Система | Команда |
 | --- | --- |
 | Windows | `winget install xArchange1.keygloss` |
-| macOS | `brew install keygloss`<br><br>Не работает. [Отблагодарите](https://github.com/xArchange1/keygloss#sponsor) на покупку Apple Developer ID. |
+| macOS | `brew install --cask xArchange1/tap/keygloss`<br><br>Не работает. [Отблагодарите](https://github.com/xArchange1/keygloss#sponsor) на покупку Apple Developer ID. |
 | Linux | <code>curl -fsSL https://raw.githubusercontent.com/xArchange1/keygloss/main/packaging/linux/install.sh | sh</code> |
 
 ### Linux
