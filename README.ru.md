@@ -11,6 +11,10 @@
   <a href="https://github.com/xArchange1/keygloss/blob/main/README.md">English</a>
 </p>
 
+<p align="center">
+  <a href="https://keygloss.app"><img src="docs/media/banner-ru.webp" alt="Баннер Keygloss: Хватит писать Ghbdtn. Keygloss сам исправит текст и переключит раскладку, пока вы печатаете."></a>
+</p>
+
 ---
 
 Набираете `ghbdtn`, получаете `привет`, и раскладка переключается сама. RU ↔ EN, на лету или по сочетанию клавиш.
