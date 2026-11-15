@@ -1,0 +1,4 @@
+# Keygloss reads the keyboards and types through a virtual one: give the user at the active
+# local session access to the input devices and to uinput (systemd-logind's "uaccess").
+KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", OPTIONS+="static_node=uinput"
+SUBSYSTEM=="input", KERNEL=="event*", TAG+="uaccess"

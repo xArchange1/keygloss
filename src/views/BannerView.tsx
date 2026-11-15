@@ -87,7 +87,9 @@ export function BannerView() {
   };
 
   const install = (version: string) => {
-    show({ kind: "toast", key: "upd.installing", params: { version }, ms: INSTALLING_MS });
+    // Linux: opens the release page instead.
+    if (ipc.IS_LINUX) leave();
+    else show({ kind: "toast", key: "upd.installing", params: { version }, ms: INSTALLING_MS });
     ipc.installUpdate().catch((e) => {
       console.error(e);
       show({ kind: "toast", key: "upd.failed", params: {}, ms: TOAST_MS });
@@ -114,7 +116,9 @@ export function BannerView() {
               <p className="mt-0.5 text-[12.5px] text-fg/70">{t("banner.updateBody")}</p>
               <div className="mt-3 flex justify-end gap-2">
                 <Button onClick={notes}>{t("banner.updateNotes")}</Button>
-                <Button variant="primary" onClick={() => install(item.version)}>{t("banner.updateInstall")}</Button>
+                <Button variant="primary" onClick={() => install(item.version)}>
+                  {t(ipc.IS_LINUX ? "upd.download" : "banner.updateInstall")}
+                </Button>
               </div>
             </>
           ) : (

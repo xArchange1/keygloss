@@ -11,3 +11,9 @@ pub use keygloss_macos::{
     MacClipboard as OsClipboard, MacFocusedText as OsFocusedText, MacForegroundApp as OsForegroundApp,
     MacHook as OsHook, MacLayouts as OsLayouts, MacOutput as OsOutput, shell,
 };
+
+#[cfg(target_os = "linux")]
+pub use keygloss_linux::{
+    LinuxClipboard as OsClipboard, LinuxFocusedText as OsFocusedText, LinuxForegroundApp as OsForegroundApp,
+    LinuxHook as OsHook, LinuxLayouts as OsLayouts, LinuxOutput as OsOutput, shell,
+};

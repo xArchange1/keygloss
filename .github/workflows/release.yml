@@ -1,8 +1,9 @@
 name: Release
 
 # Pushing a tag v<version> publishes that version: NSIS and MSI installers, a universal macOS .dmg,
-# their updater artifacts and signatures (.sig) and the updater manifest (latest.json) the app reads. A version with a suffix
-# (v0.2.0-beta.1) is a pre-release, built as NSIS only: WiX rejects non-numeric pre-release versions.
+# their updater artifacts and signatures (.sig) and the updater manifest (latest.json) the app reads,
+# and Linux .deb and .rpm packages. A version with a suffix (v0.2.0-beta.1) is a pre-release, built
+# as NSIS only on Windows (WiX rejects non-numeric pre-release versions) and .deb only on Linux.
 on:
   push:
     tags: ["v*"]
@@ -116,3 +117,44 @@ jobs:
             echo "- version: \`${GITHUB_REF_NAME#v}\`"
             echo "- sha256: \`$(shasum -a 256 "$dmg" | cut -d' ' -f1)\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # x86_64 .deb and .rpm packages (packaging/linux/install.sh installs them). They are not
+  # self-updating: the app only reports a new release, so they stay out of latest.json. After the
+  # Windows job, which creates the release. Ubuntu 22.04: the oldest glibc the packages then need.
+  release-linux:
+    needs: release
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      # The Tauri (WebKitGTK, tray), xkbcommon, udev and ALSA headers the Linux build needs.
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev libxkbcommon-dev libudev-dev libasound2-dev libdbus-1-dev
+      - run: pnpm install --frozen-lockfile
+      - id: notes
+        shell: bash
+        run: |
+          {
+            echo 'body<<NOTES_EOF'
+            node --experimental-strip-types scripts/release-notes.ts "${GITHUB_REF_NAME#v}"
+            echo NOTES_EOF
+          } >> "$GITHUB_OUTPUT"
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: Keygloss ${{ github.ref_name }}
+          releaseBody: ${{ steps.notes.outputs.body }}
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          includeUpdaterJson: false
+          args: --config src-tauri/tauri.release.linux.conf.json${{ contains(github.ref_name, '-') && ' --bundles deb' || '' }}

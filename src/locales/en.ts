@@ -15,6 +15,7 @@ const en = {
     down: "Engine is not running",
     noAccess: "Waiting for Accessibility access",
     grantAccess: "Open Accessibility settings",
+    noInput: "No access to the keyboard: log out and back in",
     resume: "Resume now",
   },
   common: {
@@ -179,6 +180,7 @@ const en = {
     failed: "The update did not go through. Try again later",
     check: "Check for updates",
     install: "Install and restart",
+    download: "Download",
     channel: "Release type",
     channelSub: "Beta gets new things sooner and may be less stable",
     stable: "Stable",

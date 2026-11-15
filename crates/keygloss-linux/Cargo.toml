@@ -1,0 +1,16 @@
+[package]
+name = "keygloss-linux"
+description = "Linux implementation of the keygloss-core platform traits."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+keygloss-core.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "0.2"
+evdev = "0.13"
+xkbcommon = { version = "0.9", default-features = false }
+zbus = { version = "5", default-features = false, features = ["blocking-api", "async-io"] }
+wl-clipboard-rs = "0.9"

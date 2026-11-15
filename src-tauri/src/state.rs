@@ -9,6 +9,9 @@ use keygloss_core::settings::Settings;
 use serde_json::Value;
 use tauri::Wry;
 use tauri_plugin_store::Store;
+#[cfg(target_os = "linux")]
+use crate::update::Update;
+#[cfg(not(target_os = "linux"))]
 use tauri_plugin_updater::Update;
 
 use crate::tray;

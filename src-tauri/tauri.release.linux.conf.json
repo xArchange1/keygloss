@@ -1,0 +1,27 @@
+{
+  "bundle": {
+    "targets": [
+      "deb",
+      "rpm"
+    ],
+    "createUpdaterArtifacts": false,
+    "linux": {
+      "deb": {
+        "files": {
+          "/usr/lib/udev/rules.d/70-keygloss.rules": "linux/70-keygloss.rules",
+          "/usr/lib/modules-load.d/keygloss.conf": "linux/keygloss-modules.conf"
+        },
+        "postInstallScript": "linux/postinst.sh",
+        "postRemoveScript": "linux/postrm.sh"
+      },
+      "rpm": {
+        "files": {
+          "/usr/lib/udev/rules.d/70-keygloss.rules": "linux/70-keygloss.rules",
+          "/usr/lib/modules-load.d/keygloss.conf": "linux/keygloss-modules.conf"
+        },
+        "postInstallScript": "linux/postinst.sh",
+        "postRemoveScript": "linux/postrm.sh"
+      }
+    }
+  }
+}

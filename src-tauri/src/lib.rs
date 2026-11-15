@@ -200,6 +200,13 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Wayland lets no client place its windows or keep one from taking focus: the banner and the
+    // picker need both, so the app runs under XWayland.
+    #[cfg(target_os = "linux")]
+    if std::env::var_os("GDK_BACKEND").is_none() {
+        // SAFETY: no other thread exists yet.
+        unsafe { std::env::set_var("GDK_BACKEND", "x11") };
+    }
     let builder = tauri::Builder::default();
     #[cfg(target_os = "macos")]
     let builder = builder.plugin(tauri_nspanel::init());

@@ -295,6 +295,8 @@ export const openSponsor = () => invoke<void>("open_sponsor");
 export const openAccessibilitySettings = () => invoke<void>("open_accessibility_settings");
 /** Running on macOS (the hook there needs the Accessibility permission; shortcuts use Command). */
 export const IS_MAC = navigator.userAgent.includes("Mac");
+/** Running on Linux (the hook needs access to the input devices; updates are downloaded by hand). */
+export const IS_LINUX = navigator.userAgent.includes("Linux");
 /** Automatic fixes, newest first. Stored on this computer only. */
 export const getHistory = () => invoke<HistoryEntry[]>("get_history");
 export const clearHistory = () => invoke<void>("clear_history");
