@@ -1,0 +1,7 @@
+/* Libron (OFL) for Latin; Literata (OFL) fills Cyrillic, which Libron lacks. One family name: "Libron". */
+@font-face { font-family: "Libron"; src: url("Libron-Regular.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; unicode-range: U+0000-03FF, U+1E00-1FFF, U+2000-206F, U+20A0-20CF, U+2100-218F, U+2200-22FF; }
+@font-face { font-family: "Libron"; src: url("Libron-Italic.ttf") format("truetype"); font-weight: 400; font-style: italic; font-display: swap; unicode-range: U+0000-03FF, U+1E00-1FFF, U+2000-206F, U+20A0-20CF, U+2100-218F, U+2200-22FF; }
+@font-face { font-family: "Libron"; src: url("Libron-Bold.ttf") format("truetype"); font-weight: 500 900; font-style: normal; font-display: swap; unicode-range: U+0000-03FF, U+1E00-1FFF, U+2000-206F, U+20A0-20CF, U+2100-218F, U+2200-22FF; }
+@font-face { font-family: "Libron"; src: url("Libron-BoldItalic.ttf") format("truetype"); font-weight: 500 900; font-style: italic; font-display: swap; unicode-range: U+0000-03FF, U+1E00-1FFF, U+2000-206F, U+20A0-20CF, U+2100-218F, U+2200-22FF; }
+@font-face { font-family: "Libron"; src: url("Literata.ttf") format("truetype"); font-weight: 200 900; font-style: normal; font-display: swap; unicode-range: U+0400-04FF, U+2116; size-adjust: 110%; }
+@font-face { font-family: "Libron"; src: url("Literata-Italic.ttf") format("truetype"); font-weight: 200 900; font-style: italic; font-display: swap; unicode-range: U+0400-04FF, U+2116; size-adjust: 110%; }
