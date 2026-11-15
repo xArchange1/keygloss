@@ -125,7 +125,7 @@ export function Segmented<T extends string>({ value, options, onChange, label, c
           onClick={() => onChange(o.value)}
           className={cx(
             "flex-1 cursor-pointer rounded-md px-3 py-[3px] text-[12px] whitespace-nowrap transition-colors",
-            o.value === value ? "bg-raised font-semibold shadow-sm" : "text-fg/75 hover:text-fg",
+            o.value === value ? "bg-raised font-semibold shadow-sm ring-1 ring-accent" : "text-fg/75 hover:text-fg",
           )}>
           {o.label}
         </button>
