@@ -15,6 +15,7 @@
   --sky-ink:var(--kg-on-accent);
   --term-bg:var(--kg-text);--term-ink:var(--kg-bg-from);
   --hl:color-mix(in oklab,var(--kg-accent) 24%,var(--kg-raised));
+  --cta-bg:var(--kg-raised);--cta-ink:var(--kg-text);
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){
@@ -25,6 +26,7 @@
     --sky-ink:var(--kg-text);
     --term-bg:var(--kg-bg-to);--term-ink:var(--kg-text);
     --hl:color-mix(in oklab,var(--kg-accent) 30%,var(--kg-raised));
+    --cta-bg:var(--kg-accent);--cta-ink:var(--kg-on-accent);
     color-scheme:dark;
   }
 }
@@ -35,6 +37,7 @@
   --sky-ink:var(--kg-text);
   --term-bg:var(--kg-bg-to);--term-ink:var(--kg-text);
   --hl:color-mix(in oklab,var(--kg-accent) 30%,var(--kg-raised));
+  --cta-bg:var(--kg-accent);--cta-ink:var(--kg-on-accent);
   color-scheme:dark;
 }
 :root{
@@ -95,7 +98,7 @@ code,.mono{font-family:var(--mono)}
 
 /* ---------- windows ---------- */
 .win{background:var(--kg-raised);border:1px solid var(--line-2);border-radius:9px;box-shadow:var(--shadow)}
-.win-bar{height:26px;display:flex;align-items:center;gap:8px;padding:0 9px;background:var(--bar);border-bottom:1px solid var(--line);border-radius:8px 8px 0 0;font-size:11.5px;color:var(--faint);white-space:nowrap}
+.win-bar{height:26px;display:flex;align-items:center;gap:8px;padding:0 9px;background:var(--bar);border-bottom:1px solid var(--line);border-radius:8px 8px 0 0;font-size:11.5px;color:var(--muted);white-space:nowrap}
 .dots{display:flex;gap:5px;flex:none}
 .dots i{width:9px;height:9px;border-radius:50%;background:var(--kg-accent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kg-text) 18%,transparent)}
 .dots i:nth-child(2){background:color-mix(in oklab,var(--kg-accent) 45%,var(--kg-raised))}
@@ -134,8 +137,6 @@ html[lang="ru"] .crop.lay{background-image:url(img/layout-switching-ru.webp)}
 html[lang="ru"] .crop.snp{background-image:url(img/snippets-ru.webp)}
 .crop.chips{--cx:1418;--cy:1368;--cw:574;--ch:94}
 html[lang="ru"] .crop.chips{--cx:1390;--cy:1360;--cw:602}
-.crop.hot{--cx:1680;--cy:988;--cw:306;--ch:92}
-html[lang="ru"] .crop.hot{--cy:980}
 .crop.trig{--cx:842;--cy:1302;--cw:1174;--ch:258}
 html[lang="ru"] .crop.trig{--cy:1293}
 .crop.ex{--cx:846;--cy:846;--cw:640;--ch:174}
@@ -193,7 +194,7 @@ h1{font-size:88px;line-height:1.1;font-weight:700;letter-spacing:-.03em}
 .demo .win-bar{border-radius:13px 13px 0 0;height:30px}
 .demo-body{height:408px;border-radius:0 0 13px 13px;padding:44px 56px;display:flex;flex-direction:column;
   background:linear-gradient(165deg,color-mix(in oklab,var(--kg-accent) 12%,var(--kg-raised)),var(--kg-raised) 55%,color-mix(in oklab,var(--kg-detail) 9%,var(--kg-raised)))}
-.demo-label{font-size:13px;color:var(--faint);margin-bottom:4px}
+.demo-label{font-size:13px;color:var(--muted);margin-bottom:4px}
 .typed{font-size:40px;line-height:1.15;color:var(--faint);text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:color-mix(in srgb,var(--kg-accent) 70%,transparent)}
 .fixed{font-size:72px;line-height:1.1;font-weight:700;letter-spacing:-.02em;margin-bottom:auto}
 .fixed .caret{display:inline-block;width:3px;height:.9em;background:var(--kg-accent);vertical-align:-.08em;margin-left:6px}
@@ -237,9 +238,9 @@ h1{font-size:88px;line-height:1.1;font-weight:700;letter-spacing:-.03em}
 .tilt-l{transform:rotate(-2deg)}.tilt-r{transform:rotate(2deg)}
 
 /* ---------- section heads ---------- */
-.eyebrow{display:inline-block;padding:4px 12px;border:1px solid var(--line-2);border-radius:99px;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .center{text-align:center}
 h2{font-size:56px;line-height:1.2;font-weight:700;letter-spacing:-.03em;text-wrap:balance}
+.sec-h{font-size:44px;line-height:1.15}
 
 /* ---------- privacy (notes) ---------- */
 .privacy{position:relative;padding:96px 0;overflow:hidden}
@@ -256,10 +257,9 @@ h2{font-size:56px;line-height:1.2;font-weight:700;letter-spacing:-.03em;text-wra
 .arc{position:absolute;top:0;left:50%;width:0;height:0;z-index:1}
 .arc i{position:absolute;width:74px;height:62px;border-radius:10px 10px 8px 8px;font-style:normal;font-weight:700;font-size:17px;padding:4px 0 0 10px;
   border:1px solid color-mix(in srgb,var(--kg-text) 16%,transparent);border-bottom-width:5px;color:color-mix(in srgb,var(--kg-text) 70%,transparent)}
-.rule{border:0;border-top:1px dotted var(--line-2);margin:0 auto}
 
 /* ---------- install (sky) ---------- */
-.install{position:relative;border-radius:40px;padding:64px 0 34px;color:var(--ink);
+.install{position:relative;border-radius:40px;padding:64px 0 40px;color:var(--ink);
   background:
     radial-gradient(420px 150px at 12% 9%,color-mix(in srgb,var(--kg-on-accent) 16%,transparent),transparent 70%),
     radial-gradient(520px 170px at 84% 16%,color-mix(in srgb,var(--kg-on-accent) 13%,transparent),transparent 70%),
@@ -267,7 +267,8 @@ h2{font-size:56px;line-height:1.2;font-weight:700;letter-spacing:-.03em;text-wra
     radial-gradient(520px 190px at 88% 62%,color-mix(in srgb,var(--kg-on-accent) 12%,transparent),transparent 70%),
     var(--sky-top)}
 .install .head{color:var(--sky-ink)}
-.install .eyebrow{background:var(--kg-raised);color:var(--muted);border-color:transparent}
+.install .seg{margin-top:24px}
+.install .next{font-size:16px;color:var(--sky-ink);text-align:center;margin:22px auto 0;max-width:560px;text-wrap:balance}
 .seg{display:inline-flex;gap:2px;padding:4px;border-radius:99px;background:color-mix(in srgb,var(--kg-raised) 30%,transparent);border:1px solid color-mix(in srgb,var(--sky-ink) 35%,transparent)}
 .seg button{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 18px;border-radius:99px;font-size:17px;color:var(--sky-ink)}
 .seg button[aria-selected="true"]{background:var(--kg-raised);color:var(--ink);box-shadow:0 1px 3px color-mix(in srgb,var(--kg-text) 30%,transparent)}
@@ -276,21 +277,21 @@ h2{font-size:56px;line-height:1.2;font-weight:700;letter-spacing:-.03em;text-wra
 .get-row{display:flex;justify-content:center;align-items:center;gap:16px;margin-top:40px}
 .term{position:relative;flex:0 1 auto;min-width:0;border-radius:9px;background:var(--term-bg);color:var(--term-ink);border:1px solid color-mix(in srgb,var(--term-ink) 22%,transparent);box-shadow:var(--shadow)}
 .term-body{display:flex;align-items:center;gap:16px;padding:10px 10px 10px 16px}
-.cmd{display:block;font-family:var(--mono);font-size:14.5px;line-height:1.4;overflow-x:auto;white-space:nowrap;padding-bottom:2px}
+.cmd{display:block;font-family:var(--mono);font-size:15px;line-height:1.4;overflow-wrap:anywhere;padding-bottom:2px}
 .cmd::before{content:"$ ";color:color-mix(in srgb,var(--term-ink) 60%,transparent)}
 .term :focus-visible{outline-color:var(--term-ink)}
-.term.wrap .cmd{white-space:normal;word-break:break-all}
 .term .pill{color:var(--kg-text);flex:none;gap:7px;height:32px;padding:0 14px;font-size:14px}
 :root[data-theme="dark"] .term .pill{color:var(--kg-text)}
 .term .pill.done{background:var(--kg-accent);color:var(--kg-on-accent);border-color:transparent}
+.install .pill.primary{height:48px;padding:0 26px;font-size:18px;color:var(--cta-ink);border-color:transparent;
+  background:linear-gradient(180deg,var(--cta-bg),color-mix(in oklab,var(--cta-ink) 8%,var(--cta-bg)))}
+.install .pill.primary:hover{background:var(--cta-bg)}
 .foot{font-size:12.5px;color:var(--muted);margin:14px auto 0;max-width:640px;text-align:center}
-.install .rule{margin-top:14px}
 .install .foot{color:color-mix(in srgb,var(--sky-ink) 88%,transparent)}
 .install .foot a{text-decoration:underline;text-underline-offset:3px}
 
 /* ---------- faq ---------- */
 .faq{padding:96px 0;position:relative}
-.faq h2.eyebrow{font-size:22px;line-height:1.3;font-weight:400;letter-spacing:.06em;padding:8px 24px}
 .qa{width:min(834px,100%);margin:32px auto 0;display:grid;gap:8px}
 .qa details{background:var(--kg-raised);border-radius:6px;box-shadow:0 1px 2px color-mix(in srgb,var(--kg-text) 8%,transparent)}
 .qa summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px;padding:12px 20px;font-size:19px;cursor:pointer;list-style:none}
@@ -313,13 +314,22 @@ footer{padding:8px 0 28px}
 .flinks a:hover{color:var(--ink)}
 .flinks .ico{width:15px;height:15px}
 .pix-wrap{width:min(640px,100%);margin:40px auto 0}
-.pix{--cell:calc(min(100vw - 48px,640px) / 47);display:grid;grid-template-columns:repeat(47,var(--cell));grid-auto-rows:var(--cell)}
+.pix{--cell:calc(min(100vw - 48px,640px) / 43);display:grid;grid-template-columns:repeat(43,var(--cell));grid-auto-rows:var(--cell)}
 .pix i{margin:1px;border-radius:22%;background:linear-gradient(180deg,color-mix(in oklab,var(--kg-accent) 62%,var(--kg-raised)),var(--kg-accent));
   border-bottom:2px solid color-mix(in oklab,var(--kg-accent) 72%,var(--kg-text))}
 .copy{text-align:center;font-size:12.5px;color:var(--faint);margin-top:32px;text-wrap:balance}
 .copy a{text-decoration:underline;text-underline-offset:3px}
 
 /* ---------- responsive ---------- */
+@media (pointer:coarse){
+  .status a,.status button,.status .theme button{height:40px;min-width:40px;justify-content:center}
+  .lang-btn{height:32px!important}
+  .seg button{height:40px}
+  .term .pill{height:40px}
+  .flinks a{min-height:40px}
+  .menubar nav a{display:inline-flex;align-items:center;min-height:40px}
+}
+@media (max-width:400px){.menubar nav li:not(:first-child){display:none}}
 @media (max-width:1399px){.collage{transform:scale(.86)}.faq .photo{right:16px}}
 @media (max-width:1239px){.collage{transform:scale(.74)}
   .frow{gap:40px}
@@ -329,7 +339,7 @@ footer{padding:8px 0 28px}
   .mini{display:flex;justify-content:center;align-items:center;gap:14px;position:relative;z-index:2}
   .mini.top{margin-bottom:34px}.mini.bot{margin-top:30px;gap:18px}
   .hero{padding-top:36px}
-  .menubar nav li:not(:first-child){display:none}
+  .menubar nav li:nth-child(2),.menubar nav li:nth-child(3){display:none}
   .rows{padding-top:64px;gap:64px}
   .frow,.frow.flip{grid-template-columns:1fr;gap:28px}
   .frow.flip .ftext{order:0}
@@ -340,15 +350,17 @@ footer{padding:8px 0 28px}
 }
 @media (max-width:640px){
   h1{font-size:64px}
-  h2{font-size:38px}
+  h2{font-size:38px}.sec-h{font-size:32px}
   .menubar{padding:0 12px}.status{gap:0}
+  .status a[href*="youtube"],.status a[href*="t.me"],.menubar nav li:nth-child(5){display:none}
+  .heart span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
   .tagline{font-size:17.5px;padding:0 20px;text-wrap:balance}
   .ctas{flex-direction:column;align-items:center;gap:12px}
   .demo-body{height:auto;padding:26px 22px 20px;gap:4px}
   .typed{font-size:24px}.fixed{font-size:40px;margin-bottom:38px}
   .wall{padding:18px 12px}
   .wall .kgp{font-size:13.5px}.wall .kgp .row{padding:10px 12px}
-  .wall .crop{--s:.262!important}
+  .wall .crop{--s:.262!important}.wall .crop.ex{--s:.44!important}
   .under,.hero-core>p{padding-inline:20px;text-wrap:balance}
   .bubble{font-size:20px}
   .install{padding-top:44px;border-radius:20px}
@@ -402,6 +414,7 @@ footer{padding:8px 0 28px}
     <span class="theme" role="group" aria-label="Theme" data-i18n-attr="aria-label:theme.label">
       <button type="button" data-theme-set="light" aria-label="Light theme" data-i18n-attr="aria-label:theme.light"><svg class="ico" aria-hidden="true"><use href="#i-sun"/></svg></button>
       <button type="button" data-theme-set="dark" aria-label="Dark theme" data-i18n-attr="aria-label:theme.dark"><svg class="ico" aria-hidden="true"><use href="#i-moon"/></svg></button>
+      <button type="button" data-theme-set="system" aria-label="Match system theme" data-i18n-attr="aria-label:theme.system"><svg class="ico" aria-hidden="true"><use href="#i-desk"/></svg></button>
     </span>
     <span class="gh-pair">
       <a href="https://github.com/xArchange1/keygloss" aria-label="Keygloss on GitHub" data-i18n-attr="aria-label:gh.label"><svg class="ico" aria-hidden="true"><use href="#i-gh"/></svg></a>
@@ -431,7 +444,7 @@ footer{padding:8px 0 28px}
       <span class="never"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg><span data-i18n="ui.never">Never translate</span></span>
     </div>
     <div class="c stk" style="--x:150;--y:318;transform:rotate(2deg)"><span class="stk-h" data-i18n="cap.hot">hotkey</span>
-      <span class="keys"><span class="kc">Ctrl</span>+<span class="kc">Alt</span></span>
+      <span class="keys"><span class="kc">Shift</span><span class="kc">Shift</span></span>
     </div>
     <div class="c stk" style="--x:1118;--y:326;transform:rotate(-2deg)"><span class="stk-h" data-i18n="cap.snip">snippets</span>
       <span data-i18n="ui.br">br</span><span class="arrow">→</span><span data-i18n="ui.regards">Best regards, Alex</span>
@@ -449,9 +462,10 @@ footer{padding:8px 0 28px}
     <h1>keygloss</h1>
     <p class="tagline" data-i18n="hero.tag">wrong layout? already fixed.</p>
     <div class="ctas">
-      <a class="pill primary" id="ctaMain" href="https://github.com/xArchange1/keygloss/releases/latest"><svg class="ico" aria-hidden="true"><use data-os-glyph href="#i-win"/></svg><span id="ctaMainT">download for windows</span></a>
+      <a class="pill primary" id="ctaMain" href="https://github.com/xArchange1/keygloss/releases/latest"><svg class="ico" aria-hidden="true"><use id="ctaMainG" href="#i-win"/></svg><span id="ctaMainT">download for windows</span></a>
       <a class="pill" id="ctaOther" href="#install"><svg class="ico" aria-hidden="true"><use href="#i-desk"/></svg><span data-i18n="hero.other">other platforms</span></a>
     </div>
+    <p class="under" id="ctaHint" hidden></p>
     <p class="under" data-i18n="hero.under">100% local, free and open source. fixes your text as you type.</p>
     <p class="neutral" data-neutral hidden data-i18n="os.neutral">keygloss is a desktop app, for windows, macos and linux.</p>
   </div>
@@ -497,15 +511,14 @@ footer{padding:8px 0 28px}
   <article class="frow flip">
     <div class="ftext">
       <span class="seq" aria-hidden="true"><i></i><i></i><i></i><i class="sp"></i><i class="on"></i><i class="on"></i></span>
-      <span class="bubble"><span class="kc">Ctrl</span>+<span class="kc">Alt</span></span>
+      <span class="bubble"><span class="kc">Shift</span><span class="kc">Shift</span></span>
       <div><h3 data-i18n="r2.h">or do it yourself with one hotkey</h3>
-      <p data-i18n="r2.p">Ctrl + Alt switches the text by hand, and undoes a fix you did not want. keygloss can learn from what you undo. the hotkey is yours to change.</p></div>
+      <p data-i18n="r2.p">tap Shift twice to switch the text by hand, or to undo a fix you did not want. keygloss can learn from what you undo. the hotkey is yours to change, to Ctrl + Alt or anything else.</p></div>
     </div>
     <div class="win fwin"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t" data-i18n="ui.pageLayout">Layout switching</span></div>
       <div class="wall b">
-        <span class="photo tilt-l"><span class="crop lay hot" style="--s:.63" role="img" aria-label="The hotkey setting: Ctrl + Alt" data-i18n-attr="aria-label:alt.hot"></span></span>
         <div class="inner"><div class="kgp">
-          <div class="row"><span data-i18n="ui.manual">Manual switch and undo</span><span class="sel"><span class="keys"><span class="kc">Ctrl</span>+<span class="kc">Alt</span></span></span></div>
+          <div class="row"><span data-i18n="ui.manual">Manual switch and undo</span><span class="sel"><span class="keys"><span class="kc">2× Shift</span></span></span></div>
           <div class="row"><span data-i18n="ui.learnUndo">Learn from undo</span><i class="tg"></i></div>
           <div class="row"><span data-i18n="ui.learnSwitch">Learn from switch</span><i class="tg"></i></div>
           <div class="row"><span data-i18n="ui.arrows">Arrow keys cancel the switch</span><i class="tg"></i></div>
@@ -531,14 +544,13 @@ footer{padding:8px 0 28px}
 <section class="privacy center" id="privacy">
   <div class="arc" id="arcL" aria-hidden="true"></div>
   <div class="arc" id="arcR" aria-hidden="true"></div>
-  <span class="eyebrow" data-i18n="priv.eyebrow">100% local</span>
-  <h2 class="vh" data-i18n="priv.h">Privacy: everything stays on this computer</h2>
+  <h2 class="sec-h" data-i18n="priv.h">everything stays on this computer</h2>
   <div class="notes win" style="text-align:left">
     <div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t" data-i18n="priv.title">notes</span></div>
     <div class="notes-body">
       <p data-i18n="priv.p1">keygloss has to read your keystrokes to fix them, so here is exactly where they go: nowhere.</p>
       <p data-i18n="priv.p2">your typing is processed on this computer only. there is no usage data and no telemetry.</p>
-      <p data-i18n="priv.p3">typed text is never logged. <mark>the only text it can keep is the history of recent automatic fixes, and that stays on this computer.</mark></p>
+      <p data-i18n="priv.p3">typed text is never logged. <mark>the only text it can keep is the history of recent automatic fixes. it is off by default and stays on this computer.</mark></p>
       <p data-i18n="priv.p4">it goes online to check github for a newer release on startup, and when you click a link. nothing else.</p>
       <p><span data-i18n="priv.p5">the startup check can be turned off in settings → general.</span><span class="caret"></span></p>
       <div class="sig"><img src="img/icon.png" alt=""><span><strong>xArchange1,</strong><span data-i18n="priv.role">developer</span></span><span class="hand" aria-hidden="true">keygloss</span></div>
@@ -549,15 +561,16 @@ footer{padding:8px 0 28px}
 <section class="install" id="install">
   <div class="wrap">
     <div class="center head">
-      <h2 class="vh" data-i18n="nav.install">install</h2>
+      <h2 class="sec-h" data-i18n="inst.h">get keygloss</h2>
       <div class="seg" role="tablist" aria-label="Platform" data-i18n-attr="aria-label:os.label">
-        <button type="button" role="tab" data-os="windows" aria-selected="true"><svg class="ico" aria-hidden="true"><use href="#i-win"/></svg>windows</button>
-        <button type="button" role="tab" data-os="macos" aria-selected="false" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-mac"/></svg>macos</button>
-        <button type="button" role="tab" data-os="linux" aria-selected="false" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-linux"/></svg>linux</button>
+        <button type="button" role="tab" id="tab-windows" aria-controls="osPanel" data-os="windows" aria-selected="true"><svg class="ico" aria-hidden="true"><use href="#i-win"/></svg>windows</button>
+        <button type="button" role="tab" id="tab-macos" aria-controls="osPanel" data-os="macos" aria-selected="false" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-mac"/></svg>macos</button>
+        <button type="button" role="tab" id="tab-linux" aria-controls="osPanel" data-os="linux" aria-selected="false" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-linux"/></svg>linux</button>
       </div>
       <p class="neutral" data-neutral hidden data-i18n="os.neutral">keygloss is a desktop app, for windows, macos and linux.</p>
     </div>
 
+    <div id="osPanel" role="tabpanel" aria-labelledby="tab-windows">
     <div class="get-row">
       <div class="term" id="term"><div class="term-body">
         <code class="cmd" id="cmd">winget install xArchange1.keygloss</code>
@@ -565,22 +578,23 @@ footer{padding:8px 0 28px}
       </div></div>
       <a class="pill primary" id="dlLink" href="https://github.com/xArchange1/keygloss/releases/latest"><svg class="ico" aria-hidden="true"><use data-os-glyph href="#i-win"/></svg><span id="dlLinkT">download installer (.exe)</span></a>
     </div>
+    <p class="next" id="osNext"></p>
     <p class="foot" id="osNote" hidden></p>
-    <p class="foot" data-i18n="inst.foot">* keygloss checks github for a newer release on startup. you can turn that off in settings → general.</p>
-    <hr class="rule">
+    </div>
+    <p class="foot" data-i18n="inst.foot">keygloss checks github for a newer release on startup. you can turn that off in settings → general.</p>
   </div>
 </section>
 
 <section class="faq" id="faq">
   <div class="wrap center">
-    <h2 class="eyebrow">faq</h2>
+    <h2 class="sec-h" data-i18n="faq.h">faq</h2>
     <span class="photo" aria-hidden="true"><span class="crop snp sc" style="--s:.33"></span></span>
     <div class="qa" style="text-align:left">
       <details open><summary data-i18n="q1">what is keygloss?</summary><p data-i18n="a1">a small app for windows, macos and linux that fixes text typed in the wrong keyboard layout. type ghbdtn and you get привет, and the layout switches to match. it works between russian and english, as you type or with a hotkey.</p></details>
       <details><summary data-i18n="q2">does it send what i type anywhere?</summary><p data-i18n="a2">no. typing is processed on this computer only. keygloss collects no usage data and has no telemetry, and typed text is never written to its log.</p></details>
       <details><summary data-i18n="q3">when does it connect to the internet?</summary><p data-i18n="a3">on startup, to check github for a newer release, and when you click a link in the app. the startup check can be turned off in settings → general.</p></details>
       <details><summary data-i18n="q4">what does it remember?</summary><p data-i18n="a4">only the history of recent automatic fixes, and only if you turn it on. it is stored on this computer and stays there.</p></details>
-      <details><summary data-i18n="q5">what if it changes a word i meant?</summary><p data-i18n="a5">press Ctrl + Alt to undo the fix. you can also mark a word “never translate” in history, or add an app to the exceptions so keygloss stays out of it.</p></details>
+      <details><summary data-i18n="q5">what if it changes a word i meant?</summary><p data-i18n="a5">tap Shift twice to undo the fix. you can also mark a word “never translate” in history, or add an app to the exceptions so keygloss stays out of it.</p></details>
       <details><summary data-i18n="q6">which languages does it work with?</summary><p data-i18n="a6">it converts between the russian and english layouts. the app's own interface is available in english and russian.</p></details>
       <details><summary data-i18n="q7">which systems does it run on?</summary><p data-i18n="a7">windows, macos and linux. the linux build is experimental and made for kde plasma 6 on wayland. there is no mobile version.</p></details>
       <details><summary data-i18n="q8">is it free?</summary><p data-i18n="a8">yes. keygloss is free and open source under the mit licence. if it saves you time, you can <a href="https://boosty.to/xarchange1/donate">sponsor the project</a>.</p></details>
@@ -628,7 +642,7 @@ footer{padding:8px 0 28px}
   /* ---------- i18n: English lives in the markup, Russian here ---------- */
   var RU={
     'nav.label':'Основное','nav.features':'возможности','nav.privacy':'приватность','nav.install':'установка','nav.faq':'вопросы',
-    'lang.label':'Язык: русский','theme.label':'Тема','theme.light':'Светлая тема','theme.dark':'Тёмная тема','gh.label':'Keygloss на GitHub','sponsor':'Поддержать',
+    'lang.label':'Язык: русский','theme.label':'Тема','theme.light':'Светлая тема','theme.dark':'Тёмная тема','theme.system':'Как в системе','gh.label':'Keygloss на GitHub','sponsor':'Поддержать',
     'ui.auto':'Автоматическое исправление раскладки','ui.fly':'Исправлять на лету','ui.typos':'Исправлять опечатки',
     'ui.after':'После слова','ui.manual':'Ручное переключение и отмена','ui.learnUndo':'Учиться на отмене','ui.learnSwitch':'Учиться на переключении','ui.arrows':'Стрелки отменяют переключение',
     'ui.br':'сув','ui.regards':'С уважением, Алекс','ui.never':'Никогда не менять',
@@ -640,26 +654,26 @@ footer{padding:8px 0 28px}
     'demo.typed':'что вы набрали','demo.got':'что оказалось в сообщении','demo.status':'каждое слово исправляется, как только вы его закончили, и раскладка переключается следом.',
     'rows.h':'Что умеет Keygloss',
     'r1.h':'исправлено к тому моменту, как вы нажали пробел','r1.p':'наберите ghbdtn, нажмите пробел, и слово превратится в привет. раскладка тоже переключится, так что следующее слово сразу выйдет правильным.',
-    'r2.h':'или сами, одним сочетанием','r2.p':'Ctrl + Alt переключает текст вручную и отменяет исправление, которое вам не нужно. keygloss умеет учиться на ваших отменах. сочетание можно поменять.',
+    'r2.h':'или сами, одним сочетанием','r2.p':'дважды нажмите Shift, чтобы переключить текст вручную или отменить исправление, которое вам не нужно. keygloss умеет учиться на ваших отменах. сочетание можно поменять, например на Ctrl + Alt.',
     'r3.h':'автозамена для того, что вы печатаете каждый день','r3.p':'дайте фразе короткое сокращение, наберите его, и оно развернётся в полный текст. раскладка и регистр не важны: !test, !TEST и !еуые считаются одним сокращением.',
-    'alt.trig':'Срабатывание: после слова, по пробелу и Enter','alt.hot':'Настройка сочетания: Ctrl + Alt','alt.ex':'Примеры сокращений: !em, !ph, !adr, !web','alt.greet':'Сниппет Greeting и его текст',
-    'priv.eyebrow':'100% локально','priv.h':'Приватность: всё остаётся на этом компьютере','priv.title':'заметки',
+    'alt.trig':'Срабатывание: после слова, по пробелу и Enter','alt.ex':'Примеры сокращений: !em, !ph, !adr, !web','alt.greet':'Сниппет Greeting и его текст',
+    'priv.h':'всё остаётся на этом компьютере','priv.title':'заметки',
     'priv.p1':'чтобы исправлять нажатия, keygloss должен их читать. поэтому прямо: никуда они не уходят.',
     'priv.p2':'набранное обрабатывается только на этом компьютере. никаких данных об использовании и никакой телеметрии.',
-    'priv.p3':'набранный текст не пишется в журнал. <mark>единственный текст, который он может хранить, это история последних автоматических исправлений, и она остаётся на этом компьютере.</mark>',
+    'priv.p3':'набранный текст не пишется в журнал. <mark>единственный текст, который он может хранить, это история последних автоматических исправлений. она выключена по умолчанию и остаётся на этом компьютере.</mark>',
     'priv.p4':'в сеть он выходит, чтобы при запуске проверить на github новую версию, и когда вы нажимаете на ссылку. больше ни за чем.',
     'priv.p5':'проверку при запуске можно выключить: настройки → общие.','priv.role':'разработчик',
-    'inst.foot':'* при запуске keygloss проверяет на github, нет ли новой версии. это можно выключить: настройки → общие.',
+    'inst.h':'установите keygloss','inst.foot':'при запуске keygloss проверяет на github, нет ли новой версии. это можно выключить: настройки → общие.',
     'q1':'что такое keygloss?','a1':'небольшое приложение для windows, macos и linux, которое исправляет текст, набранный не в той раскладке. набираете ghbdtn и получаете привет, а раскладка переключается следом. работает между русской и английской раскладками, на лету или по сочетанию клавиш.',
     'q2':'он куда-нибудь отправляет то, что я печатаю?','a2':'нет. набранное обрабатывается только на этом компьютере. keygloss не собирает данные об использовании, в нём нет телеметрии, а набранный текст не попадает в журнал.',
     'q3':'когда он выходит в интернет?','a3':'при запуске, чтобы проверить на github новую версию, и когда вы нажимаете на ссылку в приложении. проверку при запуске можно выключить: настройки → общие.',
     'q4':'что он запоминает?','a4':'только историю последних автоматических исправлений, и только если вы её включите. она хранится на этом компьютере и там остаётся.',
-    'q5':'а если он изменит слово, которое я и хотел набрать?','a5':'нажмите Ctrl + Alt, чтобы отменить исправление. ещё слово можно пометить «никогда не менять» в истории или добавить приложение в исключения, и keygloss не будет в него вмешиваться.',
+    'q5':'а если он изменит слово, которое я и хотел набрать?','a5':'дважды нажмите Shift, чтобы отменить исправление. ещё слово можно пометить «никогда не менять» в истории или добавить приложение в исключения, и keygloss не будет в него вмешиваться.',
     'q6':'с какими языками он работает?','a6':'он переводит текст между русской и английской раскладками. интерфейс самого приложения доступен на русском и английском.',
     'q7':'на каких системах он работает?','a7':'windows, macos и linux. сборка для linux экспериментальная и рассчитана на kde plasma 6 на wayland. версии для телефонов нет.',
     'q8':'он бесплатный?','a8':'да. keygloss бесплатный, с открытым кодом под лицензией mit. если он экономит вам время, можно <a href="https://boosty.to/xarchange1/donate">поддержать проект</a>.',
     'q9':'как он обновляется?','a9':'из релизов на github. стабильный или бета-канал выбирается в настройках. на linux приложение сообщит о новой версии и откроет её страницу.',
-    'f.label':'Ссылки','f.rel':'релизы','f.bug':'сообщить об ошибке','f.sponsor':'поддержать',
+    'faq.h':'вопросы','f.label':'Ссылки','f.rel':'релизы','f.bug':'сообщить об ошибке','f.sponsor':'поддержать',
     'f.noteP':'набранное обрабатывается только на этом компьютере и не пишется в журнал.','f.mit':'лицензия MIT'
   };
   var EN={};
@@ -671,15 +685,22 @@ footer{padding:8px 0 28px}
   var OS={
     en:{main:{windows:'download for windows',macos:'download for mac',linux:'download for linux'},
         dl:{windows:'download installer (.exe)',macos:'download .dmg',linux:'download .deb / .rpm'},
-        note:{windows:'',macos:'the macos build is not notarized yet. on first launch, allow it in system settings > privacy &amp; security, then grant accessibility. <a href="https://boosty.to/xarchange1/donate">sponsor the project</a> to help fund an apple developer id.',linux:''},
-        copy:'copy',copied:'copied',stars:function(n){return n+(n===1?' star':' stars')}},
+        note:{windows:'',macos:'the macos build is not notarized yet. on first launch, allow it in system settings > privacy &amp; security, then grant accessibility: macos asks for it before any app can read and fix your typing. <a href="https://boosty.to/xarchange1/donate">sponsor the project</a> to help fund an apple developer id.',linux:'the linux build is experimental: kde plasma 6 on wayland, x86_64 only. its udev rule gives the user at the computer access to the keyboards, so any program you run can read your keyboard input too. password fields are not detected. <a href="https://github.com/xArchange1/keygloss/blob/main/packaging/linux/install.sh">read the script</a> before you run it.'},
+        hint:{windows:'',macos:'not notarized yet: allow it in privacy &amp; security on first launch.',linux:'experimental: kde plasma 6 on wayland, x86_64.'},
+        mainAny:'install on your computer',
+        next:{windows:'once installed, keygloss lives in the tray by the clock and opens a welcome window where you can try it.',macos:'once installed, keygloss lives in the menu bar and opens a welcome window where you can try it.',linux:'once installed, keygloss lives in the system tray and opens a welcome window where you can try it.'},
+        copy:'copy',copied:'copied',manual:'press ctrl+c to copy',stars:function(n){return n+(n===1?' star':' stars')}},
     ru:{main:{windows:'скачать для windows',macos:'скачать для mac',linux:'скачать для linux'},
         dl:{windows:'скачать установщик (.exe)',macos:'скачать .dmg',linux:'скачать .deb / .rpm'},
-        note:{windows:'',macos:'сборка для macos пока не нотаризована. при первом запуске разрешите её в системных настройках > конфиденциальность и безопасность, затем выдайте доступ в «универсальном доступе». <a href="https://boosty.to/xarchange1/donate">поддержите проект</a>, чтобы помочь оплатить apple developer id.',linux:''},
-        copy:'копировать',copied:'скопировано',stars:function(n){var a=n%10,b=n%100;return n+(a===1&&b!==11?' звезда':(a>=2&&a<=4&&(b<10||b>=20)?' звезды':' звёзд'))}}
+        note:{windows:'',macos:'сборка для macos пока не нотаризована. при первом запуске разрешите её в системных настройках > конфиденциальность и безопасность, затем выдайте доступ в «универсальном доступе»: без него macos не даёт приложениям читать и исправлять набранное. <a href="https://boosty.to/xarchange1/donate">поддержите проект</a>, чтобы помочь оплатить apple developer id.',linux:'сборка для linux экспериментальная: kde plasma 6 на wayland, только x86_64. её правило udev даёт пользователю за компьютером доступ к клавиатурам, поэтому любая запущенная вами программа тоже сможет читать ввод с клавиатуры. поля паролей не распознаются. <a href="https://github.com/xArchange1/keygloss/blob/main/packaging/linux/install.sh">прочитайте скрипт</a>, прежде чем запускать.'},
+        hint:{windows:'',macos:'пока без нотаризации: при первом запуске разрешите его в «конфиденциальности и безопасности».',linux:'экспериментально: kde plasma 6 на wayland, x86_64.'},
+        mainAny:'установить на компьютер',
+        next:{windows:'после установки keygloss живёт в трее у часов и открывает окно приветствия, где его можно попробовать.',macos:'после установки keygloss живёт в строке меню и открывает окно приветствия, где его можно попробовать.',linux:'после установки keygloss живёт в системном трее и открывает окно приветствия, где его можно попробовать.'},
+        copy:'копировать',copied:'скопировано',manual:'нажмите ctrl+c',stars:function(n){var a=n%10,b=n%100;return n+(a===1&&b!==11?' звезда':(a>=2&&a<=4&&(b<10||b>=20)?' звезды':' звёзд'))}}
   };
   var CMD={windows:'winget install xArchange1.keygloss',macos:'brew install --cask xArchange1/tap/keygloss',linux:'curl -fsSL https://raw.githubusercontent.com/xArchange1/keygloss/main/packaging/linux/install.sh | sh'};
   var GLYPH={windows:'#i-win',macos:'#i-mac',linux:'#i-linux'};
+  var REL='https://github.com/xArchange1/keygloss/releases/latest', ASSET={windows:/_x64-setup\.exe$/,macos:/\.dmg$/}, assets={};
 
   /* ---------- platform ---------- */
   function detectOS(){
@@ -704,11 +725,17 @@ footer{padding:8px 0 28px}
     $('#langBtn').textContent=lang.toUpperCase();
     $$('#langList li').forEach(function(li){li.setAttribute('aria-selected',String(li.getAttribute('data-lang')===lang))});
     $$('[data-os-glyph]').forEach(function(u){u.setAttribute('href',GLYPH[os])});
-    $('#ctaMainT').textContent=L.main[os];
+    $('#ctaMainT').textContent=detected?L.main[os]:L.mainAny;
+    $('#ctaMain').href=detected?(assets[os]||REL):'#install';
+    $('#ctaMainG').setAttribute('href',detected?GLYPH[os]:'#i-desk');
+    $('#ctaOther').hidden=!detected;
+    $('#dlLink').href=assets[os]||REL;
+    $('#ctaHint').innerHTML=detected?L.hint[os]:''; $('#ctaHint').hidden=!detected||!L.hint[os];
     $$('[data-neutral]').forEach(function(el){el.hidden=!!detected});
     $$('.seg button').forEach(function(b){var on=b.getAttribute('data-os')===os; b.setAttribute('aria-selected',String(on)); b.tabIndex=on?0:-1});
+    $('#osPanel').setAttribute('aria-labelledby','tab-'+os);
+    $('#osNext').textContent=L.next[os];
     $('#cmd').textContent=CMD[os];
-    $('#term').classList.toggle('wrap',os==='linux');
     $('#osNote').innerHTML=L.note[os]; $('#osNote').hidden=!L.note[os];
     $('#dlLinkT').textContent=L.dl[os];
     $$('[data-copy-label]').forEach(function(el){el.textContent=L.copy});
@@ -736,16 +763,16 @@ footer{padding:8px 0 28px}
         btn.classList.add('done'); $('[data-copy-label]',btn).textContent=OS[lang].copied;
         clearTimeout(btn._t); btn._t=setTimeout(function(){btn.classList.remove('done'); $('[data-copy-label]',btn).textContent=OS[lang].copy},1800);
       };
-      var fallback=function(){var ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); done()}catch(e){} ta.remove()};
+      var manual=function(){var r=document.createRange(); r.selectNodeContents($('#cmd')); var sel=getSelection(); sel.removeAllRanges(); sel.addRange(r); $('[data-copy-label]',btn).textContent=OS[lang].manual};
+      var fallback=function(){var ta=document.createElement('textarea'), ok=false; ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{ok=document.execCommand('copy')}catch(e){} ta.remove(); if(ok)done(); else manual()};
       if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done,fallback); else fallback();
     });
   });
 
   /* ---------- theme ---------- */
-  var dark=matchMedia('(prefers-color-scheme: dark)');
-  function markTheme(){var t=root.getAttribute('data-theme')||(dark.matches?'dark':'light'); $$('[data-theme-set]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-theme-set')===t))})}
-  $$('[data-theme-set]').forEach(function(b){b.addEventListener('click',function(){var t=b.getAttribute('data-theme-set'); root.setAttribute('data-theme',t); store('kg-theme',t); markTheme()})});
-  dark.addEventListener('change',markTheme); markTheme();
+  function markTheme(){var t=root.getAttribute('data-theme')||'system'; $$('[data-theme-set]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-theme-set')===t))})}
+  $$('[data-theme-set]').forEach(function(b){b.addEventListener('click',function(){var t=b.getAttribute('data-theme-set'); if(t==='system')root.removeAttribute('data-theme'); else root.setAttribute('data-theme',t); store('kg-theme',t); markTheme()})});
+  markTheme();
 
   /* ---------- language picker ---------- */
   var btn=$('#langBtn'), list=$('#langList'), opts=$$('li',list), active=0;
@@ -791,9 +818,11 @@ footer{padding:8px 0 28px}
          l:['XX...','.X...','.X...','.X...','.X...','.X...','.X...','.....','.....'],
          o:['.....','.....','.XXX.','X...X','X...X','X...X','.XXX.','.....','.....'],
          s:['.....','.....','.XXXX','X....','.XXX.','....X','XXXX.','.....','.....']};
-  var pix=$('#pix'), word='keygloss'.split('');
-  for(var r=0;r<9;r++) word.forEach(function(ch,ci){
-    for(var c=0;c<5;c++) if(F[ch][r][c]==='X'){var d=document.createElement('i'); d.style.gridColumn=String(ci*6+c+1); d.style.gridRow=String(r+1); pix.appendChild(d)}
+  var pix=$('#pix'), x=0;
+  'keygloss'.split('').forEach(function(ch){
+    var w=Math.max.apply(null,F[ch].map(function(row){return row.lastIndexOf('X')+1}));
+    for(var r=0;r<9;r++) for(var c=0;c<w;c++) if(F[ch][r][c]==='X'){var d=document.createElement('i'); d.style.gridColumn=String(x+c+1); d.style.gridRow=String(r+1); pix.appendChild(d)}
+    x+=w+1;
   });
 
   /* ---------- start ---------- */
@@ -801,7 +830,6 @@ footer{padding:8px 0 28px}
   lang=(ql==='ru'||ql==='en')?ql:(saved==='ru'||saved==='en')?saved:(/^ru/i.test(navigator.language||'')?'ru':'en');
   render();
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(render);
-  window.addEventListener('resize',render);
 
   var fake=qs.get('stars');
   if(fake==='off'){/* screenshot the no-number state */}
@@ -809,6 +837,10 @@ footer{padding:8px 0 28px}
   else fetch('https://api.github.com/repos/xArchange1/keygloss',{headers:{Accept:'application/vnd.github+json'}})
     .then(function(r){return r.ok?r.json():null})
     .then(function(d){if(d&&Number.isInteger(d.stargazers_count)){stars=d.stargazers_count; renderStars()}})
+    .catch(function(){});
+  fetch('https://api.github.com/repos/xArchange1/keygloss/releases/latest',{headers:{Accept:'application/vnd.github+json'}})
+    .then(function(r){return r.ok?r.json():null})
+    .then(function(d){if(d&&Array.isArray(d.assets)){d.assets.forEach(function(a){for(var k in ASSET)if(ASSET[k].test(a.name))assets[k]=a.browser_download_url}); render()}})
     .catch(function(){});
 })();
 </script>
