@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 
 use crate::pair::{LanguagePair, Side};
-use crate::platform::{KeyCode, KeyTable, LayoutId};
+use crate::platform::{KeyCode, KeyTable, LayoutId, LayoutInfo};
 
 /// Sentence punctuation that is the same in both layouts (on different keys), so it is kept as
 /// typed at the end of a word.
@@ -272,8 +272,20 @@ fn number_separator(ch: char, to: Side, left_has_separator: bool, rest: &[char])
     '.'
 }
 
-/// Which side a layout belongs to, judged by the unshifted `KeyA` character.
-pub fn classify_layout(pair: &LanguagePair, table: &KeyTable) -> Option<Side> {
+/// Which side a layout belongs to. RU↔EN judges by the unshifted `KeyA` character (any Cyrillic
+/// layout is Alt, any Latin one is Latin); a manual-only pair, whose layouts are all Latin, by
+/// the primary subtag of the layout's language tag (`de-CH` is German).
+pub fn classify_layout(pair: &LanguagePair, info: &LayoutInfo, table: &KeyTable) -> Option<Side> {
+    if pair.is_manual_only() {
+        let lang = info.lang.split(['-', '_']).next().unwrap_or_default().to_lowercase();
+        return if lang == pair.latin_lang {
+            Some(Side::Latin)
+        } else if lang == pair.alt_lang {
+            Some(Side::Alt)
+        } else {
+            None
+        };
+    }
     let c = *table.get(&(KeyCode::KeyA, false))?;
     if (pair.is_alt_char)(c) {
         Some(Side::Alt)
@@ -311,7 +323,7 @@ pub fn choose_layouts(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::pair::RU_EN;
+    use crate::pair::{DE_EN, FR_EN, RU_EN};
 
     fn fb() -> Keymap {
         Keymap::fallback(&RU_EN)
@@ -382,8 +394,13 @@ mod tests {
         assert_eq!(k.convert("Aa'", Side::Alt), "Ффэ");
         assert_eq!(k.convert("\u{2018}", Side::Alt), "э");
         assert_eq!(k.convert("фэ", Side::Latin), "a'");
-        assert_eq!(classify_layout(&RU_EN, &ru), Some(Side::Alt));
-        assert_eq!(classify_layout(&RU_EN, &lat), Some(Side::Latin));
+        let info = |lang: &str| LayoutInfo { id: LayoutId("x".into()), lang: lang.into(), name: String::new() };
+        assert_eq!(classify_layout(&RU_EN, &info("ru-RU"), &ru), Some(Side::Alt));
+        assert_eq!(classify_layout(&RU_EN, &info("de-DE"), &lat), Some(Side::Latin));
+        assert_eq!(classify_layout(&DE_EN, &info("de-CH"), &lat), Some(Side::Alt));
+        assert_eq!(classify_layout(&DE_EN, &info("en-GB"), &lat), Some(Side::Latin));
+        assert_eq!(classify_layout(&DE_EN, &info("ru-RU"), &ru), None);
+        assert_eq!(classify_layout(&FR_EN, &info("fr"), &lat), Some(Side::Alt));
         // `?` exists only on the Latin side; `.` is typed on both.
         assert_eq!(k.symbol_direction("?"), Some(Side::Alt));
         assert_eq!(k.symbol_direction("a?"), None);

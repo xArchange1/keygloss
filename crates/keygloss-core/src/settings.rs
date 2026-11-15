@@ -81,6 +81,10 @@ pub enum UpdateChannel {
 #[serde(rename_all = "camelCase", default)]
 pub struct Settings {
     // Layout switching
+    /// Language pair, by the Alt language code: "ru" (auto-detection), "de", "fr" or "es"
+    /// (manual only). "" is RU↔EN (settings from before the choice); "auto" picks from the
+    /// installed layouts at the next layout read (set on a first run).
+    pub layout_pair: String,
     pub auto_enabled: bool,
     pub live_fix_enabled: bool,
     /// Automatic fixes skip words whose fixed form has fewer letters. 1 = no limit.
@@ -131,7 +135,8 @@ pub struct Settings {
     pub ignored_words: Vec<String>,
     pub force_swap_words: Vec<String>,
     pub app_exception_modes: BTreeMap<String, AppMode>,
-    /// Layout language forced when the app comes to the foreground: "en" or "ru".
+    /// Layout language forced when the app comes to the foreground: "en" or the pair's other
+    /// language ("ru", "de", "fr", "es").
     pub app_forced_layouts: BTreeMap<String, String>,
     /// Apps that already received their built-in default mode once.
     pub seeded_default_apps: Vec<String>,
@@ -189,6 +194,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Settings {
+            layout_pair: String::new(),
             auto_enabled: true,
             live_fix_enabled: true,
             auto_min_letters: 1,

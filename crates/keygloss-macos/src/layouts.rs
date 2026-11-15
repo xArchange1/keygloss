@@ -58,7 +58,6 @@ fn key_table(source: TISInputSourceRef) -> KeyTable {
     let layout = unsafe { CFDataGetBytePtr(data) };
     let kbd_type = u32::from(unsafe { LMGetKbdType() });
     const SHIFT: u32 = 0x0200 >> 8; // (shiftKey >> 8) & 0xFF
-    const NO_DEAD_KEYS: u32 = 1; // kUCKeyTranslateNoDeadKeysMask
     for &(key, code) in KEYS.iter().filter(|e| is_char_key(e.0)) {
         for shift in [false, true] {
             let (mut dead, mut len, mut buf) = (0u32, 0usize, [0u16; 4]);
@@ -69,7 +68,7 @@ fn key_table(source: TISInputSourceRef) -> KeyTable {
                     0, // kUCKeyActionDown
                     if shift { SHIFT } else { 0 },
                     kbd_type,
-                    NO_DEAD_KEYS,
+                    0, // dead keys stay dead: they return no character and are left out
                     &mut dead,
                     buf.len(),
                     &mut len,

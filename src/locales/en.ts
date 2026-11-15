@@ -38,6 +38,12 @@ const en = {
   switch: {
     title: "Layout switching",
     sub: "Typed in the wrong layout? The word fixes itself.",
+    pair: "Languages",
+    pairSub: "English plus one more. German, French and Spanish have no automatic correction: the hotkey converts the last word, the phrase or the selection",
+    pairRu: "Russian ↔ English",
+    pairDe: "German ↔ English",
+    pairFr: "French ↔ English",
+    pairEs: "Spanish ↔ English",
     auto: "Automatic layout correction",
     autoSub: "Two-way, RU ↔ EN. The word is fixed once you finish it",
     live: "Fix as you type",

@@ -158,6 +158,8 @@ fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     if first_run {
         settings.did_show_welcome = true;
         settings.did_initial_setup = true;
+        // The engine picks the pair from the installed layouts.
+        settings.layout_pair = "auto".into();
         persist::save(&store, &settings);
     }
     let version = app.package_info().version.to_string();

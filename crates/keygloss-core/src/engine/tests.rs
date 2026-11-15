@@ -15,6 +15,9 @@ use crate::platform::{
 
 const EN: &str = "00000409";
 const RU: &str = "00000419";
+const DE: &str = "00000407";
+const FR: &str = "0000040C";
+const ES: &str = "0000040A";
 
 const ROWS: [&[KeyCode]; 4] = {
     use KeyCode::*;
@@ -30,7 +33,8 @@ fn table(plain: [&str; 4], shifted: [&str; 4]) -> KeyTable {
     let mut t = KeyTable::new();
     for (row, keys) in ROWS.iter().enumerate() {
         for (shift, chars) in [(false, plain[row]), (true, shifted[row])] {
-            for (k, c) in keys.iter().zip(chars.chars()) {
+            // `\0` is a key the table lacks (a dead key).
+            for (k, c) in keys.iter().zip(chars.chars()).filter(|(_, c)| *c != '\0') {
                 t.insert((*k, shift), c);
             }
         }
@@ -49,6 +53,30 @@ fn ru() -> KeyTable {
     table(
         ["ё1234567890-=", "йцукенгшщзхъ\\", "фывапролджэ", "ячсмитьбю."],
         ["Ё!\"№;%:?*()_+", "ЙЦУКЕНГШЩЗХЪ/", "ФЫВАПРОЛДЖЭ", "ЯЧСМИТЬБЮ,"],
+    )
+}
+
+/// German QWERTZ; dead keys: ^ (Backquote), ´ and ` (Equal).
+fn de() -> KeyTable {
+    table(
+        ["\01234567890ß\0", "qwertzuiopü+#", "asdfghjklöä", "yxcvbnm,.-"],
+        ["°!\"§$%&/()=?\0", "QWERTZUIOPÜ*'", "ASDFGHJKLÖÄ", "YXCVBNM;:_"],
+    )
+}
+
+/// French AZERTY; dead keys: ^ and ¨ (BracketLeft).
+fn fr() -> KeyTable {
+    table(
+        ["²&é\"'(-è_çà)=", "azertyuiop\0$*", "qsdfghjklmù", "wxcvbn,;:!"],
+        ["\01234567890°+", "AZERTYUIOP\0£µ", "QSDFGHJKLM%", "WXCVBN?./§"],
+    )
+}
+
+/// Spanish; dead keys: ` and ^ (BracketLeft), ´ and ¨ (Quote).
+fn es() -> KeyTable {
+    table(
+        ["º1234567890'¡", "qwertyuiop\0+ç", "asdfghjklñ\0", "zxcvbnm,.-"],
+        ["ª!\"·$%&/()=?¿", "QWERTYUIOP\0*Ç", "ASDFGHJKLÑ\0", "ZXCVBNM;:_"],
     )
 }
 
@@ -113,13 +141,24 @@ struct Os {
     chords: Vec<(KeyCode, Modifiers)>,
     masks: usize,
     selection_reads: usize,
+    installed: Vec<LayoutInfo>,
+    /// A dead key waits for the next key.
+    dead: bool,
 }
 
 struct FakeOs(Mutex<Os>);
 
 impl FakeOs {
     fn new() -> Arc<FakeOs> {
-        let tables = HashMap::from([(LayoutId(EN.into()), us()), (LayoutId(RU.into()), ru())]);
+        FakeOs::with_layouts(vec![(EN, "en-US", us()), (RU, "ru-RU", ru())])
+    }
+
+    fn with_layouts(layouts: Vec<(&str, &str, KeyTable)>) -> Arc<FakeOs> {
+        let installed = layouts
+            .iter()
+            .map(|(id, lang, _)| LayoutInfo { id: LayoutId((*id).into()), lang: (*lang).into(), name: (*lang).into() })
+            .collect();
+        let tables = layouts.into_iter().map(|(id, _, t)| (LayoutId(id.into()), t)).collect();
         Arc::new(FakeOs(Mutex::new(Os {
             field: Field::default(),
             layout: LayoutId(EN.into()),
@@ -136,6 +175,8 @@ impl FakeOs {
             chords: Vec::new(),
             masks: 0,
             selection_reads: 0,
+            installed,
+            dead: false,
         })))
     }
 
@@ -176,6 +217,11 @@ impl FakeOs {
         if ev.mods.ctrl || ev.mods.alt || ev.mods.meta {
             return;
         }
+        // A dead key and Space type the accent alone (the fake always types `´`).
+        if ev.key == Space && std::mem::take(&mut os.dead) {
+            os.field.insert('´');
+            return;
+        }
         let f = &mut os.field;
         match ev.key {
             Backspace => f.backspace(),
@@ -194,7 +240,13 @@ impl FakeOs {
                 let layout = os.layout.clone();
                 if let Some(&c) = os.tables[&layout].get(&(ev.key, ev.mods.shift)) {
                     let c = if ev.caps_lock && c.is_alphabetic() { flip_case(c) } else { c };
+                    // The fake does not compose: a dead key then `t` types `´t`.
+                    if std::mem::take(&mut os.dead) {
+                        os.field.insert('´');
+                    }
                     os.field.insert(c);
+                } else if (KeyA..=IntlBackslash).contains(&ev.key) {
+                    os.dead = true;
                 }
             }
         }
@@ -238,10 +290,7 @@ impl Layouts for FakeOs {
         Ok(())
     }
     fn installed_layouts(&self) -> Vec<LayoutInfo> {
-        vec![
-            LayoutInfo { id: LayoutId(EN.into()), lang: "en-US".into(), name: "English".into() },
-            LayoutInfo { id: LayoutId(RU.into()), lang: "ru-RU".into(), name: "Russian".into() },
-        ]
+        self.os().installed.clone()
     }
     fn key_table(&self, id: &LayoutId) -> KeyTable {
         self.os().tables.get(id).cloned().unwrap_or_default()
@@ -377,11 +426,20 @@ impl H {
     }
 
     fn with(edit: impl FnOnce(&mut Settings)) -> H {
+        H::with_os(FakeOs::new(), edit)
+    }
+
+    /// English plus the layout of a manual-only pair ("de", "fr" or "es"), that pair chosen.
+    fn latin_pair(code: &str) -> H {
+        let os = FakeOs::with_layouts(vec![(EN, "en-US", us()), latin_layout(code)]);
+        H::with_os(os, |s| s.layout_pair = code.into())
+    }
+
+    fn with_os(os: Arc<FakeOs>, edit: impl FnOnce(&mut Settings)) -> H {
         data::warm_up();
         let mut settings = Settings::default();
         settings.hotkey = hotkey(KeyCode::Pause, Modifiers::NONE); // `manual()` presses Pause
         edit(&mut settings);
-        let os = FakeOs::new();
         let clock = Arc::new(FakeClock { base: Instant::now(), offset: Mutex::new(Duration::ZERO) });
         let platform = Platform {
             output: os.clone(),
@@ -508,8 +566,11 @@ impl H {
         os.field.sel = selected.then_some((0, os.field.text.len()));
     }
 
-    fn lang(&self) -> &'static str {
-        if self.os.os().layout.0 == RU { "ru" } else { "en" }
+    /// Primary language of the current layout.
+    fn lang(&self) -> String {
+        let os = self.os.os();
+        let info = os.installed.iter().find(|l| l.id == os.layout).expect("installed layout");
+        info.lang[..2].to_string()
     }
 
     fn set_layout(&self, id: &str) {
@@ -566,6 +627,16 @@ impl H {
         let d = self.press(KeyCode::Pause);
         self.advance(100);
         d
+    }
+}
+
+/// (layout id, language tag, table) of a manual-only pair's layout.
+fn latin_layout(code: &str) -> (&'static str, &'static str, KeyTable) {
+    match code {
+        "de" => (DE, "de-DE", de()),
+        "fr" => (FR, "fr-FR", fr()),
+        "es" => (ES, "es-ES", es()),
+        _ => unreachable!(),
     }
 }
 
@@ -1617,4 +1688,190 @@ fn undoing_an_automatic_fix_is_not_a_switch_request() {
         h.advance(1000);
     }
     assert!(!h.take_events().iter().any(|e| matches!(e, EngineEvent::SwitchBanner { .. } | EngineEvent::LearnBanner { .. })));
+}
+
+// ---- Manual-only pairs (DE, FR, ES) ----
+
+/// (pair, the alt layout's id and table, keys typed in English, the same keys in the alt layout).
+fn latin_cases() -> [(&'static str, &'static str, KeyTable, &'static str, &'static str); 3] {
+    [("de", DE, de(), "zes", "yes"), ("fr", FR, fr(), "qwerty", "azerty"), ("es", ES, es(), "espa;ol", "español")]
+}
+
+#[test]
+fn manual_pairs_convert_away_from_the_current_layout_and_undo() {
+    for (code, alt, table, en, foreign) in latin_cases() {
+        let mut h = H::latin_pair(code);
+        h.keys(en);
+        h.manual();
+        assert_eq!((h.text().as_str(), h.lang()), (foreign, code.to_string()), "{code}: to the alt layout");
+        h.manual();
+        assert_eq!((h.text().as_str(), h.lang()), (en, "en".to_string()), "{code}: second press undoes");
+        let outputs = h.os.os().outputs.clone();
+        let n = en.chars().count();
+        assert_eq!(outputs, vec![(n, foreign.to_string()), (n, en.to_string())], "{code}: exact deletes");
+
+        // Typed in the alt layout: back to English.
+        h.set_text("", false);
+        h.click();
+        h.set_layout(alt);
+        h.advance(1000); // past the grace of our own switch
+        h.type_with(&table, foreign);
+        assert_eq!(h.text(), foreign, "{code}");
+        h.manual();
+        assert_eq!((h.text().as_str(), h.lang()), (en, "en".to_string()), "{code}: to English");
+    }
+}
+
+#[test]
+fn manual_pairs_have_no_automatic_fixes_or_learning() {
+    for (code, _, _, en, _) in latin_cases() {
+        let mut h = H::latin_pair(code);
+        h.keys(&format!("{en} "));
+        h.advance(1000);
+        assert_eq!(h.text(), format!("{en} "), "{code}: no auto fix");
+        for _ in 0..4 {
+            h.manual();
+            h.advance(1000);
+        }
+        let events = h.take_events();
+        assert!(!events.iter().any(|e| matches!(e, EngineEvent::SwitchBanner { .. } | EngineEvent::LearnBanner { .. })), "{code}");
+    }
+}
+
+#[test]
+fn manual_pairs_convert_a_group_and_selections() {
+    let mut h = H::latin_pair("de");
+    h.keys("zes zes");
+    h.manual();
+    assert_eq!(h.text(), "yes yes", "group");
+    assert_eq!(h.lang(), "de");
+
+    // Selection: away from the current layout...
+    h.set_text("zes", true);
+    h.set_layout(EN);
+    h.advance(1000); // past the grace of our own switch
+    h.click();
+    h.manual();
+    assert_eq!((h.text().as_str(), h.lang()), ("yes", "de".to_string()));
+    h.set_text("yes", true);
+    h.advance(1000); // past the selection mute
+    h.click();
+    h.manual();
+    assert_eq!((h.text().as_str(), h.lang()), ("zes", "en".to_string()));
+    // ...except that the pair's own letters mean English, whatever the layout.
+    for layout in [EN, DE] {
+        h.set_text("Grüße", true);
+        h.set_layout(layout);
+        h.advance(1000); // past the grace of our own switch
+        h.click();
+        h.manual();
+        assert_eq!((h.text().as_str(), h.lang()), ("Gr[-e", "en".to_string()), "from {layout}");
+    }
+}
+
+#[test]
+fn dead_key_ends_the_word_without_conversion_or_deletion() {
+    let dead = [("de", KeyCode::Equal), ("fr", KeyCode::BracketLeft), ("es", KeyCode::Quote)];
+    for ((code, alt, table, _, foreign), (_, key)) in latin_cases().into_iter().zip(dead) {
+        let mut h = H::latin_pair(code);
+        h.set_layout(alt);
+        h.advance(1000); // past the grace of our own switch
+        h.type_with(&table, "t");
+        h.press(key);
+        h.type_with(&table, "ss");
+        assert_eq!(h.text(), "t´ss", "{code}");
+        h.take_events();
+        h.manual();
+        assert_eq!(h.text(), "t´ss", "{code}: untouched");
+        assert!(h.os.os().outputs.is_empty(), "{code}: nothing deleted or typed");
+        assert_eq!(h.lang(), code, "{code}: layout kept");
+        assert_eq!(h.toasts(), vec!["toast.nothingToConvert".to_string()], "{code}");
+        // The next word is tracked again.
+        h.type_with(&table, &format!(" {foreign}"));
+        h.manual();
+        assert!(h.text().starts_with("t´ss "), "{code}");
+        assert_eq!(h.lang(), "en", "{code}: the next word converts");
+    }
+}
+
+#[test]
+fn manual_pair_leaves_a_layout_outside_the_pair_alone() {
+    let os = FakeOs::with_layouts(vec![(EN, "en-US", us()), (DE, "de-DE", de()), (RU, "ru-RU", ru())]);
+    let mut h = H::with_os(os, |s| s.layout_pair = "de".into());
+    h.set_layout(RU);
+    h.type_with(&ru(), "мир");
+    h.manual();
+    assert_eq!(h.text(), "мир");
+    assert_eq!(h.lang(), "ru");
+    assert!(h.os.os().outputs.is_empty());
+}
+
+#[test]
+fn first_run_picks_the_pair_from_installed_layouts() {
+    let pick = |layouts: Vec<(&str, &str, KeyTable)>| {
+        let h = H::with_os(FakeOs::with_layouts(layouts), |s| s.layout_pair = "auto".into());
+        h.settings().layout_pair
+    };
+    assert_eq!(pick(vec![(EN, "en-US", us()), (FR, "fr-FR", fr())]), "fr");
+    assert_eq!(pick(vec![(DE, "de-DE", de()), (EN, "en-US", us()), (RU, "ru-RU", ru())]), "ru");
+    assert_eq!(pick(vec![(EN, "en-GB", us()), (ES, "es-ES", es()), (DE, "de-DE", de())]), "es");
+    assert_eq!(pick(vec![(EN, "en-US", us())]), "ru");
+}
+
+#[test]
+fn dead_key_in_ru_en_keeps_the_layout_and_text() {
+    // Default settings (RU↔EN); the English layout is US-International-like with a dead `'`.
+    let mut intl = us();
+    intl.remove(&(KeyCode::Quote, false));
+    let os = FakeOs::with_layouts(vec![(EN, "en-US", intl), (RU, "ru-RU", ru())]);
+    let mut h = H::with_os(os, |s| s.auto_enabled = false);
+    h.keys("ghb");
+    h.press(KeyCode::Quote);
+    h.keys("d");
+    h.manual();
+    assert_eq!(h.text(), "ghb´d");
+    assert!(h.os.os().outputs.is_empty());
+    assert_eq!(h.lang(), "en");
+}
+
+#[test]
+fn switching_the_pair_takes_effect_at_once() {
+    let os = FakeOs::with_layouts(vec![(EN, "en-US", us()), (RU, "ru-RU", ru()), (DE, "de-DE", de())]);
+    let mut h = H::with_os(os, |s| s.auto_enabled = false);
+    h.keys("ghbdtn");
+    h.manual();
+    assert_eq!(h.text(), "привет");
+    h.engine(|e, now| {
+        let mut s = e.settings().clone();
+        s.layout_pair = "de".into();
+        e.set_settings(s, now);
+    });
+    h.set_text("", false);
+    h.set_layout(EN);
+    h.advance(1000); // past the grace of our own switch
+    h.click();
+    h.keys("zes");
+    h.manual();
+    assert_eq!((h.text().as_str(), h.lang()), ("yes", "de".to_string()));
+}
+
+#[test]
+fn manual_pair_group_undoes_on_the_next_press() {
+    let mut h = H::latin_pair("fr");
+    h.keys("qwerty qwerty");
+    h.manual();
+    assert_eq!((h.text().as_str(), h.lang()), ("azerty azerty", "fr".to_string()));
+    h.manual();
+    assert_eq!((h.text().as_str(), h.lang()), ("qwerty qwerty", "en".to_string()));
+}
+
+#[test]
+fn manual_pair_group_stops_at_a_layout_switch() {
+    let mut h = H::latin_pair("de");
+    h.keys("zes ");
+    h.set_layout(DE);
+    h.advance(1000);
+    h.type_with(&de(), "yes");
+    h.manual();
+    assert_eq!((h.text().as_str(), h.lang()), ("zes zes", "en".to_string()));
 }

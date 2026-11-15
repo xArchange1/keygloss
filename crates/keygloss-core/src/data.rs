@@ -57,9 +57,10 @@ impl LangData {
     /// Parses the pair's embedded data. Panics only if the embedded files are malformed, which
     /// the tests rule out.
     pub fn load(pair: &'static LanguagePair) -> LangData {
-        let f = &pair.files;
+        let d = pair.data.as_ref().expect("the pair has language data");
+        let f = &d.files;
         let extra: HashMap<String, serde_json::Value> = parse(f.extra);
-        let k = &pair.extra;
+        let k = &d.extra;
         let set = |keys: &[&str]| -> HashSet<String> {
             let mut out = HashSet::new();
             for key in keys {

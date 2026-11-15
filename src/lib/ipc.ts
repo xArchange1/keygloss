@@ -39,6 +39,8 @@ export type UpdateChannel = "stable" | "beta";
 
 export interface Settings {
   // Layout switching
+  /** "ru", or "de" / "fr" / "es" (manual only); "" is RU↔EN, "auto" is resolved at startup. */
+  layoutPair: string;
   autoEnabled: boolean;
   liveFixEnabled: boolean;
   /** Shortest word (in letters) the automatic fix touches; 1 = no limit. */
@@ -192,11 +194,14 @@ export interface SnippetPickerOpen {
   snippets: [string, string][];
 }
 
+/** The pair's language besides English: "ru" (with automatic correction), "de", "fr" or "es". */
+export const pairLang = (s: Settings) => (["de", "fr", "es"].includes(s.layoutPair) ? s.layoutPair : "ru");
+
 // ---- Browser fallback (dev only: no Tauri, settings live in memory) ----
 
 const NO_MODS: Modifiers = { ctrl: false, alt: false, shift: false, meta: false };
 let memSettings: Settings = {
-  autoEnabled: true, liveFixEnabled: true, autoMinLetters: 1, inlineLiveFix: true, triggerSpace: true,
+  layoutPair: "", autoEnabled: true, liveFixEnabled: true, autoMinLetters: 1, inlineLiveFix: true, triggerSpace: true,
   triggerEnter: true, triggerTab: false, enterPreConvert: true, arrowsCancel: true,
   developerMode: false, dedupeChatter: false, groupConvert: true, learnOnUndoEnabled: true, learnOnSwitchEnabled: true,
   typoFix: true, twoCapsFix: true, sound: "beep", soundVolume: 0.6, soundFile: "",
