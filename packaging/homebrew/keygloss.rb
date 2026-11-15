@@ -1,6 +1,6 @@
-# Homebrew cask for Keygloss. Copy it to Casks/keygloss.rb in a tap repository
-# (github.com/<owner>/homebrew-tap), then: brew install --cask <owner>/tap/keygloss
-# On each release, set `version` and `sha256` from the release job's summary ("Homebrew cask").
+# Homebrew cask for Keygloss: brew install --cask xArchange1/tap/keygloss
+# Each stable release copies it to Casks/keygloss.rb in github.com/xArchange1/homebrew-tap with
+# `version` and `sha256` set (.github/workflows/release.yml), so edit it here, not in the tap.
 cask "keygloss" do
   version "0.1.0"
   sha256 "0000000000000000000000000000000000000000000000000000000000000000"
@@ -21,7 +21,7 @@ cask "keygloss" do
 
   app "Keygloss.app"
 
-  # Without a Developer ID the app is ad-hoc signed: Gatekeeper would block its first launch.
+  # Without a Developer ID the app is not notarized: Gatekeeper would block its first launch.
   postflight do
     system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{appdir}/Keygloss.app"]
   end
