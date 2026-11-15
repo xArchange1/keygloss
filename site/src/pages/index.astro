@@ -1,0 +1,1038 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>keygloss: type ghbdtn, get привет</title>
+<meta name="description" content="Keygloss fixes text typed in the wrong keyboard layout, RU ↔ EN. Free, open source, and it works on your computer only.">
+<link rel="icon" href="img/icon.png">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style is:inline>
+:root{
+  --kg-bg-from:#f3eee7;--kg-bg-to:#e4e5e3;--kg-text:#171819;--kg-accent:#8a6500;--kg-detail:#3d48b8;--kg-on-accent:#fffdf8;--kg-raised:#fbf9f5;
+  --sky-top:color-mix(in oklab,var(--kg-accent) 85%,var(--kg-text));
+  --sky-bot:color-mix(in oklab,var(--kg-accent) 26%,var(--kg-bg-to));
+  --sky-ink:var(--kg-on-accent);
+  --term-bg:var(--kg-text);--term-ink:var(--kg-bg-from);
+  --hl:color-mix(in oklab,var(--kg-accent) 24%,var(--kg-raised));
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --kg-bg-from:#2b2d30;--kg-bg-to:#0b0c0d;--kg-text:#f3eee7;--kg-accent:#f5c84c;--kg-detail:#8e9bff;--kg-on-accent:#171819;--kg-raised:#34363a;
+    --sky-top:color-mix(in oklab,var(--kg-accent) 18%,var(--kg-bg-to));
+    --sky-bot:color-mix(in oklab,var(--kg-accent) 7%,var(--kg-bg-to));
+    --sky-ink:var(--kg-text);
+    --term-bg:var(--kg-bg-to);--term-ink:var(--kg-text);
+    --hl:color-mix(in oklab,var(--kg-accent) 30%,var(--kg-raised));
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --kg-bg-from:#2b2d30;--kg-bg-to:#0b0c0d;--kg-text:#f3eee7;--kg-accent:#f5c84c;--kg-detail:#8e9bff;--kg-on-accent:#171819;--kg-raised:#34363a;
+  --sky-top:color-mix(in oklab,var(--kg-accent) 18%,var(--kg-bg-to));
+  --sky-bot:color-mix(in oklab,var(--kg-accent) 7%,var(--kg-bg-to));
+  --sky-ink:var(--kg-text);
+  --term-bg:var(--kg-bg-to);--term-ink:var(--kg-text);
+  --hl:color-mix(in oklab,var(--kg-accent) 30%,var(--kg-raised));
+  color-scheme:dark;
+}
+:root{
+  --ink:var(--kg-text);
+  --muted:color-mix(in oklab,var(--kg-text) 68%,var(--kg-bg-from));
+  --faint:color-mix(in oklab,var(--kg-text) 58%,var(--kg-bg-from));
+  --line:color-mix(in srgb,var(--kg-text) 13%,transparent);
+  --line-2:color-mix(in srgb,var(--kg-text) 24%,transparent);
+  --bar:color-mix(in oklab,var(--kg-text) 8%,var(--kg-raised));
+  --panel:color-mix(in oklab,var(--kg-text) 4%,var(--kg-raised));
+  --shadow:0 1px 2px color-mix(in srgb,var(--kg-text) 10%,transparent),0 10px 28px -10px color-mix(in srgb,var(--kg-text) 30%,transparent);
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --wrap:1090px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:auto;-webkit-text-size-adjust:100%}
+body{margin:0;font-family:"Libron",Georgia,serif;font-size:16px;line-height:1.5;color:var(--ink);
+  background:linear-gradient(180deg,var(--kg-bg-from),var(--kg-bg-to)) fixed;overflow-x:hidden}
+::selection{background:color-mix(in srgb,var(--kg-accent) 30%,transparent)}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--kg-detail);outline-offset:2px;border-radius:4px}
+h1,h2,h3,p,ul{margin:0;padding:0}
+ul{list-style:none}
+svg{display:block}
+.ico{width:16px;height:16px;fill:currentColor;flex:none}
+.wrap{width:min(var(--wrap),100% - 48px);margin-inline:auto}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+[hidden]{display:none!important}
+code,.mono{font-family:var(--mono)}
+
+/* ---------- menu bar ---------- */
+.menubar{position:sticky;top:0;z-index:50;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;
+  background:color-mix(in srgb,var(--kg-bg-from) 92%,transparent);border-bottom:1px solid var(--line);font-size:14px}
+.menubar nav ul{display:flex;gap:16px;align-items:center}
+.menubar nav a{color:var(--muted)}
+.menubar nav a:hover{color:var(--ink)}
+.menubar nav a.brand{color:var(--ink);font-weight:700}
+.menubar .mark{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px}
+.menubar .mark img{width:100%;height:100%}
+.status{display:flex;align-items:center;gap:4px;color:var(--muted)}
+.status a,.status button{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 6px;border-radius:6px}
+.status a:hover,.status button:hover{color:var(--ink);background:color-mix(in srgb,var(--kg-text) 7%,transparent)}
+.status .ico{width:15px;height:15px}
+.status .num{font-size:13px;font-variant-numeric:tabular-nums}
+.status .get{color:var(--kg-detail);font-weight:700;margin-left:8px;gap:6px}
+.status .get:hover{color:var(--kg-detail);text-decoration:underline;text-underline-offset:3px;background:none}
+.gh-pair{display:inline-flex;align-items:center}
+.gh-pair a + a{padding-left:2px;margin-left:-4px}
+.heart .ico{fill:var(--kg-accent)}
+
+.lang{position:relative}
+.lang-btn{font-weight:700;font-size:12.5px;letter-spacing:.04em;border:1px solid var(--line-2);padding:0 7px!important;height:22px!important;border-radius:5px!important;color:var(--ink)}
+.lang-list{position:absolute;right:0;top:34px;min-width:164px;padding:5px;background:var(--kg-raised);border:1px solid var(--line-2);border-radius:10px;box-shadow:var(--shadow)}
+.lang-list li{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;cursor:pointer;color:var(--ink);font-size:14.5px}
+.lang-list li svg{width:22px;height:15px;border-radius:2px;box-shadow:0 0 0 1px var(--line-2);flex:none}
+.lang-list li:hover,.lang-list li.active{background:color-mix(in srgb,var(--kg-text) 8%,transparent)}
+.lang-list li[aria-selected="true"]::after{content:"";margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--kg-detail)}
+.lang-list:focus-visible{outline:2px solid var(--kg-detail);outline-offset:2px;border-radius:10px}
+
+/* ---------- windows ---------- */
+.win{background:var(--kg-raised);border:1px solid var(--line-2);border-radius:9px;box-shadow:var(--shadow)}
+.win-bar{height:26px;display:flex;align-items:center;gap:8px;padding:0 9px;background:var(--bar);border-bottom:1px solid var(--line);border-radius:8px 8px 0 0;font-size:11.5px;color:var(--faint);white-space:nowrap}
+.dots{display:flex;gap:5px;flex:none}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--kg-accent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kg-text) 18%,transparent)}
+.dots i:nth-child(2){background:color-mix(in oklab,var(--kg-accent) 45%,var(--kg-raised))}
+.dots i:nth-child(3){background:color-mix(in oklab,var(--kg-detail) 70%,var(--kg-raised))}
+.win-bar .t{flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;padding-right:36px}
+.win-bar .x{margin-left:auto;font-size:12px;color:var(--faint);line-height:1}
+.win.wn .win-bar{padding:0 0 0 8px;gap:6px}
+.win.wn .win-bar img{width:13px;height:13px}
+.win.wn .win-bar .t{text-align:left;padding:0;color:var(--muted)}
+.caps{display:flex;margin-left:auto;height:100%}
+.caps i{width:26px;height:100%;display:grid;place-items:center}
+.caps svg{width:9px;height:9px;stroke:var(--muted);fill:none;stroke-width:1}
+.win-body{padding:5px}
+.cap{display:block;text-align:center;font-size:12px;color:var(--faint);margin-top:9px}
+
+/* rebuilt app UI */
+.kgp{background:var(--panel);border:1px solid var(--line);border-radius:8px;font-size:12px;line-height:1.3}
+.kgp .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;min-height:34px}
+.kgp .row + .row{border-top:1px solid var(--line)}
+.kgp .row > span:first-child{min-width:0}
+.kgp .dim{opacity:.5}
+.tg{flex:none;width:28px;height:16px;border-radius:99px;background:var(--kg-accent);position:relative}
+.tg::after{content:"";position:absolute;right:2px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--kg-on-accent)}
+.tg.off{background:color-mix(in srgb,var(--kg-text) 26%,transparent)}
+.tg.off::after{right:auto;left:2px;background:var(--kg-raised)}
+.keys{display:inline-flex;align-items:center;gap:4px;flex:none;color:var(--faint);font-size:10px}
+.kc{display:inline-block;padding:1px 6px;border:1px solid color-mix(in srgb,var(--kg-detail) 40%,transparent);border-bottom-width:2px;border-radius:5px;background:var(--kg-raised);color:var(--kg-detail);font-weight:700;font-size:11.5px;line-height:1.5}
+.sel{display:inline-flex;align-items:center;gap:8px;padding:2px 8px;border:1px solid var(--line-2);border-radius:6px;background:var(--kg-raised);flex:none}
+.sel::after{content:"";width:5px;height:5px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg);margin-top:-3px}
+.kgh{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--kg-detail);margin:10px 4px 6px}
+.hist .when{font-size:10px;font-weight:700;color:var(--faint)}
+.hist .from{color:var(--faint)}
+.hist .to{font-weight:700}
+.hist .arrow{color:var(--faint);margin:0 4px}
+.hist .row{display:block}
+.never{display:inline-flex;align-items:center;gap:4px;margin-top:5px;padding:2px 7px;border:1px solid var(--line-2);border-radius:5px;font-size:10.5px;color:var(--muted)}
+.never svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2}
+.snip-head{display:flex;gap:10px;padding:8px 10px 2px;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:700}
+.snip-head span:first-child,.snip-row span:first-child{width:52px;flex:none}
+.snip-row{display:flex;gap:10px;padding:4px 10px 9px}
+
+/* image crops: unitless image px in --cx/--cy/--cw/--ch, scale in --s */
+.crop{display:block;flex:none;width:calc(var(--cw) * var(--s) * 1px);height:calc(var(--ch) * var(--s) * 1px);
+  background-repeat:no-repeat;background-size:calc(2400px * var(--s)) auto;
+  background-position:calc(var(--cx) * var(--s) * -1px) calc(var(--cy) * var(--s) * -1px);border-radius:6px;max-width:100%}
+.crop.lay{background-image:url(img/layout-switching.webp)}
+.crop.snp{background-image:url(img/snippets.webp)}
+html[lang="ru"] .crop.lay{background-image:url(img/layout-switching-ru.webp)}
+html[lang="ru"] .crop.snp{background-image:url(img/snippets-ru.webp)}
+.crop.chips{--cx:1418;--cy:1368;--cw:574;--ch:94}
+html[lang="ru"] .crop.chips{--cx:1390;--cy:1360;--cw:602}
+.crop.hot{--cx:1680;--cy:988;--cw:306;--ch:92}
+html[lang="ru"] .crop.hot{--cy:980}
+.crop.trig{--cx:842;--cy:1302;--cw:1174;--ch:258}
+html[lang="ru"] .crop.trig{--cy:1293}
+.crop.ex{--cx:846;--cy:846;--cw:640;--ch:174}
+.crop.greet{--cx:843;--cy:1582;--cw:1170;--ch:306}
+.crop.sc{--cx:1588;--cy:1456;--cw:394;--ch:86}
+
+/* ---------- hero ---------- */
+.hero{position:relative;overflow:hidden;padding:242px 0 44px;text-align:center;
+  background-image:radial-gradient(color-mix(in srgb,var(--kg-text) 16%,transparent) 1px,transparent 1.4px);background-size:43px 43px;background-position:50% 16px}
+.hero-core{position:relative;z-index:2}
+h1{font-size:88px;line-height:1.1;font-weight:700;letter-spacing:-.03em}
+.tagline{font-size:19px;margin-top:6px}
+.ctas{display:flex;justify-content:center;gap:20px;margin-top:34px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:11px;height:40px;padding:0 20px;border-radius:99px;font-size:17px;white-space:nowrap;
+  border:1px solid var(--line-2);background:linear-gradient(180deg,var(--kg-raised),color-mix(in oklab,var(--kg-text) 7%,var(--kg-raised)));
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--kg-on-accent) 50%,transparent),0 1px 2px color-mix(in srgb,var(--kg-text) 14%,transparent),0 6px 14px -8px color-mix(in srgb,var(--kg-text) 40%,transparent)}
+.pill:hover{background:var(--kg-raised)}
+.pill .ico{width:17px;height:17px}
+.pill.primary{color:var(--kg-on-accent);border-color:color-mix(in oklab,var(--kg-accent) 70%,var(--kg-text));
+  background:linear-gradient(180deg,color-mix(in oklab,var(--kg-accent) 88%,var(--kg-on-accent)),var(--kg-accent));
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--kg-on-accent) 35%,transparent),0 1px 2px color-mix(in srgb,var(--kg-text) 20%,transparent),0 8px 16px -8px color-mix(in srgb,var(--kg-accent) 70%,transparent)}
+.pill.primary:hover{background:var(--kg-accent)}
+.pill.sm{height:36px;font-size:16px;padding:0 18px}
+.under{font-size:12.5px;color:var(--faint);margin-top:14px}
+.neutral{font-size:13.5px;color:var(--muted);margin-top:10px}
+
+.collage{position:absolute;inset:0;z-index:1;transform-origin:50% 0}
+.c{position:absolute;left:calc(50% + (var(--x) - 720) * 1px);top:calc(var(--y) * 1px);text-align:left}
+.kao{font-size:19px;white-space:nowrap;letter-spacing:.02em}
+.keycap{width:46px;height:46px;border-radius:9px;position:relative;font-weight:700;
+  background:linear-gradient(180deg,var(--kg-raised),color-mix(in oklab,var(--kg-text) 6%,var(--kg-raised)));
+  border:1px solid var(--line-2);border-bottom-width:4px;box-shadow:0 6px 12px -6px color-mix(in srgb,var(--kg-text) 40%,transparent)}
+.keycap b{position:absolute;left:8px;top:3px;font-size:15px}
+.keycap i{position:absolute;right:8px;bottom:2px;font-style:normal;font-size:15px;color:var(--kg-accent)}
+.keycap.wide{width:auto;height:40px;padding:0 14px;display:inline-grid;place-items:center;font-size:15px;color:var(--kg-detail)}
+.sticky{width:118px;padding:12px 10px 16px;background:var(--hl);color:var(--ink);font-size:17px;line-height:1.25;text-align:center;
+  box-shadow:0 1px 1px color-mix(in srgb,var(--kg-text) 20%,transparent),0 12px 16px -10px color-mix(in srgb,var(--kg-text) 45%,transparent);transform:rotate(-5deg)}
+.sticky s{color:var(--muted);text-decoration-thickness:1px}
+.sticky b{display:block;font-size:21px}
+.tag{width:78px;border-radius:5px;overflow:hidden;background:var(--kg-raised);text-align:center;transform:rotate(4deg);
+  box-shadow:0 1px 1px color-mix(in srgb,var(--kg-text) 20%,transparent),0 8px 12px -8px color-mix(in srgb,var(--kg-text) 45%,transparent)}
+.tag::before,.tag::after{content:"";display:block;height:11px;background:var(--kg-accent)}
+.tag::after{height:5px}
+.tag span{display:block;padding:7px 0 6px;font-weight:700;font-size:14px;line-height:1}
+.dot{width:14px;height:14px;border-radius:50%;background:var(--kg-detail);box-shadow:0 0 0 4px color-mix(in srgb,var(--kg-detail) 22%,transparent)}
+.icon-tile{width:46px;height:46px;border-radius:10px;box-shadow:var(--shadow)}
+.photo{padding:4px;background:var(--kg-raised);border-radius:8px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.mini{display:none}
+
+.demo{position:relative;z-index:2;width:min(800px,100% - 48px);margin:48px auto 0;text-align:left;border-radius:14px}
+.demo .win-bar{border-radius:13px 13px 0 0;height:30px}
+.demo-body{height:408px;border-radius:0 0 13px 13px;padding:44px 56px;display:flex;flex-direction:column;
+  background:linear-gradient(165deg,color-mix(in oklab,var(--kg-accent) 12%,var(--kg-raised)),var(--kg-raised) 55%,color-mix(in oklab,var(--kg-detail) 9%,var(--kg-raised)))}
+.demo-label{font-size:13px;color:var(--faint);margin-bottom:4px}
+.typed{font-size:40px;line-height:1.15;color:var(--faint);text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:color-mix(in srgb,var(--kg-accent) 70%,transparent)}
+.fixed{font-size:72px;line-height:1.1;font-weight:700;letter-spacing:-.02em;margin-bottom:auto}
+.fixed .caret{display:inline-block;width:3px;height:.9em;background:var(--kg-accent);vertical-align:-.08em;margin-left:6px}
+.demo-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+.badge{display:inline-flex;align-items:center;gap:7px;padding:2px 10px;border-radius:99px;border:1px solid color-mix(in srgb,var(--kg-detail) 40%,transparent);color:var(--kg-detail);font-weight:700;font-size:13px;background:var(--kg-raised)}
+.badge::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--kg-detail)}
+
+/* ---------- feature rows ---------- */
+.rows{padding:18px 0 0}
+.frow{display:grid;grid-template-columns:290px 705px;justify-content:space-between;align-items:stretch;margin-top:50px;padding:0 16px}
+.frow.flip{grid-template-columns:705px 290px;padding:0}
+.frow.flip .ftext{order:2;text-align:right;align-items:flex-end}
+.ftext{display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;padding:22px 0 20px}
+.seq{display:flex;gap:5px;align-items:center}
+.seq i{width:13px;height:13px;border-radius:3px;border:1px solid var(--line-2);border-bottom-width:2px;background:var(--kg-raised)}
+.seq i.on{background:var(--kg-accent);border-color:color-mix(in oklab,var(--kg-accent) 70%,var(--kg-text))}
+.seq i.sp{width:38px}
+.bubble{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:22px;font-size:23px;line-height:1.3;position:relative;white-space:nowrap;
+  background:linear-gradient(180deg,var(--kg-raised),var(--hl));border:1px solid color-mix(in oklab,var(--kg-accent) 55%,var(--kg-raised));
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--kg-on-accent) 60%,transparent),0 8px 14px -8px color-mix(in srgb,var(--kg-text) 40%,transparent)}
+.bubble s{color:var(--muted);text-decoration-thickness:1px}
+.bubble .kc{font-size:17px;padding:1px 9px}
+.ftext h3{font-size:19px;font-weight:700;line-height:1.3;margin-bottom:10px}
+.ftext p{color:var(--muted);max-width:290px}
+.fwin{border-radius:14px;overflow:hidden}
+.fwin .win-bar{height:30px;border-radius:0}
+.wall{height:440px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:28px;
+  background:linear-gradient(150deg,color-mix(in oklab,var(--kg-accent) 34%,var(--kg-raised)),color-mix(in oklab,var(--kg-accent) 10%,var(--kg-raised)) 48%,color-mix(in oklab,var(--kg-detail) 20%,var(--kg-raised)))}
+.wall.b{background:linear-gradient(210deg,color-mix(in oklab,var(--kg-detail) 22%,var(--kg-raised)),color-mix(in oklab,var(--kg-accent) 12%,var(--kg-raised)) 55%,color-mix(in oklab,var(--kg-accent) 36%,var(--kg-raised)))}
+.wall.c2{background:linear-gradient(180deg,color-mix(in oklab,var(--kg-text) 16%,var(--kg-raised)),color-mix(in oklab,var(--kg-accent) 26%,var(--kg-raised)))}
+.wall .inner{width:100%;max-width:520px}
+.wall .kgp{font-size:15px;border-radius:12px;box-shadow:var(--shadow);background:var(--kg-raised)}
+.wall .kgp .row{padding:12px 16px;min-height:48px}
+.wall .tg{width:38px;height:22px}.wall .tg::after{width:16px;height:16px;top:3px;right:3px}
+.wall .kc{font-size:14px;padding:2px 8px}
+.wall .sel{padding:4px 10px}
+.wall .crop{box-shadow:var(--shadow);border-radius:10px}
+.wall .pair{display:flex;gap:16px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+[data-theme="dark"] .crop.lay{filter:brightness(.88)}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .crop.lay{filter:brightness(.88)}}
+.tilt-l{transform:rotate(-2deg)}.tilt-r{transform:rotate(2deg)}
+
+/* ---------- section heads ---------- */
+.eyebrow{display:inline-block;padding:4px 12px;border:1px solid var(--line-2);border-radius:99px;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.center{text-align:center}
+h2{font-size:56px;line-height:1.2;font-weight:700;letter-spacing:-.03em;text-wrap:balance}
+
+/* ---------- privacy (notes) ---------- */
+.privacy{position:relative;padding:168px 0 100px;overflow:hidden}
+.notes{position:relative;z-index:2;width:min(480px,100% - 48px);margin:24px auto 0;border-radius:8px}
+.notes .win-bar{background:var(--hl);height:30px}
+.notes-body{padding:22px 24px 44px;font-size:19px;line-height:30px;color:var(--muted)}
+.notes-body p + p{margin-top:10px}
+.notes-body mark{background:var(--hl);color:var(--ink);padding:3px 2px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.notes-body .caret{display:inline-block;width:1px;height:22px;background:var(--ink);vertical-align:-4px;margin-left:2px}
+.sig{display:flex;align-items:center;gap:12px;margin-top:38px;font-size:16px;line-height:24px}
+.sig img{width:40px;height:40px;border-radius:50%}
+.sig strong{display:block;color:var(--ink);font-weight:400}
+.sig .hand{margin-left:auto;font-style:italic;font-weight:700;font-size:34px;color:var(--ink);transform:rotate(-6deg);letter-spacing:-.02em;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:5px}
+.arc{position:absolute;top:0;left:50%;width:0;height:0;z-index:1}
+.arc i{position:absolute;width:74px;height:62px;border-radius:10px 10px 8px 8px;font-style:normal;font-weight:700;font-size:17px;padding:4px 0 0 10px;
+  border:1px solid color-mix(in srgb,var(--kg-text) 16%,transparent);border-bottom-width:5px;color:color-mix(in srgb,var(--kg-text) 70%,transparent)}
+.rule{border:0;border-top:1px dotted var(--line-2);margin:0 auto}
+
+/* ---------- more features (grid) ---------- */
+.more{padding:110px 0 200px;overflow:hidden}
+.marq{position:relative;margin-top:22px;height:68px}
+.marq h2{position:relative;display:inline-block}
+.marq .ghost{position:absolute;top:0;font-size:56px;line-height:1.2;font-weight:700;letter-spacing:-.03em;color:color-mix(in srgb,var(--kg-text) 38%,transparent);white-space:nowrap}
+.marq .ghost.l{right:calc(50% + var(--half) + 26px)}
+.marq .ghost.r{left:calc(50% + var(--half) + 26px)}
+.sticker{position:absolute;right:-96px;top:-78px;width:104px;height:104px;border-radius:50%;display:grid;place-items:center;text-align:center;transform:rotate(-14deg);
+  background:var(--kg-accent);color:var(--kg-on-accent);font-style:italic;font-weight:700;font-size:21px;line-height:1.05;
+  box-shadow:inset 0 0 0 4px color-mix(in srgb,var(--kg-on-accent) 30%,transparent),0 10px 16px -8px color-mix(in srgb,var(--kg-text) 50%,transparent)}
+.grid{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start;margin-top:70px;
+  -webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 220px),transparent calc(100% - 10px));mask-image:linear-gradient(180deg,#000 calc(100% - 220px),transparent calc(100% - 10px))}
+.col{display:grid;gap:16px}
+.col:nth-child(2){margin-top:48px}
+.card .win-bar{height:30px}
+.col:nth-child(1) .card:nth-child(1) .win-bar,.col:nth-child(3) .card:nth-child(3) .win-bar{background:linear-gradient(90deg,var(--bar),color-mix(in oklab,var(--kg-accent) 24%,var(--kg-raised)),var(--bar))}
+.col:nth-child(2) .card:nth-child(1) .win-bar,.col:nth-child(1) .card:nth-child(3) .win-bar{background:linear-gradient(90deg,var(--bar),color-mix(in oklab,var(--kg-detail) 20%,var(--kg-raised)),var(--bar))}
+.col:nth-child(3) .card:nth-child(1) .win-bar,.col:nth-child(2) .card:nth-child(2) .win-bar{background:linear-gradient(90deg,var(--bar),color-mix(in oklab,var(--kg-text) 20%,var(--kg-raised)),var(--bar))}
+.card-body{padding:16px 15px 18px}
+.card-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.card-top .av{width:40px;height:40px;border-radius:8px;display:grid;place-items:center;background:var(--panel);border:1px solid var(--line);flex:none}
+.card-top .av svg{width:20px;height:20px;fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.card-top strong{display:block;font-weight:400;font-size:15px;line-height:20px}
+.card-top small{display:block;font-size:14px;line-height:20px;color:var(--faint)}
+.card-top .tg,.card-top .keys,.card-top .sel{margin-left:auto}
+.card-body p{font-size:16px;line-height:24px;font-weight:400;color:color-mix(in srgb,var(--kg-text) 85%,transparent)}
+.card-body .meta{font-size:12px;color:var(--faint);margin-top:12px}
+.starbar{position:relative;z-index:2;margin-top:-8px;height:72px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
+  background:linear-gradient(180deg,var(--kg-raised),var(--panel));border:1px solid var(--line);border-radius:6px;box-shadow:var(--shadow);font-size:19px}
+.starbar a{color:var(--kg-detail);text-decoration:underline;text-underline-offset:3px}
+.starbar .tile{position:absolute;left:64px;top:-22px;width:106px;height:106px;border-radius:14px;transform:rotate(-5deg);box-shadow:var(--shadow)}
+
+/* ---------- install (sky) ---------- */
+.install{position:relative;border-radius:40px;padding:128px 0 34px;color:var(--ink);
+  background:
+    radial-gradient(420px 150px at 12% 9%,color-mix(in srgb,var(--kg-on-accent) 16%,transparent),transparent 70%),
+    radial-gradient(520px 170px at 84% 16%,color-mix(in srgb,var(--kg-on-accent) 13%,transparent),transparent 70%),
+    radial-gradient(600px 200px at 30% 44%,color-mix(in srgb,var(--kg-on-accent) 10%,transparent),transparent 70%),
+    radial-gradient(520px 190px at 88% 62%,color-mix(in srgb,var(--kg-on-accent) 12%,transparent),transparent 70%),
+    var(--sky-top)}
+.install .head{color:var(--sky-ink)}
+.install .eyebrow{background:var(--kg-raised);color:var(--muted);border-color:transparent}
+.install h2{margin-top:22px}
+.install .sub{font-size:19px;margin-top:20px}
+.seg{display:inline-flex;gap:2px;padding:4px;margin-top:22px;border-radius:99px;background:color-mix(in srgb,var(--kg-raised) 30%,transparent);border:1px solid color-mix(in srgb,var(--sky-ink) 35%,transparent)}
+.seg button{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 18px;border-radius:99px;font-size:17px;color:var(--sky-ink)}
+.seg button[aria-selected="true"]{background:var(--kg-raised);color:var(--ink);box-shadow:0 1px 3px color-mix(in srgb,var(--kg-text) 30%,transparent)}
+.seg button:focus-visible{outline-color:var(--sky-ink);border-radius:99px}
+.install .neutral{color:var(--sky-ink);margin-top:14px}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:64px;padding:0 4px}
+.plan{position:relative;border-radius:9px;background:linear-gradient(180deg,var(--kg-raised) 30%,color-mix(in srgb,var(--kg-raised) 82%,transparent));text-align:center}
+.plan .win-bar{background:color-mix(in oklab,var(--kg-accent) 22%,var(--kg-raised))}
+.plan.pop .win-bar{background:var(--kg-accent)}
+.plan.pop .dots i{background:var(--kg-on-accent)}
+.plan .pop-tag{position:absolute;left:50%;top:-11px;transform:translateX(-50%);padding:1px 10px;border-radius:99px;font-size:13px;background:var(--hl);border:1px solid color-mix(in oklab,var(--kg-accent) 60%,var(--kg-raised));color:var(--ink)}
+.plan-top{padding:22px 20px 22px;margin:0 20px;border-bottom:1px dotted var(--line-2)}
+.plan-top h3{font-size:28px;font-weight:400;line-height:1.2}
+.plan-top p{font-size:19px;margin-top:8px}
+.plan-top small{display:block;font-size:12.5px;color:var(--muted);margin-top:10px}
+.plan-mid{padding:30px 20px 30px;margin:0 20px;border-bottom:1px dotted var(--line-2)}
+.plan-mid .big{font-size:56px;line-height:1.1;font-weight:700;letter-spacing:-.02em}
+.plan-mid .per{font-size:14px;margin:16px 0 14px}
+.plan ul{text-align:left;padding:26px 26px 26px}
+.plan ul .lab{color:var(--muted);margin-bottom:10px}
+.plan ul li:not(.lab){display:flex;gap:12px;align-items:center;line-height:32px}
+.plan ul li:not(.lab)::before{content:"";width:16px;height:16px;border-radius:50%;flex:none;background:var(--ink) no-repeat 50%/10px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 5.2 4.2 7.4 8 3' fill='none' stroke='%23888' stroke-width='1.6'/%3E%3C/svg%3E")}
+.capstick{position:absolute;right:-44px;top:26px;z-index:3;transform:rotate(12deg)}
+.term{position:relative;margin:18px 4px 0;border-radius:9px;background:var(--term-bg);color:var(--term-ink);border:1px solid color-mix(in srgb,var(--term-ink) 22%,transparent);box-shadow:var(--shadow)}
+.term .win-bar{background:color-mix(in srgb,var(--term-ink) 12%,var(--term-bg));border-color:transparent}
+.term-body{display:flex;align-items:center;gap:24px;padding:26px 24px 28px}
+.term-body .txt{flex:1;min-width:0}
+.cmd{display:block;font-family:var(--mono);font-size:19px;line-height:1.4;overflow-x:auto;white-space:nowrap;padding-bottom:2px}
+.cmd::before{content:"$ ";color:color-mix(in srgb,var(--term-ink) 60%,transparent)}
+.term-body p{margin-top:10px;color:color-mix(in srgb,var(--term-ink) 74%,transparent);max-width:560px}
+.term-body p a{color:var(--term-ink);text-decoration:underline;text-underline-offset:3px;text-decoration-color:color-mix(in srgb,var(--term-ink) 50%,transparent)}
+.term-body p a:hover{text-decoration-color:currentColor}
+.term-body .os-note{font-size:14px;line-height:1.45;padding-left:12px;border-left:1px solid color-mix(in srgb,var(--term-ink) 35%,transparent)}
+.term :focus-visible{outline-color:var(--term-ink)}
+.term .pill{color:var(--kg-text);flex:none;min-width:132px;justify-content:center}
+:root[data-theme="dark"] .term .pill{color:var(--kg-text)}
+.term .pill.done{background:var(--kg-accent);color:var(--kg-on-accent);border-color:transparent}
+.foot{font-size:12.5px;color:var(--muted);margin:14px auto 0;max-width:640px;text-align:center}
+.install .rule{margin-top:14px}
+.install .foot{color:color-mix(in srgb,var(--sky-ink) 88%,transparent)}
+
+/* ---------- faq ---------- */
+.faq{padding:120px 0 250px;position:relative}
+.faq h2{margin-top:26px}
+.faq .sub{font-size:19px;margin-top:22px}
+.qa{width:min(834px,100%);margin:62px auto 0;display:grid;gap:8px}
+.qa details{background:var(--kg-raised);border-radius:6px;box-shadow:0 1px 2px color-mix(in srgb,var(--kg-text) 8%,transparent)}
+.qa summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px;padding:12px 20px;font-size:19px;cursor:pointer;list-style:none}
+.qa summary::-webkit-details-marker{display:none}
+.qa summary::after{content:"";width:14px;height:14px;flex:none;margin-right:4px;
+  background:linear-gradient(var(--ink),var(--ink)) 50%/100% 1.5px no-repeat,linear-gradient(var(--ink),var(--ink)) 50%/1.5px 100% no-repeat}
+.qa details[open] summary::after{transform:rotate(45deg)}
+.qa details[open] summary{padding-bottom:2px;min-height:48px;align-items:flex-end}
+.qa details p{padding:0 20px 18px;color:var(--muted);max-width:510px;box-sizing:content-box}
+.qa details a{color:var(--kg-detail);text-decoration:underline;text-underline-offset:3px}
+.faq .photo{position:absolute;right:calc(50% - 622px);top:296px;transform:rotate(6deg)}
+
+/* ---------- footer ---------- */
+footer{padding-bottom:24px}
+.fcols{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.fcols h3{font-size:16px;font-weight:400;margin-bottom:12px}
+.fcols li{line-height:36px;color:var(--muted)}
+.fcols a{display:inline-flex;align-items:center;gap:8px}
+.fcols a:hover{color:var(--ink)}
+.fcols p{color:var(--muted);line-height:24px;margin-top:6px;max-width:250px}
+.pix-wrap{position:relative;margin-top:24px}
+.pix{--cell:calc((min(100vw - 48px,var(--wrap))) / 47);display:grid;grid-template-columns:repeat(47,var(--cell));grid-auto-rows:var(--cell)}
+.pix i{margin:1px;border-radius:22%;background:linear-gradient(180deg,color-mix(in oklab,var(--kg-accent) 62%,var(--kg-raised)),var(--kg-accent));
+  border-bottom:3px solid color-mix(in oklab,var(--kg-accent) 72%,var(--kg-text))}
+.pix-wrap .keycap{position:absolute}
+.pix-wrap .k1{left:-140px;top:14px;transform:rotate(-8deg)}
+.pix-wrap .k2{right:-110px;top:-6px;transform:rotate(7deg);width:62px;height:58px}
+html[lang="ru"] .sticker{font-size:15px}
+.copy{text-align:center;font-size:12.5px;color:var(--faint);margin-top:44px}
+.copy a{text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- responsive ---------- */
+@media (max-width:1399px){.collage{transform:scale(.86)}.pix-wrap .keycap,.capstick{display:none}.faq .photo{right:16px}}
+@media (max-width:1239px){.collage{transform:scale(.74)}.collage .lo{display:none}
+  .frow,.frow.flip{grid-template-columns:1fr 1.9fr;gap:32px;padding:0}.frow.flip{grid-template-columns:1.9fr 1fr}
+  .faq .photo{display:none}.sticker{right:-40px}}
+@media (max-width:999px){
+  .collage{display:none}
+  .mini{display:flex;justify-content:center;align-items:center;gap:14px;position:relative;z-index:2}
+  .mini.top{margin-bottom:34px}.mini.bot{margin-top:30px;gap:18px}
+  .hero{padding-top:36px}
+  .menubar nav li:not(:first-child),.menubar .mark,.status .get{display:none}
+  .frow,.frow.flip{grid-template-columns:1fr;gap:20px;margin-top:64px}
+  .frow.flip .ftext{order:0;text-align:left;align-items:flex-start}
+  .ftext{gap:22px;padding:0}
+  .wall{height:auto;min-height:320px}
+  .arc,.marq .ghost{display:none}
+  .privacy{padding:110px 0 80px}
+  .grid{grid-template-columns:1fr 1fr}.col:nth-child(3){grid-column:1/-1;grid-template-columns:1fr 1fr;align-items:start}.col:nth-child(3) .card:last-child{display:none}
+  .plans{grid-template-columns:1fr;max-width:420px;margin-inline:auto;gap:28px}
+  .starbar .tile{left:16px;width:72px;height:72px;top:-44px}
+  .fcols{grid-template-columns:1fr 1fr;gap:36px 24px}
+  .faq{padding-bottom:120px}
+}
+@media (max-width:640px){
+  h1{font-size:64px}
+  h2,.marq .ghost{font-size:38px}
+  .marq{height:auto}
+  .menubar{padding:0 12px}.status{gap:0}
+  .tagline{font-size:17.5px;padding:0 20px;text-wrap:balance}
+  .ctas{flex-direction:column;align-items:center;gap:12px}
+  .demo-body{height:auto;padding:26px 22px 20px;gap:4px}
+  .typed{font-size:24px}.fixed{font-size:40px;margin-bottom:38px}
+  .wall{padding:18px 12px;min-height:0}
+  .wall .kgp{font-size:13.5px}.wall .kgp .row{padding:10px 12px}
+  .wall .crop{--s:.262!important}
+  .under,.hero-core>p{padding-inline:20px;text-wrap:balance}
+  .bubble{font-size:20px}
+  .grid{grid-template-columns:1fr;-webkit-mask-image:none;mask-image:none}.col:nth-child(2){margin-top:0}
+  .col:nth-child(3){grid-template-columns:1fr}.col:nth-child(3) .card:last-child{display:block}
+  .starbar{margin-top:56px;height:auto;padding:36px 16px 16px;font-size:17px;text-align:center}
+  .sticker{right:-6px;top:-74px;width:78px;height:78px;font-size:16px}html[lang="ru"] .sticker{font-size:11.5px}
+  .more{padding:90px 0 110px}
+  .install{padding-top:84px;border-radius:20px}
+  .seg button{padding:0 14px;font-size:16px}
+  .term-body{flex-direction:column;align-items:stretch;padding:20px 16px}
+  .cmd{font-size:14.5px}
+  .notes-body{font-size:17px;line-height:27px;padding:18px 18px 30px}
+  .sig .hand{font-size:26px}
+  .qa summary{font-size:17px;padding:10px 14px}.qa details p{padding:0 14px 16px}
+  .pix i{border-bottom-width:1px}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-win" viewBox="0 0 24 24"><path d="M2 4.6 11 3.3v8.2H2zM12.2 3.1 22 1.7v9.8h-9.8zM2 12.7h9v8.2l-9-1.3zM12.2 12.7H22v9.8l-9.8-1.4z"/></symbol>
+  <symbol id="i-mac" viewBox="0 0 24 24"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></symbol>
+  <symbol id="i-linux" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 1.5c-2.300 0-3.700 1.800-3.700 4.200 0 1.600.200 2.600-.800 4.200C6.200 12 4.600 14.600 4.600 17.400c0 1 .300 1.900.800 2.600l-1.900 1.300c-.500.400-.300 1.200.400 1.200h5.200c.600 0 1-.500 1-1h3.800c0 .500.400 1 1 1h5.200c.700 0 .900-.800.400-1.200l-1.900-1.300c.500-.700.800-1.600.800-2.600 0-2.800-1.600-5.400-2.900-7.500-1-1.600-.800-2.600-.800-4.200 0-2.400-1.400-4.200-3.700-4.200zm0 8c1.800 0 3.600 3.600 3.600 7.200 0 1.800-1.400 2.800-3.600 2.800s-3.600-1-3.600-2.800c0-3.600 1.800-7.200 3.600-7.200z"/></symbol>
+  <symbol id="i-desk" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M3 4h18a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-7v2h3v2H7v-2h3v-2H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm1 2v9h16V6z"/></symbol>
+  <symbol id="i-gh" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></symbol>
+  <symbol id="i-yt" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></symbol>
+  <symbol id="i-tg" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21.2 3.4 12.7a5.4 5.4 0 0 1 7.7-7.7l.9.9.9-.9a5.4 5.4 0 0 1 7.7 7.7z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3 6.6 7.2.8-5.4 4.9 1.5 7.1L12 17.8l-6.3 3.6 1.5-7.1L1.800 9.400 9 8.600z"/></symbol>
+  <symbol id="f-en" viewBox="0 0 60 30"><clipPath id="fc"><path d="M30,15h30v15zv15h-30zh-30v-15zv-15h30z"/></clipPath><path d="M0,0v30h60v-30z" fill="#012169"/><path d="M0,0 60,30M60,0 0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 60,30M60,0 0,30" clip-path="url(#fc)" stroke="#C8102E" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></symbol>
+  <symbol id="f-ru" viewBox="0 0 60 40"><path fill="#fff" d="M0 0h60v14H0z"/><path fill="#0039A6" d="M0 13.3h60v14H0z"/><path fill="#D52B1E" d="M0 26.7h60V40H0z"/></symbol>
+</svg>
+
+<header class="menubar">
+  <nav aria-label="Main" data-i18n-attr="aria-label:nav.label">
+    <ul>
+      <li><a class="brand" href="#top">keygloss</a></li>
+      <li><a href="#features" data-i18n="nav.features">features</a></li>
+      <li><a href="#privacy" data-i18n="nav.privacy">privacy</a></li>
+      <li><a href="#install" data-i18n="nav.install">install</a></li>
+      <li><a href="#faq" data-i18n="nav.faq">faq</a></li>
+    </ul>
+  </nav>
+  <span class="mark" aria-hidden="true"><img src="img/keygloss.svg" alt=""></span>
+  <div class="status">
+    <div class="lang">
+      <button type="button" class="lang-btn" id="langBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Language: English" data-i18n-attr="aria-label:lang.label">EN</button>
+      <ul class="lang-list" id="langList" role="listbox" tabindex="-1" aria-label="Language" hidden>
+        <li role="option" id="lang-en" data-lang="en" aria-selected="true"><svg aria-hidden="true"><use href="#f-en"/></svg>English</li>
+        <li role="option" id="lang-ru" data-lang="ru" aria-selected="false"><svg aria-hidden="true"><use href="#f-ru"/></svg>Русский</li>
+      </ul>
+    </div>
+    <span class="gh-pair">
+      <a href="https://github.com/xArchange1/keygloss" aria-label="Keygloss on GitHub" data-i18n-attr="aria-label:gh.label"><svg class="ico" aria-hidden="true"><use href="#i-gh"/></svg></a>
+      <a class="num" data-stars href="https://github.com/xArchange1/keygloss/stargazers" hidden></a>
+    </span>
+    <a class="heart" href="https://boosty.to/xarchange1/donate" aria-label="Sponsor" data-i18n-attr="aria-label:sponsor"><svg class="ico" aria-hidden="true"><use href="#i-heart"/></svg></a>
+    <a href="#youtube-todo" aria-label="YouTube"><svg class="ico" aria-hidden="true"><use href="#i-yt"/></svg></a>
+    <a href="#telegram-todo" aria-label="Telegram"><svg class="ico" aria-hidden="true"><use href="#i-tg"/></svg></a>
+    <a class="get" href="#install"><svg class="ico" aria-hidden="true"><use data-os-glyph href="#i-win"/></svg><span data-i18n="nav.get">get keygloss</span></a>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero">
+  <div class="collage" aria-hidden="true">
+    <div class="c tag" style="--x:312;--y:26"><span>RU ↔ EN</span></div>
+
+    <div class="c" style="--x:44;--y:76;width:232px">
+      <div class="win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="x">x</span></div>
+        <div class="win-body"><div class="kgp">
+          <div class="row"><span data-i18n="ui.auto">Automatic layout correction</span><i class="tg"></i></div>
+          <div class="row"><span data-i18n="ui.fly">Fix as you type</span><i class="tg"></i></div>
+          <div class="row"><span class="dim" data-i18n="ui.multi">Convert multiple words</span><i class="tg off"></i></div>
+          <div class="row"><span data-i18n="ui.typos">Fix typos</span><i class="tg"></i></div>
+          <div class="row"><span data-i18n="ui.caps">Two leading capitals</span><i class="tg"></i></div>
+        </div></div></div>
+      <span class="cap" data-i18n="cap.toggles">layout-switching.png</span>
+    </div>
+
+    <div class="c keycap" style="--x:308;--y:222;transform:rotate(-7deg)"><b>G</b><i>П</i></div>
+
+    <div class="c" style="--x:492;--y:26">
+      <div class="win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t" data-i18n="ui.after">After a word</span></div>
+        <div class="win-body"><span class="crop lay chips" style="--s:.39"></span></div></div>
+      <span class="cap" data-i18n="cap.trig">triggers.png</span>
+    </div>
+
+    <img class="c icon-tile" style="--x:861;--y:114" src="img/icon.png" alt="">
+    <span class="c dot" style="--x:806;--y:196"></span>
+
+    <div class="c" style="--x:984;--y:63;width:268px">
+      <div class="win wn"><div class="win-bar"><img src="img/keygloss.svg" alt=""><span class="t">Keygloss</span>
+        <span class="caps"><i><svg viewBox="0 0 10 10"><path d="M0 5h10"/></svg></i><i><svg viewBox="0 0 10 10"><path d="M.5.5h9v9h-9z"/></svg></i><i><svg viewBox="0 0 10 10"><path d="m0 0 10 10M10 0 0 10"/></svg></i></span></div>
+        <div class="win-body"><div class="kgp">
+          <div class="row"><span data-i18n="ui.manual">Manual switch and undo</span><span class="sel"><span class="keys"><span class="kc">Ctrl</span>+<span class="kc">Alt</span></span></span></div>
+          <div class="row"><span data-i18n="ui.learnUndo">Learn from undo</span><i class="tg"></i></div>
+          <div class="row"><span data-i18n="ui.learnSwitch">Learn from switch</span><i class="tg"></i></div>
+        </div></div></div>
+      <span class="cap" data-i18n="cap.hot">hotkey.png</span>
+    </div>
+    <div class="c sticky" style="--x:1238;--y:150"><s>ghbdtn</s> → <b>привет</b></div>
+    <div class="c photo" style="--x:1300;--y:36;transform:rotate(3deg)"><span class="crop lay hot" style="--s:.33"></span></div>
+
+    <div class="c" style="--x:34;--y:366;width:236px">
+      <div class="win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="x">x</span></div>
+        <div class="win-body"><div class="kgp" style="margin-bottom:5px">
+          <div class="snip-head"><span data-i18n="ui.replace">Replace</span><span data-i18n="ui.with">With</span></div>
+          <div class="snip-row"><span data-i18n="ui.br">br</span><span data-i18n="ui.regards">Best regards, Alex</span></div>
+        </div><span class="crop snp ex" style="--s:.35"></span></div></div>
+      <span class="cap" data-i18n="cap.snip">snippets.png</span>
+    </div>
+    <div class="c lo" style="--x:176;--y:604;transform:rotate(-12deg);display:flex;gap:6px"><span class="keycap wide">Ctrl</span><span class="keycap wide">Alt</span></div>
+
+    <div class="c keycap" style="--x:1150;--y:436;transform:rotate(6deg)"><b>H</b><i>Р</i></div>
+    <div class="c" style="--x:1222;--y:340;width:190px">
+      <div class="win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="x">x</span></div>
+        <div class="win-body"><div class="kgp hist">
+          <div class="row"><div class="when" data-i18n="ui.when1">November 15, 10:20 AM</div><span class="from">ghbdtn</span><span class="arrow">→</span><span class="to">привет</span><br><span class="never"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg><span data-i18n="ui.never">Never translate</span></span></div>
+          <div class="row"><div class="when" data-i18n="ui.when2">November 15, 10:14 AM</div><span class="from">руддщ</span><span class="arrow">→</span><span class="to">hello</span><br><span class="never"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg><span data-i18n="ui.never">Never translate</span></span></div>
+          <div class="row"><div class="when" data-i18n="ui.when3">November 15, 9:58 AM</div><span class="from">cgfcb,j</span><span class="arrow">→</span><span class="to">спасибо</span><br><span class="never"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg><span data-i18n="ui.never">Never translate</span></span></div>
+        </div></div></div>
+      <span class="cap" data-i18n="cap.hist">history.png</span>
+    </div>
+  </div>
+
+  <div class="mini top" aria-hidden="true">
+    <div class="keycap" style="transform:rotate(-7deg)"><b>G</b><i>П</i></div>
+    <div class="win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t" data-i18n="ui.after">After a word</span></div>
+      <div class="win-body"><span class="crop lay chips" style="--s:.345"></span></div></div>
+    <div class="keycap" style="transform:rotate(6deg)"><b>H</b><i>Р</i></div>
+  </div>
+
+  <div class="hero-core">
+    <h1>keygloss</h1>
+    <p class="tagline" data-i18n="hero.tag">wrong layout? already fixed.</p>
+    <div class="ctas">
+      <a class="pill primary" id="ctaMain" href="https://github.com/xArchange1/keygloss/releases/latest"><svg class="ico" aria-hidden="true"><use data-os-glyph href="#i-win"/></svg><span id="ctaMainT">download for windows</span></a>
+      <a class="pill" id="ctaOther" href="#install"><svg class="ico" aria-hidden="true"><use href="#i-desk"/></svg><span data-i18n="hero.other">other platforms</span></a>
+    </div>
+    <p class="under" data-i18n="hero.under">100% free and open source. fixes your text as you type, ru ↔ en.</p>
+    <p class="neutral" data-neutral hidden data-i18n="os.neutral">keygloss is a desktop app, for windows, macos and linux.</p>
+  </div>
+
+  <div class="mini bot" aria-hidden="true">
+    <div class="sticky"><s>ghbdtn</s> → <b>привет</b></div>
+    <div class="tag"><span>RU ↔ EN</span></div>
+  </div>
+
+  <figure class="demo win" style="margin-bottom:0">
+    <div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t" data-i18n="demo.title">a message, typed without looking at the layout</span></div>
+    <div class="demo-body">
+      <span class="demo-label" data-i18n="demo.typed">what you typed</span>
+      <span class="typed">ghbdtn, rfr ltkf?</span>
+      <span class="demo-label" style="margin-top:26px" data-i18n="demo.got">what ends up in the message</span>
+      <span class="fixed">привет, как дела?<span class="caret"></span></span>
+      <div class="demo-status"><span class="badge">EN → RU</span><span data-i18n="demo.status">each word is fixed as you finish it, and the layout switches to match.</span></div>
+    </div>
+    <figcaption class="cap" style="position:absolute;left:0;right:0;top:100%" data-i18n="cap.demo">hello.txt</figcaption>
+  </figure>
+</section>
+
+<section class="rows wrap" id="features">
+  <h2 class="vh" data-i18n="rows.h">What Keygloss does</h2>
+
+  <article class="frow">
+    <div class="ftext">
+      <span class="seq" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="sp"></i><i></i><i></i></span>
+      <span class="bubble"><s>ghbdtn</s> → привет</span>
+      <div><h3 data-i18n="r1.h">fixed by the time you hit space</h3>
+      <p data-i18n="r1.p">type ghbdtn, press space, and the word becomes привет. the layout switches too, so the next word comes out right the first time.</p></div>
+    </div>
+    <div class="win fwin"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t" data-i18n="ui.pageLayout">Layout switching</span></div>
+      <div class="wall"><div class="inner">
+        <div class="kgp">
+          <div class="row"><span data-i18n="ui.auto">Automatic layout correction</span><i class="tg"></i></div>
+          <div class="row"><span data-i18n="ui.fly">Fix as you type</span><i class="tg"></i></div>
+          <div class="row"><span data-i18n="ui.short">Shortest word to fix</span><span class="sel">2</span></div>
+        </div></div>
+        <span class="crop lay trig tilt-r" style="--s:.39" role="img" aria-label="Triggers: after a word, on Space and Enter" data-i18n-attr="aria-label:alt.trig"></span>
+      </div></div>
+  </article>
+
+  <article class="frow flip">
+    <div class="ftext">
+      <span class="seq" aria-hidden="true"><i></i><i></i><i></i><i class="sp"></i><i class="on"></i><i class="on"></i></span>
+      <span class="bubble"><span class="kc">Ctrl</span>+<span class="kc">Alt</span></span>
+      <div><h3 data-i18n="r2.h">or do it yourself with one hotkey</h3>
+      <p data-i18n="r2.p">Ctrl + Alt switches the text by hand, and undoes a fix you did not want. keygloss can learn from what you undo. the hotkey is yours to change.</p></div>
+    </div>
+    <div class="win fwin"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t" data-i18n="ui.pageLayout">Layout switching</span></div>
+      <div class="wall b">
+        <span class="photo tilt-l"><span class="crop lay hot" style="--s:.63" role="img" aria-label="The hotkey setting: Ctrl + Alt" data-i18n-attr="aria-label:alt.hot"></span></span>
+        <div class="inner"><div class="kgp">
+          <div class="row"><span data-i18n="ui.manual">Manual switch and undo</span><span class="sel"><span class="keys"><span class="kc">Ctrl</span>+<span class="kc">Alt</span></span></span></div>
+          <div class="row"><span data-i18n="ui.learnUndo">Learn from undo</span><i class="tg"></i></div>
+          <div class="row"><span data-i18n="ui.learnSwitch">Learn from switch</span><i class="tg"></i></div>
+          <div class="row"><span data-i18n="ui.arrows">Arrow keys cancel the switch</span><i class="tg"></i></div>
+        </div></div>
+      </div></div>
+  </article>
+
+  <article class="frow">
+    <div class="ftext">
+      <span class="seq" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="sp"></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <span class="bubble"><span data-i18n="ui.br">br</span> → <span data-i18n="ui.regards">Best regards, Alex</span></span>
+      <div><h3 data-i18n="r3.h">snippets for what you type every day</h3>
+      <p data-i18n="r3.p">give a phrase a short abbreviation, type it, and it expands into the full text. layout and case do not matter: !test, !TEST and !еуые are the same snippet.</p></div>
+    </div>
+    <div class="win fwin"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t" data-i18n="ui.pageSnip">Snippets</span></div>
+      <div class="wall c2">
+        <span class="crop snp ex tilt-l" style="--s:.485" role="img" aria-label="Example snippets: !em, !ph, !adr, !web" data-i18n-attr="aria-label:alt.ex"></span>
+        <span class="crop snp greet tilt-r" style="--s:.425" role="img" aria-label="A snippet named Greeting with its text" data-i18n-attr="aria-label:alt.greet"></span>
+      </div></div>
+  </article>
+</section>
+
+<section class="privacy center" id="privacy">
+  <div class="arc" id="arcL" aria-hidden="true"></div>
+  <div class="arc" id="arcR" aria-hidden="true"></div>
+  <span class="eyebrow" data-i18n="priv.eyebrow">100% local</span>
+  <h2 class="vh" data-i18n="priv.h">Privacy: everything stays on this computer</h2>
+  <div class="notes win" style="text-align:left">
+    <div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t" data-i18n="priv.title">notes</span></div>
+    <div class="notes-body">
+      <p data-i18n="priv.p1">keygloss has to read your keystrokes to fix them, so here is exactly where they go: nowhere.</p>
+      <p data-i18n="priv.p2">your typing is processed on this computer only. there is no usage data and no telemetry.</p>
+      <p data-i18n="priv.p3">typed text is never logged. <mark>the only text it can keep is the history of recent automatic fixes, and that stays on this computer.</mark></p>
+      <p data-i18n="priv.p4">it goes online to check github for a newer release on startup, and when you click a link. nothing else.</p>
+      <p><span data-i18n="priv.p5">the startup check can be turned off in settings → general.</span><span class="caret"></span></p>
+      <div class="sig"><img src="img/icon.png" alt=""><span><strong>xArchange1,</strong><span data-i18n="priv.role">developer</span></span><span class="hand" aria-hidden="true">keygloss</span></div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule wrap">
+
+<section class="more">
+  <div class="wrap center">
+    <span class="eyebrow" data-i18n="more.eyebrow">features</span>
+    <div class="marq" id="marq">
+      <span class="ghost l" aria-hidden="true" data-i18n="more.h">and the small things</span>
+      <h2 id="marqH"><span data-i18n="more.h">and the small things</span><span class="sticker" aria-hidden="true" data-i18n="more.sticker">open<br>source</span></h2>
+      <span class="ghost r" aria-hidden="true" data-i18n="more.h">and the small things</span>
+    </div>
+
+    <div class="grid" style="text-align:left">
+      <div class="col">
+        <article class="card win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="x">x</span></div><div class="card-body">
+          <div class="card-top"><span class="av"><svg viewBox="0 0 24 24"><path d="M4 17 8 6l4 11M5.500 13h5M14 14l3 3 5-7"/></svg></span><span><strong data-i18n="ui.typos">Fix typos</strong><small data-i18n="ui.pathFix">layout switching › text fixes</small></span><i class="tg"></i></div>
+          <p data-i18n="g1">typo fixes run alongside the layout fixes, in the same pass.</p></div></article>
+        <article class="card win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="x">x</span></div><div class="card-body">
+          <div class="card-top"><span class="av"><svg viewBox="0 0 24 24"><path d="M3 18 7 7l4 11M4.500 14h5M14 18l3-8 3 8M15.200 15h3.600"/></svg></span><span><strong data-i18n="ui.caps">Two leading capitals</strong><small data-i18n="ui.pathFix">layout switching › text fixes</small></span><i class="tg"></i></div>
+          <p data-i18n="g2">held shift a beat too long? HEllo goes back to Hello.</p></div></article>
+        <article class="card win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="x">x</span></div><div class="card-body">
+          <div class="card-top"><span class="av"><svg viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.500" cy="8.500" r="1.200"/></svg></span><span><strong data-i18n="ui.pageExc">Exceptions</strong><small data-i18n="ui.pathApp">per app</small></span></div>
+          <p data-i18n="g3">tell keygloss which apps to leave alone.</p></div></article>
+      </div>
+      <div class="col">
+        <article class="card win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="x">x</span></div><div class="card-body">
+          <div class="card-top"><span class="av"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span><strong data-i18n="ui.pageHist">History</strong><small data-i18n="ui.pathLocal">local only</small></span></div>
+          <p data-i18n="g4">a list of recent automatic fixes, stored only on this computer. mark a word “never translate” right from the list.</p></div></article>
+        <article class="card win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="x">x</span></div><div class="card-body">
+          <div class="card-top"><span class="av"><svg viewBox="0 0 24 24"><path d="M3 17 6.500 8l3.500 9M4.200 14h4.600M14 8h7M17.500 8v9"/></svg></span><span><strong data-i18n="ui.case">Change case of the selection</strong><small><span class="keys"><span class="kc">Ctrl</span>+<span class="kc">Alt</span>+<span class="kc">U</span></span></small></span></div>
+          <p data-i18n="g5">select text, press the shortcut, and its case changes.</p></div></article>
+        <article class="card win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="x">x</span></div><div class="card-body">
+          <div class="card-top"><span class="av"><svg viewBox="0 0 24 24"><path d="M4 8h16M4 16h16M8 4v16"/></svg></span><span><strong data-i18n="ui.short">Shortest word to fix</strong><small data-i18n="ui.pathLay">layout switching</small></span><span class="sel">2</span></div>
+          <p data-i18n="g6">you choose how short a word can be before keygloss touches it.</p></div></article>
+      </div>
+      <div class="col">
+        <article class="card win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="x">x</span></div><div class="card-body">
+          <div class="card-top"><span class="av"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg></span><span><strong data-i18n="ui.updates">Updates</strong><small data-i18n="ui.pathGen">general</small></span></div>
+          <p data-i18n="g7">updates come from github releases. pick the stable or the beta channel.</p></div></article>
+        <article class="card win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="x">x</span></div><div class="card-body">
+          <div class="card-top"><span class="av"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.200 3 14.800 0 18M12 3c-3 3.200-3 14.800 0 18"/></svg></span><span><strong data-i18n="ui.uilang">Interface language</strong><small data-i18n="ui.pathGen">general</small></span></div>
+          <p data-i18n="g8">the app itself speaks english and russian.</p></div></article>
+        <article class="card win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="x">x</span></div><div class="card-body">
+          <div class="card-top"><span class="av"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M8 14h8"/></svg></span><span><strong data-i18n="ui.both">Windows, macOS, Linux</strong><small data-i18n="ui.pathSame">the same app</small></span></div>
+          <p data-i18n="g9">one app for all three. the linux build is experimental: kde plasma 6 on wayland.</p></div></article>
+      </div>
+    </div>
+
+    <div class="starbar">
+      <img class="tile" src="img/icon.png" alt="">
+      <span data-i18n="bar.text">free, open source, mit licensed.</span>
+      <a href="https://github.com/xArchange1/keygloss" data-i18n="bar.link">see it on github</a>
+      <a data-stars-long href="https://github.com/xArchange1/keygloss/stargazers" hidden></a>
+    </div>
+  </div>
+</section>
+
+<section class="install" id="install">
+  <div class="wrap">
+    <div class="center head">
+      <span class="eyebrow" data-i18n="inst.eyebrow">install</span>
+      <h2 data-i18n="inst.h">keygloss, your way</h2>
+      <p class="sub" data-i18n="inst.sub">three ways to get it. all of them free.</p>
+      <div class="seg" role="tablist" aria-label="Platform" data-i18n-attr="aria-label:os.label">
+        <button type="button" role="tab" data-os="windows" aria-selected="true"><svg class="ico" aria-hidden="true"><use href="#i-win"/></svg>windows</button>
+        <button type="button" role="tab" data-os="macos" aria-selected="false" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-mac"/></svg>macos</button>
+        <button type="button" role="tab" data-os="linux" aria-selected="false" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-linux"/></svg>linux</button>
+      </div>
+      <p class="neutral" data-neutral hidden data-i18n="os.neutral">keygloss is a desktop app, for windows, macos and linux.</p>
+    </div>
+
+    <div class="plans">
+      <article class="plan win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span></div>
+        <div class="plan-top"><h3 data-i18n="p1.h">installer</h3><p data-i18n="p1.p">a regular setup file.</p><small data-i18n="p1.s">best if you like a download button</small></div>
+        <div class="plan-mid"><div class="big" id="extBig">.exe</div><p class="per" data-i18n="p1.per">from the latest github release</p>
+          <a class="pill sm" id="dlLink" href="https://github.com/xArchange1/keygloss/releases/latest">download installer (.exe)</a></div>
+        <ul><li class="lab" data-i18n="p.steps">steps</li><li data-i18n="p1.a">open the release page</li><li id="p1b">download the .exe file</li><li id="p1c">run it</li></ul>
+      </article>
+      <article class="plan pop win"><span class="pop-tag" data-i18n="p2.tag">quickest</span><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span></div>
+        <div class="plan-top"><h3 data-i18n="p2.h">package manager</h3><p data-i18n="p2.p">one line in a terminal.</p><small data-i18n="p2.s">best if a terminal is already open</small></div>
+        <div class="plan-mid"><div class="big" id="pmBig">winget</div><p class="per" id="pmPer">comes with windows</p>
+          <a class="pill sm primary" href="#term" data-i18n="p2.btn">see the command</a></div>
+        <ul><li class="lab" data-i18n="p.steps">steps</li><li data-i18n="p2.a">open a terminal</li><li data-i18n="p2.b">paste the command</li><li data-i18n="p2.c">press enter</li></ul>
+      </article>
+      <article class="plan win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span></div>
+        <span class="capstick tag" aria-hidden="true"><span>MIT</span></span>
+        <div class="plan-top"><h3 data-i18n="p3.h">source</h3><p data-i18n="p3.p">read it before you run it.</p><small data-i18n="p3.s">best if you trust code more than promises</small></div>
+        <div class="plan-mid"><div class="big">MIT</div><p class="per" data-i18n="p3.per">every line is public</p>
+          <a class="pill sm" href="https://github.com/xArchange1/keygloss"><svg class="ico" aria-hidden="true"><use href="#i-gh"/></svg><span data-i18n="p3.btn">open github</span></a></div>
+        <ul><li class="lab" data-i18n="p.inside">inside</li><li data-i18n="p3.a">the whole app, mit licensed</li><li data-i18n="p3.b">bug reports through github issues</li><li data-i18n="p3.c">release notes on github</li></ul>
+      </article>
+    </div>
+
+    <div class="term" id="term">
+      <div class="win-bar"><span class="dots"><i></i><i></i><i></i></span></div>
+      <div class="term-body">
+        <div class="txt"><code class="cmd" id="cmd">winget install xArchange1.keygloss</code>
+          <p id="cmdHelp">run this in a terminal on windows to install keygloss with winget.</p>
+          <p class="os-note" id="osNote" hidden></p>
+          <p class="direct"><span data-i18n="inst.or">or</span> <a id="dlLink2" href="https://github.com/xArchange1/keygloss/releases/latest">download installer (.exe)</a></p></div>
+        <button type="button" class="pill" data-copy aria-live="polite"><span data-copy-label>copy the command</span></button>
+      </div>
+    </div>
+    <p class="foot" data-i18n="inst.foot">* keygloss checks github for a newer release on startup. you can turn that off in settings → general.</p>
+    <hr class="rule">
+  </div>
+</section>
+
+<section class="faq" id="faq">
+  <div class="wrap center">
+    <span class="eyebrow">faq</span>
+    <h2 data-i18n="faq.h">frequently asked questions</h2>
+    <p class="sub" data-i18n="faq.sub">what to know about keygloss, privacy, and getting started.</p>
+    <span class="photo" aria-hidden="true"><span class="crop snp sc" style="--s:.33"></span></span>
+    <div class="qa" style="text-align:left">
+      <details open><summary data-i18n="q1">what is keygloss?</summary><p data-i18n="a1">a small app for windows, macos and linux that fixes text typed in the wrong keyboard layout. type ghbdtn and you get привет, and the layout switches to match. it works between russian and english, as you type or with a hotkey.</p></details>
+      <details><summary data-i18n="q2">does it send what i type anywhere?</summary><p data-i18n="a2">no. typing is processed on this computer only. keygloss collects no usage data and has no telemetry, and typed text is never written to its log.</p></details>
+      <details><summary data-i18n="q3">when does it connect to the internet?</summary><p data-i18n="a3">on startup, to check github for a newer release, and when you click a link in the app. the startup check can be turned off in settings → general.</p></details>
+      <details><summary data-i18n="q4">what does it remember?</summary><p data-i18n="a4">only the history of recent automatic fixes, and only if you turn it on. it is stored on this computer and stays there.</p></details>
+      <details><summary data-i18n="q5">what if it changes a word i meant?</summary><p data-i18n="a5">press Ctrl + Alt to undo the fix. you can also mark a word “never translate” in history, or add an app to the exceptions so keygloss stays out of it.</p></details>
+      <details><summary data-i18n="q6">which languages does it work with?</summary><p data-i18n="a6">it converts between the russian and english layouts. the app's own interface is available in english and russian.</p></details>
+      <details><summary data-i18n="q7">which systems does it run on?</summary><p data-i18n="a7">windows, macos and linux. the linux build is experimental and made for kde plasma 6 on wayland. there is no mobile version.</p></details>
+      <details><summary data-i18n="q8">is it free?</summary><p data-i18n="a8">yes. keygloss is free and open source under the mit licence. if it saves you time, you can <a href="https://boosty.to/xarchange1/donate">sponsor the project</a>.</p></details>
+      <details><summary data-i18n="q9">how does it update?</summary><p data-i18n="a9">from github releases. you choose between the stable and the beta channel in settings. on linux the app tells you about a new release and opens its page.</p></details>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="fcols">
+      <div><h3 data-i18n="f.product">product</h3><ul>
+        <li><a href="#features" data-i18n="nav.features">features</a></li>
+        <li><a href="#privacy" data-i18n="nav.privacy">privacy</a></li>
+        <li><a href="#install" data-i18n="nav.install">install</a></li>
+        <li><a href="#faq" data-i18n="nav.faq">faq</a></li></ul></div>
+      <div><h3 data-i18n="f.res">resources</h3><ul>
+        <li><a href="https://github.com/xArchange1/keygloss"><svg class="ico" aria-hidden="true"><use href="#i-gh"/></svg>github</a> <a class="num" data-stars-star href="https://github.com/xArchange1/keygloss/stargazers" hidden></a></li>
+        <li><a href="https://github.com/xArchange1/keygloss/releases" data-i18n="f.rel">releases</a></li>
+        <li><a href="https://github.com/xArchange1/keygloss/issues" data-i18n="f.bug">report a bug</a></li></ul></div>
+      <div><h3 data-i18n="f.connect">connect</h3><ul>
+        <li><a href="#youtube-todo"><svg class="ico" aria-hidden="true"><use href="#i-yt"/></svg>youtube</a></li>
+        <li><a href="#telegram-todo"><svg class="ico" aria-hidden="true"><use href="#i-tg"/></svg>telegram</a></li>
+        <li><a class="heart" href="https://boosty.to/xarchange1/donate"><svg class="ico" aria-hidden="true"><use href="#i-heart"/></svg><span data-i18n="f.sponsor">sponsor</span></a></li></ul></div>
+      <div><h3 data-i18n="f.note">privacy note</h3><p data-i18n="f.noteP">*keygloss processes your typing on this computer only. typed text is never logged.*</p></div>
+    </div>
+    <div class="pix-wrap" aria-hidden="true">
+      <div class="keycap k1"><b>G</b><i>П</i></div>
+      <div class="keycap k2"><b>H</b><i>Р</i></div>
+      <div class="pix" id="pix"></div>
+    </div>
+    <p class="copy">© 2026 xArchange1 · <span data-i18n="f.mit">mit licence</span></p>
+  </div>
+</footer>
+
+<script is:inline>
+(function(){
+  var root=document.documentElement, qs=new URLSearchParams(location.search);
+  function $(s,c){return (c||document).querySelector(s)}
+  function $$(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s))}
+  function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+
+  /* theme: ?theme= wins, otherwise the system setting */
+  var th=qs.get('theme'); if(th==='dark'||th==='light') root.setAttribute('data-theme',th);
+
+  /* ---------- i18n: English lives in the markup, Russian here ---------- */
+  var RU={
+    'nav.label':'Основное','nav.features':'возможности','nav.privacy':'приватность','nav.install':'установка','nav.faq':'вопросы','nav.get':'скачать keygloss',
+    'lang.label':'Язык: русский','gh.label':'Keygloss на GitHub','sponsor':'Поддержать',
+    'ui.auto':'Автоматическое исправление раскладки','ui.fly':'Исправлять на лету','ui.multi':'Переключать несколько слов','ui.typos':'Исправлять опечатки','ui.caps':'Две заглавные подряд',
+    'ui.after':'После слова','ui.manual':'Ручное переключение и отмена','ui.learnUndo':'Учиться на отмене','ui.learnSwitch':'Учиться на переключении','ui.arrows':'Стрелки отменяют переключение',
+    'ui.replace':'Что','ui.with':'На что','ui.br':'сув','ui.regards':'С уважением, Алекс','ui.never':'Никогда не менять',
+    'ui.when1':'15 ноября, 10:20','ui.when2':'15 ноября, 10:14','ui.when3':'15 ноября, 9:58',
+    'ui.pageLayout':'Переключение раскладки','ui.pageSnip':'Автозамена','ui.pageExc':'Исключения','ui.pageHist':'История','ui.short':'Минимальная длина слова','ui.case':'Менять регистр выделенного',
+    'ui.updates':'Обновления','ui.uilang':'Язык интерфейса','ui.both':'Windows, macOS, Linux',
+    'ui.pathFix':'переключение раскладки › правка текста','ui.pathApp':'по приложениям','ui.pathLocal':'только локально','ui.pathLay':'переключение раскладки','ui.pathGen':'общие','ui.pathSame':'одно и то же приложение',
+    'cap.toggles':'раскладка.png','cap.trig':'срабатывание.png','cap.hot':'сочетание.png','cap.snip':'автозамена.png','cap.hist':'история.png','cap.demo':'привет.txt',
+    'hero.tag':'хватит писать ghbdtn','hero.other':'другие платформы','hero.under':'бесплатно, с открытым кодом. сам исправит текст, пока вы печатаете.','inst.or':'или',
+    'os.neutral':'keygloss работает на компьютере: windows, macos и linux.','os.label':'Платформа',
+    'demo.title':'сообщение, набранное без оглядки на раскладку','demo.typed':'что вы набрали','demo.got':'что оказалось в сообщении','demo.status':'каждое слово исправляется, как только вы его закончили, и раскладка переключается следом.',
+    'rows.h':'Что умеет Keygloss',
+    'r1.h':'исправлено к тому моменту, как вы нажали пробел','r1.p':'наберите ghbdtn, нажмите пробел, и слово превратится в привет. раскладка тоже переключится, так что следующее слово сразу выйдет правильным.',
+    'r2.h':'или сами, одним сочетанием','r2.p':'Ctrl + Alt переключает текст вручную и отменяет исправление, которое вам не нужно. keygloss умеет учиться на ваших отменах. сочетание можно поменять.',
+    'r3.h':'автозамена для того, что вы печатаете каждый день','r3.p':'дайте фразе короткое сокращение, наберите его, и оно развернётся в полный текст. раскладка и регистр не важны: !test, !TEST и !еуые считаются одним сокращением.',
+    'alt.trig':'Срабатывание: после слова, по пробелу и Enter','alt.hot':'Настройка сочетания: Ctrl + Alt','alt.ex':'Примеры сокращений: !em, !ph, !adr, !web','alt.greet':'Сниппет Greeting и его текст',
+    'priv.eyebrow':'100% локально','priv.h':'Приватность: всё остаётся на этом компьютере','priv.title':'заметки',
+    'priv.p1':'чтобы исправлять нажатия, keygloss должен их читать. поэтому прямо: никуда они не уходят.',
+    'priv.p2':'набранное обрабатывается только на этом компьютере. никаких данных об использовании и никакой телеметрии.',
+    'priv.p3':'набранный текст не пишется в журнал. <mark>единственный текст, который он может хранить, это история последних автоматических исправлений, и она остаётся на этом компьютере.</mark>',
+    'priv.p4':'в сеть он выходит, чтобы при запуске проверить на github новую версию, и когда вы нажимаете на ссылку. больше ни за чем.',
+    'priv.p5':'проверку при запуске можно выключить: настройки → общие.','priv.role':'разработчик',
+    'more.eyebrow':'возможности','more.h':'и мелочи','more.sticker':'открытый<br>код',
+    'g1':'опечатки исправляются вместе с раскладкой, за один проход.','g2':'задержали shift на мгновение дольше? ПРивет снова станет Привет.','g3':'укажите приложения, в которые keygloss не должен вмешиваться.',
+    'g4':'список последних автоматических исправлений, хранится только на этом компьютере. слово можно пометить «никогда не менять» прямо в списке.','g5':'выделите текст, нажмите сочетание, и регистр изменится.','g6':'вы сами решаете, насколько коротким может быть слово, чтобы keygloss его трогал.',
+    'g7':'обновления приходят из релизов на github. выберите стабильный канал или бета.','g8':'само приложение говорит на русском и английском.','g9':'одно приложение для всех трёх. сборка для linux экспериментальная: kde plasma 6 на wayland.',
+    'bar.text':'бесплатно, с открытым кодом, лицензия mit.','bar.link':'посмотреть на github',
+    'inst.eyebrow':'установка','inst.h':'keygloss, как вам удобно','inst.sub':'три способа его получить. все бесплатные.',
+    'p1.h':'установщик','p1.p':'обычный установочный файл.','p1.s':'если вам привычнее кнопка «скачать»','p1.per':'из последнего релиза на github','p1.a':'откройте страницу релиза',
+    'p.steps':'шаги','p.inside':'внутри',
+    'p2.tag':'быстрее всего','p2.h':'менеджер пакетов','p2.p':'одна строка в терминале.','p2.s':'если терминал уже открыт','p2.a':'откройте терминал','p2.b':'вставьте команду','p2.c':'нажмите enter','p2.btn':'к команде',
+    'p3.h':'исходный код','p3.p':'прочитайте, прежде чем запускать.','p3.s':'если коду вы верите больше, чем обещаниям','p3.per':'каждая строка открыта','p3.btn':'открыть github','p3.a':'всё приложение, лицензия mit','p3.b':'сообщения об ошибках через github issues','p3.c':'заметки к выпускам на github',
+    'inst.foot':'* при запуске keygloss проверяет на github, нет ли новой версии. это можно выключить: настройки → общие.',
+    'faq.h':'частые вопросы','faq.sub':'что стоит знать о keygloss, приватности и первых шагах.',
+    'q1':'что такое keygloss?','a1':'небольшое приложение для windows, macos и linux, которое исправляет текст, набранный не в той раскладке. набираете ghbdtn и получаете привет, а раскладка переключается следом. работает между русской и английской раскладками, на лету или по сочетанию клавиш.',
+    'q2':'он куда-нибудь отправляет то, что я печатаю?','a2':'нет. набранное обрабатывается только на этом компьютере. keygloss не собирает данные об использовании, в нём нет телеметрии, а набранный текст не попадает в журнал.',
+    'q3':'когда он выходит в интернет?','a3':'при запуске, чтобы проверить на github новую версию, и когда вы нажимаете на ссылку в приложении. проверку при запуске можно выключить: настройки → общие.',
+    'q4':'что он запоминает?','a4':'только историю последних автоматических исправлений, и только если вы её включите. она хранится на этом компьютере и там остаётся.',
+    'q5':'а если он изменит слово, которое я и хотел набрать?','a5':'нажмите Ctrl + Alt, чтобы отменить исправление. ещё слово можно пометить «никогда не менять» в истории или добавить приложение в исключения, и keygloss не будет в него вмешиваться.',
+    'q6':'с какими языками он работает?','a6':'он переводит текст между русской и английской раскладками. интерфейс самого приложения доступен на русском и английском.',
+    'q7':'на каких системах он работает?','a7':'windows, macos и linux. сборка для linux экспериментальная и рассчитана на kde plasma 6 на wayland. версии для телефонов нет.',
+    'q8':'он бесплатный?','a8':'да. keygloss бесплатный, с открытым кодом под лицензией mit. если он экономит вам время, можно <a href="https://boosty.to/xarchange1/donate">поддержать проект</a>.',
+    'q9':'как он обновляется?','a9':'из релизов на github. стабильный или бета-канал выбирается в настройках. на linux приложение сообщит о новой версии и откроет её страницу.',
+    'f.product':'продукт','f.res':'ресурсы','f.rel':'релизы','f.bug':'сообщить об ошибке','f.connect':'на связи','f.sponsor':'поддержать','f.note':'о приватности',
+    'f.noteP':'*keygloss обрабатывает набранное только на этом компьютере. набранный текст не пишется в журнал.*','f.mit':'лицензия mit'
+  };
+  var EN={};
+  $$('[data-i18n]').forEach(function(el){var k=el.getAttribute('data-i18n'); if(!(k in EN)) EN[k]=el.innerHTML});
+  $$('[data-i18n-attr]').forEach(function(el){var p=el.getAttribute('data-i18n-attr').split(':'); EN[p[1]]=el.getAttribute(p[0])});
+  EN['lang.label']='Language: English';
+
+  /* strings that depend on the platform */
+  var SPONSOR='https://boosty.to/xarchange1/donate';
+  var OS={
+    en:{main:{windows:'download for windows',macos:'download for mac',linux:'download for linux'},
+        dl:{windows:'download installer (.exe)',macos:'download .dmg',linux:'download .deb / .rpm'},
+        file:{windows:'download the .exe file',macos:'download the .dmg file',linux:'download the .deb or .rpm file'},
+        run:{windows:'run it',macos:'drag keygloss to applications',linux:'install it with your package manager'},
+        per:{windows:'comes with windows',macos:'needs homebrew',linux:'the install script from the repository'},
+        help:{windows:'run this in a terminal on windows to install keygloss with winget.',macos:'run this in a terminal on a mac to install keygloss with homebrew.',linux:'run this in a terminal to install or update keygloss from the latest stable release.'},
+        note:{windows:'',macos:'the macos build is not notarized yet. on first launch, allow it in system settings > privacy &amp; security, then grant accessibility. <a href="'+SPONSOR+'">sponsor the project</a> to help fund an apple developer id.',linux:'experimental. kde plasma 6 on wayland.'},
+        copy:'copy the command',copied:'copied',stars:function(n){return n+(n===1?' star':' stars')}},
+    ru:{main:{windows:'скачать для windows',macos:'скачать для mac',linux:'скачать для linux'},
+        dl:{windows:'скачать установщик (.exe)',macos:'скачать .dmg',linux:'скачать .deb / .rpm'},
+        file:{windows:'скачайте файл .exe',macos:'скачайте файл .dmg',linux:'скачайте файл .deb или .rpm'},
+        run:{windows:'запустите его',macos:'перетащите keygloss в «программы»',linux:'установите его менеджером пакетов'},
+        per:{windows:'уже есть в windows',macos:'нужен homebrew',linux:'установочный скрипт из репозитория'},
+        help:{windows:'выполните это в терминале windows, чтобы установить keygloss через winget.',macos:'выполните это в терминале на mac, чтобы установить keygloss через homebrew.',linux:'выполните это в терминале, чтобы установить или обновить keygloss из последнего стабильного релиза.'},
+        note:{windows:'',macos:'сборка для macos пока не нотаризована. при первом запуске разрешите её в системных настройках > конфиденциальность и безопасность, затем выдайте доступ в «универсальном доступе». <a href="'+SPONSOR+'">поддержите проект</a>, чтобы помочь оплатить apple developer id.',linux:'экспериментально. kde plasma 6 на wayland.'},
+        copy:'скопировать команду',copied:'скопировано',stars:function(n){var a=n%10,b=n%100;return n+(a===1&&b!==11?' звезда':(a>=2&&a<=4&&(b<10||b>=20)?' звезды':' звёзд'))}}
+  };
+  var CMD={windows:'winget install xArchange1.keygloss',macos:'brew install --cask xArchange1/tap/keygloss',linux:'curl -fsSL https://raw.githubusercontent.com/xArchange1/keygloss/main/packaging/linux/install.sh | sh'};
+  var GLYPH={windows:'#i-win',macos:'#i-mac',linux:'#i-linux'}, EXT={windows:'.exe',macos:'.dmg',linux:'.deb'}, PM={windows:'winget',macos:'brew',linux:'curl'};
+
+  /* ---------- platform ---------- */
+  function detectOS(){
+    var n=navigator, p=((n.userAgentData&&n.userAgentData.platform)||'').toLowerCase(), ua=(n.userAgent||'').toLowerCase();
+    if(n.userAgentData&&n.userAgentData.mobile) return null;
+    if(/android|iphone|ipad|ipod|mobile/.test(ua)) return null;
+    if(p==='windows'||(!p&&/windows nt/.test(ua))) return 'windows';
+    if(p==='macos'||(!p&&/macintosh|mac os x/.test(ua))) return (n.maxTouchPoints>1)?null:'macos'; /* iPadOS reports itself as a Mac */
+    if(/windows nt/.test(ua)) return 'windows';
+    if(/cros/.test(ua)) return null;
+    if(p==='linux'||/linux|x11/.test(ua)) return 'linux';
+    return null;
+  }
+  var qos=qs.get('os'), detected=(qos==='windows'||qos==='macos'||qos==='linux')?qos:(qos==='unknown'?null:detectOS());
+  var os=detected||'windows', lang='en', stars=null;
+
+  function render(){
+    var L=OS[lang], dict=lang==='ru'?RU:EN;
+    root.lang=lang;
+    $$('[data-i18n]').forEach(function(el){var k=el.getAttribute('data-i18n'); el.innerHTML=(dict[k]!==undefined?dict[k]:EN[k])});
+    $$('[data-i18n-attr]').forEach(function(el){var p=el.getAttribute('data-i18n-attr').split(':'); el.setAttribute(p[0],dict[p[1]]!==undefined?dict[p[1]]:EN[p[1]])});
+    $('#langBtn').textContent=lang.toUpperCase();
+    $$('#langList li').forEach(function(li){li.setAttribute('aria-selected',String(li.getAttribute('data-lang')===lang))});
+    $$('[data-os-glyph]').forEach(function(u){u.setAttribute('href',GLYPH[os])});
+    $('#ctaMainT').textContent=L.main[os];
+    $$('[data-neutral]').forEach(function(el){el.hidden=!!detected});
+    $$('.seg button').forEach(function(b){var on=b.getAttribute('data-os')===os; b.setAttribute('aria-selected',String(on)); b.tabIndex=on?0:-1});
+    $('#cmd').textContent=CMD[os];
+    $('#cmdHelp').textContent=L.help[os];
+    $('#dlLink').textContent=L.dl[os]; $('#dlLink2').textContent=L.dl[os];
+    $('#extBig').textContent=EXT[os];
+    $('#p1b').textContent=L.file[os]; $('#p1c').textContent=L.run[os];
+    $('#pmBig').textContent=PM[os];
+    var note=$('#osNote'); note.innerHTML=L.note[os]; note.hidden=!L.note[os];
+    $('#pmPer').textContent=L.per[os];
+    $$('[data-copy-label]').forEach(function(el){el.textContent=L.copy});
+    $$('[data-copy]').forEach(function(b){b.classList.remove('done')});
+    renderStars();
+    var h=$('#marqH'); if(h) $('#marq').style.setProperty('--half',(h.firstElementChild.offsetWidth/2)+'px');
+  }
+  function renderStars(){
+    var ok=typeof stars==='number'&&isFinite(stars)&&stars>=0, n=ok?stars.toLocaleString(lang==='ru'?'ru-RU':'en-US'):'';
+    var label=ok?OS[lang].stars(stars).replace(String(stars),n):'';
+    $$('[data-stars]').forEach(function(a){a.hidden=!ok; a.textContent=ok?'★ '+n:''; if(ok)a.setAttribute('aria-label',label)});
+    $$('[data-stars-star]').forEach(function(a){a.hidden=!ok; a.textContent=ok?'★ '+n:''; if(ok)a.setAttribute('aria-label',label)});
+    $$('[data-stars-long]').forEach(function(a){a.hidden=!ok; a.textContent=ok?'★ '+label:''});
+  }
+  function setOS(v){os=v; render()}
+  $$('.seg button').forEach(function(b,i,all){
+    b.addEventListener('click',function(){setOS(b.getAttribute('data-os'))});
+    b.addEventListener('keydown',function(e){
+      if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault(); var t=all[(i+(e.key==='ArrowRight'?1:all.length-1))%all.length]; setOS(t.getAttribute('data-os')); t.focus()}
+    });
+  });
+
+  /* ---------- copy ---------- */
+  $$('[data-copy]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var text=CMD[os], done=function(){
+        btn.classList.add('done'); $('[data-copy-label]',btn).textContent=OS[lang].copied;
+        clearTimeout(btn._t); btn._t=setTimeout(function(){btn.classList.remove('done'); $('[data-copy-label]',btn).textContent=OS[lang].copy},1800);
+      };
+      var fallback=function(){var ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); done()}catch(e){} ta.remove()};
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done,fallback); else fallback();
+    });
+  });
+
+  /* ---------- language picker ---------- */
+  var btn=$('#langBtn'), list=$('#langList'), opts=$$('li',list), active=0;
+  function mark(i){active=(i+opts.length)%opts.length; opts.forEach(function(o,j){o.classList.toggle('active',j===active)}); list.setAttribute('aria-activedescendant',opts[active].id)}
+  function openL(){list.hidden=false; btn.setAttribute('aria-expanded','true'); mark(Math.max(0,opts.findIndex(function(o){return o.getAttribute('data-lang')===lang}))); list.focus()}
+  function closeL(focus){list.hidden=true; btn.setAttribute('aria-expanded','false'); if(focus)btn.focus()}
+  function setLang(v,save){lang=v==='ru'?'ru':'en'; if(save)store('kg-lang',lang); render()}
+  btn.addEventListener('click',function(){list.hidden?openL():closeL()});
+  btn.addEventListener('keydown',function(e){if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault(); openL()}});
+  list.addEventListener('keydown',function(e){
+    if(e.key==='ArrowDown'){e.preventDefault(); mark(active+1)}
+    else if(e.key==='ArrowUp'){e.preventDefault(); mark(active-1)}
+    else if(e.key==='Home'){e.preventDefault(); mark(0)}
+    else if(e.key==='End'){e.preventDefault(); mark(opts.length-1)}
+    else if(e.key==='Enter'||e.key===' '){e.preventDefault(); setLang(opts[active].getAttribute('data-lang'),true); closeL(true)}
+    else if(e.key==='Escape'){e.preventDefault(); closeL(true)}
+    else if(e.key==='Tab'){closeL()}
+  });
+  opts.forEach(function(o,i){o.addEventListener('click',function(){setLang(o.getAttribute('data-lang'),true); closeL(true)}); o.addEventListener('mousemove',function(){mark(i)})});
+  document.addEventListener('click',function(e){if(!list.hidden&&!e.target.closest('.lang'))closeL()});
+
+  /* ---------- decorative keycaps ---------- */
+  function arc(el,pts,letters,n,mix){
+    var segs=[],total=0,i;
+    for(i=1;i<pts.length;i++){var d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]); segs.push(d); total+=d}
+    for(i=0;i<n;i++){
+      var t=i/(n-1)*total,s=0; while(s<segs.length-1&&t>segs[s]){t-=segs[s];s++}
+      var f=t/segs[s],x=pts[s][0]+(pts[s+1][0]-pts[s][0])*f,y=pts[s][1]+(pts[s+1][1]-pts[s][1])*f,k=document.createElement('i'),p=i/(n-1);
+      k.textContent=letters[i%letters.length];
+      k.style.cssText='left:'+x.toFixed(0)+'px;top:'+y.toFixed(0)+'px;background:'+(i%4===3?mix(p):'var(--kg-raised)')+';opacity:'+Math.min(1,.12+p*2.6).toFixed(2);
+      el.appendChild(k);
+    }
+  }
+  arc($('#arcL'),[[-760,290],[-600,640],[-545,655],[-420,310],[-300,262],[-236,262]],['g','h','b','d','t','n'],30,function(p){
+    return 'color-mix(in oklab,var(--kg-accent) '+Math.round(18+p*62)+'%,color-mix(in oklab,var(--kg-detail) '+Math.round(40-p*40)+'%,var(--kg-raised)))'});
+  arc($('#arcR'),[[730,330],[600,640],[560,640],[440,300],[300,262],[166,262]],['п','р','и','в','е','т'],30,function(p){
+    return 'color-mix(in oklab,var(--kg-accent) '+Math.round(10+p*45)+'%,color-mix(in oklab,var(--kg-text) '+Math.round(26-p*20)+'%,var(--kg-raised)))'});
+
+  var F={k:['X....','X....','X..X.','X.X..','XX...','X.X..','X..X.','.....','.....'],
+         e:['.....','.....','.XXX.','X...X','XXXXX','X....','.XXXX','.....','.....'],
+         y:['.....','.....','X...X','X...X','X...X','.XXXX','....X','....X','.XXX.'],
+         g:['.....','.....','.XXXX','X...X','X...X','.XXXX','....X','....X','.XXX.'],
+         l:['XX...','.X...','.X...','.X...','.X...','.X...','.X...','.....','.....'],
+         o:['.....','.....','.XXX.','X...X','X...X','X...X','.XXX.','.....','.....'],
+         s:['.....','.....','.XXXX','X....','.XXX.','....X','XXXX.','.....','.....']};
+  var pix=$('#pix'), word='keygloss'.split('');
+  for(var r=0;r<9;r++) word.forEach(function(ch,ci){
+    for(var c=0;c<5;c++) if(F[ch][r][c]==='X'){var d=document.createElement('i'); d.style.gridColumn=String(ci*6+c+1); d.style.gridRow=String(r+1); pix.appendChild(d)}
+  });
+
+  /* ---------- start ---------- */
+  var ql=qs.get('lang'), saved=store('kg-lang');
+  lang=(ql==='ru'||ql==='en')?ql:(saved==='ru'||saved==='en')?saved:(/^ru/i.test(navigator.language||'')?'ru':'en');
+  render();
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(render);
+  window.addEventListener('resize',render);
+
+  var fake=qs.get('stars');
+  if(fake==='off'){/* screenshot the no-number state */}
+  else if(fake&&/^\d+$/.test(fake)){stars=parseInt(fake,10); renderStars()}
+  else fetch('https://api.github.com/repos/xArchange1/keygloss',{headers:{Accept:'application/vnd.github+json'}})
+    .then(function(r){return r.ok?r.json():null})
+    .then(function(d){if(d&&Number.isInteger(d.stargazers_count)){stars=d.stargazers_count; renderStars()}})
+    .catch(function(){});
+})();
+</script>
+</body>
+</html>
