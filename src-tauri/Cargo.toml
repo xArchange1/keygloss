@@ -38,3 +38,9 @@ windows-core = "0.62.2"
 keygloss-macos.workspace = true
 # Non-activating panels for the banner and the picker.
 tauri-nspanel = "2.1.1"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+keygloss-linux.workspace = true
+# The sound file picker, through the desktop portal (its GTK backend clashes with Tauri's GTK).
+rfd = { version = "0.18.0", default-features = false, features = ["xdg-portal"] }
+semver = "1"

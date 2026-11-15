@@ -64,7 +64,8 @@ export function UpdateDialog({ update, onClose }: { update: PendingUpdate; onClo
   const lines = notesFor(update.notes ?? "", i18n.language === "ru" ? "ru" : "en");
   const [state, setState] = useState<"idle" | "installing" | "failed">("idle");
   const install = () => {
-    setState("installing");
+    // Linux: opens the release page, the app keeps running.
+    if (!ipc.IS_LINUX) setState("installing");
     ipc.installUpdate().catch((e) => {
       console.error(e);
       setState("failed");
@@ -75,7 +76,7 @@ export function UpdateDialog({ update, onClose }: { update: PendingUpdate; onClo
       {state === "failed" && <span className="mr-auto text-[12px] text-fg/70">{t("upd.failed")}</span>}
       <Button variant="ghost" onClick={onClose}>{t("updDialog.later")}</Button>
       <Button variant="primary" disabled={state === "installing"} onClick={install}>
-        {state === "installing" ? t("upd.installing", { version: update.version }) : t("upd.install")}
+        {state === "installing" ? t("upd.installing", { version: update.version }) : t(ipc.IS_LINUX ? "upd.download" : "upd.install")}
       </Button>
     </>}>
       <section>

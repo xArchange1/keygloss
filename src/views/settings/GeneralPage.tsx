@@ -34,7 +34,8 @@ export function GeneralPage() {
     });
   };
   const install = () => {
-    setUpd("installing");
+    // Linux: opens the release page, the app keeps running.
+    if (!ipc.IS_LINUX) setUpd("installing");
     ipc.installUpdate().catch((e) => {
       console.error(e);
       setUpd("failed");
@@ -69,7 +70,9 @@ export function GeneralPage() {
       <Card>
         <Row title={t(`upd.${upd}`, { version: newVersion })} sub={t("upd.current", { version })} control={
           upd === "available" || upd === "installing"
-            ? <Button variant="primary" disabled={upd === "installing"} onClick={install}>{t("upd.install")}</Button>
+            ? <Button variant="primary" disabled={upd === "installing"} onClick={install}>
+              {t(ipc.IS_LINUX ? "upd.download" : "upd.install")}
+            </Button>
             : <Button disabled={upd === "checking"} onClick={check}>{t("upd.check")}</Button>
         } />
         <Row title={t("upd.channel")} help={t("upd.channelSub")} control={
@@ -82,8 +85,10 @@ export function GeneralPage() {
         } />
         <SwitchRow title={t("upd.startup")} checked={s.updateCheckOnStartup}
           onChange={(updateCheckOnStartup) => update({ updateCheckOnStartup })} />
-        <SwitchRow title={t("upd.auto")} help={t("upd.autoSub")} disabled={!s.updateCheckOnStartup}
-          checked={s.autoUpdate} onChange={(autoUpdate) => update({ autoUpdate })} />
+        {!ipc.IS_LINUX && (
+          <SwitchRow title={t("upd.auto")} help={t("upd.autoSub")} disabled={!s.updateCheckOnStartup}
+            checked={s.autoUpdate} onChange={(autoUpdate) => update({ autoUpdate })} />
+        )}
         <SwitchRow title={t("upd.whatsNew")} help={t("upd.whatsNewSub")} checked={s.showWhatsNew}
           onChange={(showWhatsNew) => update({ showWhatsNew })} />
       </Card>

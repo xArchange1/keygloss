@@ -197,6 +197,18 @@ fn show_floating(app: &AppHandle, label: &str, _hwnd: isize, rect: Option<(i32, 
     panel.show();
 }
 
+/// Moves the window to `rect` and shows it. Under XWayland (`run`) it can be placed, and it
+/// does not take focus (`focusable(false)`).
+#[cfg(target_os = "linux")]
+fn show_floating(app: &AppHandle, label: &str, _hwnd: isize, rect: Option<(i32, i32, i32, i32)>) {
+    use tauri::{PhysicalPosition, PhysicalSize};
+    let Some(w) = app.get_webview_window(label) else { return };
+    let Some((x, y, width, height)) = rect else { return };
+    let _ = w.set_size(PhysicalSize::new(width as u32, height as u32));
+    let _ = w.set_position(PhysicalPosition::new(x, y));
+    let _ = w.show();
+}
+
 /// Top-right corner of the primary monitor's work area.
 pub fn show_banner(app: &AppHandle) {
     let (w, h) = BANNER_SIZE;

@@ -1,0 +1,26 @@
+{
+  "bundle": {
+    "targets": ["deb", "rpm"],
+    "createUpdaterArtifacts": false,
+    "linux": {
+      "deb": {
+        "depends": ["libayatana-appindicator3-1"],
+        "files": {
+          "/usr/lib/udev/rules.d/70-keygloss.rules": "linux/70-keygloss.rules",
+          "/usr/lib/modules-load.d/keygloss.conf": "linux/keygloss-modules.conf"
+        },
+        "postInstallScript": "linux/postinst.sh",
+        "postRemoveScript": "linux/postrm.sh"
+      },
+      "rpm": {
+        "depends": ["libayatana-appindicator-gtk3"],
+        "files": {
+          "/usr/lib/udev/rules.d/70-keygloss.rules": "linux/70-keygloss.rules",
+          "/usr/lib/modules-load.d/keygloss.conf": "linux/keygloss-modules.conf"
+        },
+        "postInstallScript": "linux/postinst.sh",
+        "postRemoveScript": "linux/postrm.sh"
+      }
+    }
+  }
+}

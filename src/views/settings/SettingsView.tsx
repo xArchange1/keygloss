@@ -32,6 +32,7 @@ function StatusLine() {
   const [text, live] = paused ? [t("status.paused", { time }), false]
     : !status.running ? [t("status.down"), false]
     : ipc.IS_MAC && !status.hookHealthy ? [t("status.noAccess"), false]
+    : ipc.IS_LINUX && !status.hookHealthy ? [t("status.noInput"), false]
     : !status.autoEnabled ? [t("status.autoOff"), false]
     : [t("status.working"), true];
   return (
