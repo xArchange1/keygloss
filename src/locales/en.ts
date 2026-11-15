@@ -136,6 +136,7 @@ const en = {
     colExpansion: "With",
     phTrigger: "e.g. br",
     phExpansion: "e.g. Best regards, Alex",
+    enabled: "Expand snippets as you type",
     expandOn: "Expand on key",
     disabled: "Snippets are off — no expansion key selected.",
     hint: "Layout and case are ignored: !test = !TEST = !еуые.",

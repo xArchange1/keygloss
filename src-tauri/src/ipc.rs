@@ -450,7 +450,7 @@ mod tests {
             "learnOnUndoEnabled", "learnOnSwitchEnabled", "typoFix", "twoCapsFix", "sound", "soundVolume", "soundFile", "hotkey",
             "caseChangeHotkey", "plainPaste", "plainPasteHotkey", "snippetPickHotkey", "pauseMinutes",
             "pausedUntil", "ignoredWords", "forceSwapWords", "appExceptionModes",
-            "appForcedLayouts", "seededDefaultApps", "snippetsOrdered", "snippetExpandSpace", "snippetExpandEnter",
+            "appForcedLayouts", "seededDefaultApps", "snippetsEnabled", "snippetsOrdered", "snippetExpandSpace", "snippetExpandEnter",
             "snippetExpandTab", "textSnippets", "undoDeclinedWords", "undoStrikeCount", "undoStrikeTime",
             "switchDeclinedWords", "switchStrikeCount", "switchStrikeTime",
             "typoPersonalWords", "lastLayoutCyr", "lastLayoutLat", "language", "appTheme", "didInitialSetup",
