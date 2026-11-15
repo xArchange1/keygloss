@@ -81,7 +81,7 @@ code,.mono{font-family:var(--mono)}
 .status a:hover,.status button:hover{color:var(--ink);background:color-mix(in srgb,var(--kg-text) 7%,transparent)}
 .status .ico{width:15px;height:15px}
 .gh-pair{display:inline-flex;align-items:center}
-.heart .ico{fill:var(--kg-accent)}
+.heart .ico,.status .star{fill:var(--kg-accent)}
 .theme{display:inline-flex;gap:1px}
 .status .theme button{height:24px;padding:0 5px;opacity:.5}
 .status .theme button[aria-pressed="true"]{opacity:1;background:color-mix(in srgb,var(--kg-text) 6%,transparent)}
@@ -147,7 +147,7 @@ html[lang="ru"] .crop.trig{--cy:1293}
 .hero{position:relative;overflow:hidden;padding:150px 0 0;text-align:center;
   background-image:radial-gradient(color-mix(in srgb,var(--kg-text) 16%,transparent) 1px,transparent 1.4px);background-size:43px 43px;background-position:50% 16px}
 .hero-core{position:relative;z-index:2}
-h1{font-size:88px;line-height:1.1;font-weight:700;letter-spacing:-.03em}
+h1{font-size:100px;line-height:1.1;font-weight:700;letter-spacing:-.03em}
 .tagline{font-size:19px;margin-top:6px}
 .ctas{display:flex;justify-content:center;gap:20px;margin-top:34px;flex-wrap:wrap}
 .pill{display:inline-flex;align-items:center;gap:11px;height:40px;padding:0 20px;border-radius:99px;font-size:17px;white-space:nowrap;
@@ -194,6 +194,9 @@ h1{font-size:88px;line-height:1.1;font-weight:700;letter-spacing:-.03em}
 .demo .win-bar{border-radius:13px 13px 0 0;height:30px}
 .demo-body{height:408px;border-radius:0 0 13px 13px;padding:44px 56px;display:flex;flex-direction:column;
   background:linear-gradient(165deg,color-mix(in oklab,var(--kg-accent) 12%,var(--kg-raised)),var(--kg-raised) 55%,color-mix(in oklab,var(--kg-detail) 9%,var(--kg-raised)))}
+.down{display:grid;place-items:center;width:44px;height:44px;margin:14px 0 10px;border-radius:50%;background:var(--kg-accent);color:var(--kg-on-accent);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--kg-on-accent) 35%,transparent),0 6px 14px -6px color-mix(in srgb,var(--kg-text) 50%,transparent)}
+.down svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 .demo-label{font-size:13px;color:var(--muted);margin-bottom:4px}
 .typed{font-size:40px;line-height:1.15;color:var(--faint);text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:color-mix(in srgb,var(--kg-accent) 70%,transparent)}
 .fixed{font-size:72px;line-height:1.1;font-weight:700;letter-spacing:-.02em;margin-bottom:auto}
@@ -243,9 +246,8 @@ h2{font-size:56px;line-height:1.2;font-weight:700;letter-spacing:-.03em;text-wra
 .sec-h{font-size:44px;line-height:1.15}
 
 /* ---------- privacy (notes) ---------- */
-.privacy{position:relative;padding:96px 0;overflow:hidden}
+.privacy{position:relative;padding:66px 0 96px;overflow:hidden}
 .notes{position:relative;z-index:2;width:min(480px,100% - 48px);margin:24px auto 0;border-radius:8px}
-.notes .win-bar{background:var(--hl);height:30px}
 .notes-body{padding:22px 24px 44px;font-size:19px;line-height:30px;color:var(--muted)}
 .notes-body p + p{margin-top:10px}
 .notes-body mark{background:var(--hl);color:var(--ink);padding:3px 2px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
@@ -344,12 +346,12 @@ footer{padding:8px 0 28px}
   .frow,.frow.flip{grid-template-columns:1fr;gap:28px}
   .frow.flip .ftext{order:0}
   .arc{display:none}
-  .privacy{padding:64px 0}
+  .privacy{padding:34px 0 64px}
   .flinks ul + ul{padding-left:0;border-left:0}
   .faq{padding:64px 0}
 }
 @media (max-width:640px){
-  h1{font-size:64px}
+  h1{font-size:72px}
   h2{font-size:38px}.sec-h{font-size:32px}
   .menubar{padding:0 12px}.status{gap:0}
   .status a[href*="youtube"],.status a[href*="t.me"],.menubar nav li:nth-child(5){display:none}
@@ -416,10 +418,10 @@ footer{padding:8px 0 28px}
       <button type="button" data-theme-set="dark" aria-label="Dark theme" data-i18n-attr="aria-label:theme.dark"><svg class="ico" aria-hidden="true"><use href="#i-moon"/></svg></button>
       <button type="button" data-theme-set="system" aria-label="Match system theme" data-i18n-attr="aria-label:theme.system"><svg class="ico" aria-hidden="true"><use href="#i-desk"/></svg></button>
     </span>
-    <span class="gh-pair">
-      <a href="https://github.com/xArchange1/keygloss" aria-label="Keygloss on GitHub" data-i18n-attr="aria-label:gh.label"><svg class="ico" aria-hidden="true"><use href="#i-gh"/></svg></a>
-    </span>
     <a class="heart" href="https://boosty.to/xarchange1/donate"><svg class="ico" aria-hidden="true"><use href="#i-heart"/></svg><span data-i18n="sponsor">Support</span></a>
+    <span class="gh-pair">
+      <a href="https://github.com/xArchange1/keygloss" aria-label="Keygloss on GitHub" data-i18n-attr="aria-label:gh.label"><svg class="ico star" aria-hidden="true"><use href="#i-star"/></svg><svg class="ico" aria-hidden="true"><use href="#i-gh"/></svg></a>
+    </span>
     <a href="https://youtube.com/@xArchangel1" aria-label="YouTube"><svg class="ico" aria-hidden="true"><use href="#i-yt"/></svg></a>
     <a href="https://t.me/xArchange1" aria-label="Telegram"><svg class="ico" aria-hidden="true"><use href="#i-tg"/></svg></a>
   </div>
@@ -480,7 +482,8 @@ footer{padding:8px 0 28px}
     <div class="demo-body">
       <span class="demo-label" data-i18n="demo.typed">what you typed</span>
       <span class="typed">ghbdtn, rfr ltkf?</span>
-      <span class="demo-label" style="margin-top:26px" data-i18n="demo.got">what ends up in the message</span>
+      <span class="down" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v15M5.5 12.5 12 19l6.5-6.5"/></svg></span>
+      <span class="demo-label" data-i18n="demo.got">what ends up in the message</span>
       <span class="fixed">привет, как дела?<span class="caret"></span></span>
       <div class="demo-status"><span class="badge">EN → RU</span><span data-i18n="demo.status">each word is fixed as you finish it, and the layout switches to match.</span></div>
     </div>
@@ -546,7 +549,6 @@ footer{padding:8px 0 28px}
   <div class="arc" id="arcR" aria-hidden="true"></div>
   <h2 class="sec-h" data-i18n="priv.h">everything stays on this computer</h2>
   <div class="notes win" style="text-align:left">
-    <div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t" data-i18n="priv.title">notes</span></div>
     <div class="notes-body">
       <p data-i18n="priv.p1">keygloss has to read your keystrokes to fix them, so here is exactly where they go: nowhere.</p>
       <p data-i18n="priv.p2">your typing is processed on this computer only. there is no usage data and no telemetry.</p>
@@ -614,7 +616,7 @@ footer{padding:8px 0 28px}
         <li><a href="#faq" data-i18n="nav.faq">faq</a></li>
       </ul>
       <ul>
-        <li><a href="https://github.com/xArchange1/keygloss"><svg class="ico" aria-hidden="true"><use href="#i-gh"/></svg>github</a> <a class="num" data-stars-star href="https://github.com/xArchange1/keygloss/stargazers" hidden></a></li>
+        <li><a href="https://github.com/xArchange1/keygloss"><svg class="ico" aria-hidden="true"><use href="#i-gh"/></svg>github</a></li>
         <li><a href="https://github.com/xArchange1/keygloss/releases" data-i18n="f.rel">releases</a></li>
         <li><a href="https://github.com/xArchange1/keygloss/issues" data-i18n="f.bug">report a bug</a></li>
       </ul>
@@ -625,7 +627,7 @@ footer{padding:8px 0 28px}
       </ul>
     </nav>
     <div class="pix-wrap" aria-hidden="true"><div class="pix" id="pix"></div></div>
-    <p class="copy">© 2026 xArchange1 · <span data-i18n="f.mit">MIT licence</span> · <span data-i18n="f.noteP">typing is processed on this computer only and never logged.</span></p>
+    <p class="copy">© 2026 xArchange1 · <span data-i18n="f.mit">MIT licence</span></p>
   </div>
 </footer>
 
@@ -649,7 +651,7 @@ footer{padding:8px 0 28px}
     'ui.when1':'15 ноября, 10:20',
     'ui.pageLayout':'Переключение раскладки','ui.pageSnip':'Автозамена','ui.short':'Минимальная длина слова',
     'cap.toggles':'раскладка','cap.trig':'срабатывание','cap.hot':'сочетание','cap.snip':'автозамена','cap.hist':'история',
-    'hero.tag':'хватит писать ghbdtn','hero.other':'другие платформы','hero.under':'полностью локально, бесплатно, с открытым кодом. сам исправит текст, пока вы печатаете.',
+    'hero.tag':'Больше никаких Ghbdtn','hero.other':'другие платформы','hero.under':'полностью локально, бесплатно, с открытым кодом. сам исправит текст, пока вы печатаете.',
     'os.neutral':'keygloss работает на компьютере: windows, macos и linux.','os.label':'Платформа',
     'demo.typed':'что вы набрали','demo.got':'что оказалось в сообщении','demo.status':'каждое слово исправляется, как только вы его закончили, и раскладка переключается следом.',
     'rows.h':'Что умеет Keygloss',
@@ -657,7 +659,7 @@ footer{padding:8px 0 28px}
     'r2.h':'или сами, одним сочетанием','r2.p':'дважды нажмите Shift, чтобы переключить текст вручную или отменить исправление, которое вам не нужно. keygloss умеет учиться на ваших отменах. сочетание можно поменять, например на Ctrl + Alt.',
     'r3.h':'автозамена для того, что вы печатаете каждый день','r3.p':'дайте фразе короткое сокращение, наберите его, и оно развернётся в полный текст. раскладка и регистр не важны: !test, !TEST и !еуые считаются одним сокращением.',
     'alt.trig':'Срабатывание: после слова, по пробелу и Enter','alt.ex':'Примеры сокращений: !em, !ph, !adr, !web','alt.greet':'Сниппет Greeting и его текст',
-    'priv.h':'всё остаётся на этом компьютере','priv.title':'заметки',
+    'priv.h':'всё остаётся на этом компьютере',
     'priv.p1':'чтобы исправлять нажатия, keygloss должен их читать. поэтому прямо: никуда они не уходят.',
     'priv.p2':'набранное обрабатывается только на этом компьютере. никаких данных об использовании и никакой телеметрии.',
     'priv.p3':'набранный текст не пишется в журнал. <mark>единственный текст, который он может хранить, это история последних автоматических исправлений. она выключена по умолчанию и остаётся на этом компьютере.</mark>',
@@ -674,7 +676,7 @@ footer{padding:8px 0 28px}
     'q8':'он бесплатный?','a8':'да. keygloss бесплатный, с открытым кодом под лицензией mit. если он экономит вам время, можно <a href="https://boosty.to/xarchange1/donate">поддержать проект</a>.',
     'q9':'как он обновляется?','a9':'из релизов на github. стабильный или бета-канал выбирается в настройках. на linux приложение сообщит о новой версии и откроет её страницу.',
     'faq.h':'вопросы','f.label':'Ссылки','f.rel':'релизы','f.bug':'сообщить об ошибке','f.sponsor':'поддержать',
-    'f.noteP':'набранное обрабатывается только на этом компьютере и не пишется в журнал.','f.mit':'лицензия MIT'
+    'f.mit':'лицензия MIT'
   };
   var EN={};
   $$('[data-i18n]').forEach(function(el){var k=el.getAttribute('data-i18n'); if(!(k in EN)) EN[k]=el.innerHTML});
@@ -689,14 +691,14 @@ footer{padding:8px 0 28px}
         hint:{windows:'',macos:'not notarized yet: allow it in privacy &amp; security on first launch.',linux:'experimental: kde plasma 6 on wayland, x86_64.'},
         mainAny:'install on your computer',
         next:{windows:'once installed, keygloss lives in the tray by the clock and opens a welcome window where you can try it.',macos:'once installed, keygloss lives in the menu bar and opens a welcome window where you can try it.',linux:'once installed, keygloss lives in the system tray and opens a welcome window where you can try it.'},
-        copy:'copy',copied:'copied',manual:'press ctrl+c to copy',stars:function(n){return n+(n===1?' star':' stars')}},
+        copy:'copy',copied:'copied',manual:'press ctrl+c to copy'},
     ru:{main:{windows:'скачать для windows',macos:'скачать для mac',linux:'скачать для linux'},
         dl:{windows:'скачать установщик (.exe)',macos:'скачать .dmg',linux:'скачать .deb / .rpm'},
         note:{windows:'',macos:'сборка для macos пока не нотаризована. при первом запуске разрешите её в системных настройках > конфиденциальность и безопасность, затем выдайте доступ в «универсальном доступе»: без него macos не даёт приложениям читать и исправлять набранное. <a href="https://boosty.to/xarchange1/donate">поддержите проект</a>, чтобы помочь оплатить apple developer id.',linux:'сборка для linux экспериментальная: kde plasma 6 на wayland, только x86_64. её правило udev даёт пользователю за компьютером доступ к клавиатурам, поэтому любая запущенная вами программа тоже сможет читать ввод с клавиатуры. поля паролей не распознаются. <a href="https://github.com/xArchange1/keygloss/blob/main/packaging/linux/install.sh">прочитайте скрипт</a>, прежде чем запускать.'},
         hint:{windows:'',macos:'пока без нотаризации: при первом запуске разрешите его в «конфиденциальности и безопасности».',linux:'экспериментально: kde plasma 6 на wayland, x86_64.'},
         mainAny:'установить на компьютер',
         next:{windows:'после установки keygloss живёт в трее у часов и открывает окно приветствия, где его можно попробовать.',macos:'после установки keygloss живёт в строке меню и открывает окно приветствия, где его можно попробовать.',linux:'после установки keygloss живёт в системном трее и открывает окно приветствия, где его можно попробовать.'},
-        copy:'копировать',copied:'скопировано',manual:'нажмите ctrl+c',stars:function(n){var a=n%10,b=n%100;return n+(a===1&&b!==11?' звезда':(a>=2&&a<=4&&(b<10||b>=20)?' звезды':' звёзд'))}}
+        copy:'копировать',copied:'скопировано',manual:'нажмите ctrl+c'}
   };
   var CMD={windows:'winget install xArchange1.keygloss',macos:'brew install --cask xArchange1/tap/keygloss',linux:'curl -fsSL https://raw.githubusercontent.com/xArchange1/keygloss/main/packaging/linux/install.sh | sh'};
   var GLYPH={windows:'#i-win',macos:'#i-mac',linux:'#i-linux'};
@@ -715,7 +717,7 @@ footer{padding:8px 0 28px}
     return null;
   }
   var qos=qs.get('os'), detected=(qos==='windows'||qos==='macos'||qos==='linux')?qos:(qos==='unknown'?null:detectOS());
-  var os=detected||'windows', lang='en', stars=null;
+  var os=detected||'windows', lang='en';
 
   function render(){
     var L=OS[lang], dict=lang==='ru'?RU:EN;
@@ -740,13 +742,6 @@ footer{padding:8px 0 28px}
     $('#dlLinkT').textContent=L.dl[os];
     $$('[data-copy-label]').forEach(function(el){el.textContent=L.copy});
     $$('[data-copy]').forEach(function(b){b.classList.remove('done')});
-    renderStars();
-  }
-  function renderStars(){
-    var ok=typeof stars==='number'&&isFinite(stars)&&stars>=0, n=ok?stars.toLocaleString(lang==='ru'?'ru-RU':'en-US'):'';
-    var label=ok?OS[lang].stars(stars).replace(String(stars),n):'';
-    $$('[data-stars]').forEach(function(a){a.hidden=!ok; a.textContent=ok?'★ '+n:''; if(ok)a.setAttribute('aria-label',label)});
-    $$('[data-stars-star]').forEach(function(a){a.hidden=!ok; a.textContent=ok?'★ '+n:''; if(ok)a.setAttribute('aria-label',label)});
   }
   function setOS(v){os=v; render()}
   $$('.seg button').forEach(function(b,i,all){
@@ -831,13 +826,6 @@ footer{padding:8px 0 28px}
   render();
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(render);
 
-  var fake=qs.get('stars');
-  if(fake==='off'){/* screenshot the no-number state */}
-  else if(fake&&/^\d+$/.test(fake)){stars=parseInt(fake,10); renderStars()}
-  else fetch('https://api.github.com/repos/xArchange1/keygloss',{headers:{Accept:'application/vnd.github+json'}})
-    .then(function(r){return r.ok?r.json():null})
-    .then(function(d){if(d&&Number.isInteger(d.stargazers_count)){stars=d.stargazers_count; renderStars()}})
-    .catch(function(){});
   fetch('https://api.github.com/repos/xArchange1/keygloss/releases/latest',{headers:{Accept:'application/vnd.github+json'}})
     .then(function(r){return r.ok?r.json():null})
     .then(function(d){if(d&&Array.isArray(d.assets)){d.assets.forEach(function(a){for(var k in ASSET)if(ASSET[k].test(a.name))assets[k]=a.browser_download_url}); render()}})
