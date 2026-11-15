@@ -17,13 +17,13 @@ cask "keygloss" do
 
   # The app updates itself.
   auto_updates true
-  depends_on macos: ">= :big_sur"
+  depends_on macos: :big_sur
 
   app "Keygloss.app"
 
   # Without a Developer ID the app is not notarized: Gatekeeper would block its first launch.
-  postflight do
-    system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{appdir}/Keygloss.app"]
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/Keygloss.app"]
   end
 
   uninstall quit:      "com.keygloss.app",
