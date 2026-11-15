@@ -51,9 +51,10 @@ jobs:
 
   # A universal (Apple Silicon + Intel) .app and .dmg, plus the updater's .app.tar.gz, added to the
   # same release and manifest. After the Windows job: both jobs edit latest.json.
-  # Signed with a Developer ID and notarized when the APPLE_* secrets exist; ad-hoc signed
-  # otherwise (Gatekeeper then blocks the first launch, and macOS asks for the Accessibility
-  # permission again after every update).
+  # Signed with a Developer ID and notarized when the APPLE_* secrets exist; otherwise signed with a
+  # self-signed certificate (MACOS_CERTIFICATE), or ad-hoc without one. Gatekeeper then blocks the
+  # first launch of a download; ad-hoc signed, macOS also asks for the Accessibility permission
+  # again after every update.
   release-macos:
     needs: release
     runs-on: macos-latest
@@ -95,6 +96,30 @@ jobs:
               { echo "$v<<APPLE_EOF"; echo "${!v}"; echo APPLE_EOF; } >> "$GITHUB_ENV"
             fi
           done
+      # Without a Developer ID: sign with the same self-signed certificate every release (MACOS_CERTIFICATE,
+      # a base64 .p12 whose common name is "Keygloss Self-Signed", and MACOS_CERTIFICATE_PASSWORD).
+      # macOS ties the Accessibility grant to the certificate, so it survives updates. The bundler
+      # only imports Developer ID certificates, so this one goes into a keychain here.
+      - name: Self-signed signing (without a Developer ID)
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          if [ -n "$APPLE_CERTIFICATE" ] || [ -z "$MACOS_CERTIFICATE" ]; then exit 0; fi
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          password=$(openssl rand -hex 16)
+          echo "$MACOS_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -t 3600 -u "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          security import "$RUNNER_TEMP/cert.p12" -f pkcs12 -k "$keychain" -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm "$RUNNER_TEMP/cert.p12"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$password" "$keychain"
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          security find-identity -p codesigning "$keychain"
+          echo "APPLE_SIGNING_IDENTITY=Keygloss Self-Signed" >> "$GITHUB_ENV"
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -106,17 +131,28 @@ jobs:
           releaseBody: ${{ steps.notes.outputs.body }}
           prerelease: ${{ contains(github.ref_name, '-') }}
           args: --target universal-apple-darwin --config src-tauri/tauri.release.macos.conf.json
-      # The values for the Homebrew cask (packaging/homebrew/keygloss.rb).
-      - name: Homebrew cask values
+      # Stable releases publish packaging/homebrew/keygloss.rb, with this version and the .dmg's
+      # sha256, to the tap (xArchange1/homebrew-tap). HOMEBREW_TAP_DEPLOY_KEY is the private half of
+      # a write deploy key on that repository.
+      - if: ${{ !contains(github.ref_name, '-') }}
+        uses: actions/checkout@v4
+        with:
+          repository: xArchange1/homebrew-tap
+          ssh-key: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+          path: homebrew-tap
+      - name: Update the Homebrew tap
+        if: ${{ !contains(github.ref_name, '-') }}
         shell: bash
         run: |
-          dmg=$(ls target/universal-apple-darwin/release/bundle/dmg/*.dmg)
-          {
-            echo "### Homebrew cask"
-            echo "- dmg: \`$(basename "$dmg")\`"
-            echo "- version: \`${GITHUB_REF_NAME#v}\`"
-            echo "- sha256: \`$(shasum -a 256 "$dmg" | cut -d' ' -f1)\`"
-          } >> "$GITHUB_STEP_SUMMARY"
+          version=${GITHUB_REF_NAME#v}
+          sha=$(shasum -a 256 target/universal-apple-darwin/release/bundle/dmg/*.dmg | cut -d' ' -f1)
+          sed -e "s/^  version \".*\"/  version \"$version\"/" -e "s/^  sha256 \".*\"/  sha256 \"$sha\"/" \
+            packaging/homebrew/keygloss.rb > homebrew-tap/Casks/keygloss.rb
+          cd homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/keygloss.rb
+          git diff --cached --quiet || { git commit -m "keygloss $version" && git push; }
 
   # x86_64 .deb and .rpm packages (packaging/linux/install.sh installs them). They are not
   # self-updating: the app only reports a new release, so they stay out of latest.json. After the
