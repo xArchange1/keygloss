@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/xArchange1/keygloss/releases"><img src="https://img.shields.io/github/downloads/xArchange1/keygloss/total?label=%D1%81%D0%BA%D0%B0%D1%87%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F" alt="Скачивания"></a>
+</p>
+
+<p align="center">
   <a href="https://keygloss.com/ru/"><img src="../media/banner-ru.webp" alt="Баннер Keygloss: Больше никаких Ghbdtn. Keygloss сам исправит текст и переключит раскладку, пока вы печатаете."></a>
 </p>
 
