@@ -12,6 +12,10 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/xArchange1/keygloss/releases"><img src="https://img.shields.io/github/downloads/xArchange1/keygloss/total?label=downloads" alt="Downloads"></a>
+</p>
+
+<p align="center">
   <a href="https://keygloss.com"><img src="docs/media/banner-en.webp" alt="Keygloss banner: Wrong layout? Already fixed. The free layout switcher that fixes your text as you type."></a>
 </p>
 
