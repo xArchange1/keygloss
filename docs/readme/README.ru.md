@@ -15,7 +15,7 @@
   <a href="https://keygloss.com/ru/"><img src="../media/banner-ru.webp" alt="Баннер Keygloss: Больше никаких Ghbdtn. Keygloss сам исправит текст и переключит раскладку, пока вы печатаете."></a>
 </p>
 
-<p align="center"><a href="https://youtu.be/hCwC3H6UGZY"><img src="../media/video.webp" width="320" alt="Видео на YouTube"></a><br><sub>Посмотрите, как это работает</sub></p>
+<p align="center"><a href="https://youtu.be/hCwC3H6UGZY"><img src="../media/video.webp" width="320" alt="Смотреть демо Keygloss на YouTube"></a><br><a href="https://youtu.be/hCwC3H6UGZY">▶ Смотреть демо на YouTube</a></p>
 
 ---
 
