@@ -15,7 +15,7 @@
   <a href="https://keygloss.com"><img src="docs/media/banner-en.webp" alt="Keygloss banner: Wrong layout? Already fixed. The free layout switcher that fixes your text as you type."></a>
 </p>
 
-<p align="center"><a href="https://youtu.be/hCwC3H6UGZY"><img src="docs/media/video.webp" width="320" alt="Demo video on YouTube"></a><br><sub>See it in action</sub></p>
+<p align="center"><a href="https://youtu.be/hCwC3H6UGZY"><img src="docs/media/video.webp" width="320" alt="Watch the Keygloss demo on YouTube"></a><br><a href="https://youtu.be/hCwC3H6UGZY">▶ Watch the demo on YouTube</a></p>
 
 ---
 
