@@ -6,7 +6,26 @@ on:
     branches: [main]
 
 jobs:
+  # Pull requests that only touch Markdown, docs/ or the site skip the build.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" != pull_request ] ||
+             gh pr diff ${{ github.event.number }} -R ${{ github.repository }} --name-only | grep -qvE '\.md$|^docs/|^site/'; then
+            echo code=true >> "$GITHUB_OUTPUT"
+          else
+            echo code=false >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -38,8 +57,8 @@ jobs:
 
   # The required check: one stable name for the whole OS matrix.
   ci:
-    needs: build
+    needs: [changes, build]
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - run: test "${{ needs.build.result }}" = success
+      - run: test "${{ needs.changes.result }}" = success && [[ "${{ needs.build.result }}" =~ ^(success|skipped)$ ]]
