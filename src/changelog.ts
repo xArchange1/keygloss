@@ -8,6 +8,19 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.1.2",
+    en: [
+      "Check for updates from the tray (menu bar on macOS).",
+      "Clearer Russian wording throughout the app.",
+      "macOS: the app is now signed, so from this version on the Accessibility permission carries over to updates.",
+    ],
+    ru: [
+      "Пункт «Проверить обновления» в меню значка (в строке меню на macOS).",
+      "Русские тексты в программе стали понятнее.",
+      "macOS: программа теперь подписана, так что начиная с этой версии разрешение в «Универсальном доступе» сохраняется при обновлениях.",
+    ],
+  },
+  {
     version: "0.1.1",
     en: [
       "macOS support: a universal app for Apple Silicon and Intel, installable with Homebrew.",
