@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "astro": "^7.4.12"
+  },
+  "dependencies": {
+    "vanilla-tilt": "^1.8.1"
   }
 }

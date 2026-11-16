@@ -146,10 +146,13 @@ code,.mono{font-family:var(--mono)}
 .kgp .row + .row{border-top:1px solid var(--line)}
 .kgp .row > span:first-child{min-width:0}
 .kgp .dim{opacity:.5}
-.tg{flex:none;width:28px;height:16px;border-radius:99px;background:var(--kg-accent);position:relative}
-.tg::after{content:"";position:absolute;right:2px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--kg-on-accent)}
+.tg{flex:none;width:28px;height:16px;border-radius:99px;background:var(--kg-accent);position:relative;transition:background-color .15s}
+.tg::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--kg-raised);
+  box-shadow:0 1px 2px color-mix(in srgb,var(--kg-text) 25%,transparent);transition:transform .2s cubic-bezier(.16,1,.3,1),background-color .15s}
+.tg:not(.off)::after{transform:translateX(12px);background:var(--kg-on-accent)}
 .tg.off{background:color-mix(in srgb,var(--kg-text) 26%,transparent)}
-.tg.off::after{right:auto;left:2px;background:var(--kg-raised)}
+.row:has(> .tg){cursor:pointer;user-select:none}
+.tg:focus-visible{outline:2px solid var(--kg-detail);outline-offset:2px}
 .keys{display:inline-flex;align-items:center;gap:4px;flex:none;color:var(--faint);font-size:10px}
 .kc{display:inline-block;padding:1px 6px;border:1px solid color-mix(in srgb,var(--kg-detail) 40%,transparent);border-bottom-width:2px;border-radius:5px;background:var(--kg-raised);color:var(--kg-detail);font-weight:700;font-size:11.5px;line-height:1.5}
 .sel{display:inline-flex;align-items:center;gap:8px;padding:2px 8px;border:1px solid var(--line-2);border-radius:6px;background:var(--kg-raised);flex:none}
@@ -160,6 +163,9 @@ code,.mono{font-family:var(--mono)}
 .hist .arrow{color:var(--faint);margin:0 4px}
 .never{display:inline-flex;align-items:center;gap:4px;margin-top:5px;padding:2px 7px;border:1px solid var(--line-2);border-radius:5px;font-size:10.5px;color:var(--muted)}
 .never svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2}
+.collage .never{cursor:pointer;user-select:none;transition:background-color .15s,border-color .15s,color .15s,scale .15s}
+.collage .never:active{scale:.95}
+.collage .never.on{background:var(--kg-accent);border-color:var(--kg-accent);color:var(--kg-on-accent)}
 
 /* image crops: unitless image px in --cx/--cy/--cw/--ch, scale in --s */
 .crop{display:block;flex:none;width:calc(var(--cw) * var(--s) * 1px);height:calc(var(--ch) * var(--s) * 1px);
@@ -198,8 +204,14 @@ h1{font-size:100px;line-height:1.1;font-weight:700;letter-spacing:-.03em}
 .under{font-size:12.5px;color:var(--faint);margin-top:14px}
 .neutral{font-size:13.5px;color:var(--muted);margin-top:10px}
 
-.collage{position:absolute;inset:0;z-index:1;transform-origin:50% 0}
-.c{position:absolute;left:calc(50% + (var(--x) - 720) * 1px);top:calc(var(--y) * 1px);text-align:left}
+.collage{position:absolute;inset:0;z-index:3;transform-origin:50% 0;pointer-events:none}
+.c{position:absolute;left:calc(50% + (var(--x) - 720) * 1px);top:calc(var(--y) * 1px);text-align:left;pointer-events:auto}
+/* the whole desk drifts toward the pointer, nearer objects (bigger --d) further */
+.collage .c{translate:calc(var(--mx,0) * var(--d,12) * 1px) calc(var(--my,0) * var(--d,12) * 1px);
+  transform:translate(var(--dx,0px),var(--dy,0px)) rotate(var(--r,0deg));transition:translate 1.1s cubic-bezier(.16,1,.3,1),scale .2s cubic-bezier(.16,1,.3,1),box-shadow .2s}
+.collage .keycap{cursor:grab;touch-action:none;user-select:none}
+.collage .keycap.held{cursor:grabbing;scale:1.08;z-index:1;box-shadow:0 18px 24px -12px color-mix(in srgb,var(--kg-text) 50%,transparent)}
+.tagline em{font-style:normal;color:var(--kg-detail)}
 .keycap{width:46px;height:46px;border-radius:9px;position:relative;font-weight:700;
   background:linear-gradient(180deg,var(--kg-raised),color-mix(in oklab,var(--kg-text) 6%,var(--kg-raised)));
   border:1px solid var(--line-2);border-bottom-width:4px;box-shadow:0 6px 12px -6px color-mix(in srgb,var(--kg-text) 40%,transparent)}
@@ -269,7 +281,7 @@ h1{font-size:100px;line-height:1.1;font-weight:700;letter-spacing:-.03em}
 .wall .inner{width:100%;max-width:520px}
 .wall .kgp{font-size:15px;border-radius:12px;box-shadow:var(--shadow);background:var(--kg-raised)}
 .wall .kgp .row{padding:12px 16px;min-height:48px}
-.wall .tg{width:38px;height:22px}.wall .tg::after{width:16px;height:16px;top:3px;right:3px}
+.wall .tg{width:38px;height:22px}.wall .tg::after{width:16px;height:16px;top:3px;left:3px}.wall .tg:not(.off)::after{transform:translateX(16px)}
 .wall .kc{font-size:14px;padding:2px 8px}
 .wall .sel{padding:4px 10px}
 .wall .crop{box-shadow:var(--shadow);border-radius:10px}
@@ -336,8 +348,12 @@ h2{font-size:56px;line-height:1.2;font-weight:700;letter-spacing:-.03em;text-wra
 .qa summary::-webkit-details-marker{display:none}
 .qa summary::after{content:"";width:14px;height:14px;flex:none;margin-right:4px;
   background:linear-gradient(var(--ink),var(--ink)) 50%/100% 1.5px no-repeat,linear-gradient(var(--ink),var(--ink)) 50%/1.5px 100% no-repeat}
-.qa details[open] summary::after{transform:rotate(45deg)}
-.qa details[open] summary{padding-bottom:2px;min-height:48px;align-items:flex-end}
+.qa details[open]:not(.closing) summary::after{transform:rotate(45deg)}
+.qa details[open]:not(.closing) summary{padding-bottom:2px;min-height:48px;align-items:flex-end}
+.qa summary::after{transition:transform .3s cubic-bezier(.16,1,.3,1)}
+.qa details p{transition:opacity .25s}
+.qa details.closing p{opacity:0}
+@starting-style{.qa details[open] p{opacity:0}}
 .qa details p{padding:0 20px 18px;color:var(--muted);max-width:510px;box-sizing:content-box}
 .qa details a{color:var(--kg-detail);text-decoration:underline;text-underline-offset:3px}
 .faq .photo{position:absolute;right:calc(50% - 622px);top:296px;transform:rotate(6deg)}
@@ -358,7 +374,25 @@ footer{padding:8px 0 28px}
 .copy{text-align:center;font-size:12.5px;color:var(--faint);margin-top:32px;text-wrap:balance}
 .copy a{text-decoration:underline;text-underline-offset:3px}
 
+/* ---------- download toast ---------- */
+.toast{position:fixed;right:24px;bottom:24px;z-index:60;display:flex;gap:12px;align-items:flex-start;width:min(390px,100% - 32px);
+  padding:14px 12px 14px 14px;background:var(--kg-raised);border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--shadow);font-size:14.5px;line-height:1.45;
+  visibility:hidden;opacity:0;translate:0 14px;transition:opacity .2s,translate .2s,visibility 0s .2s}
+.toast.show{visibility:visible;opacity:1;translate:0 0;transition:opacity .3s,translate .45s cubic-bezier(.16,1,.3,1)}
+.toast .down{width:34px;height:34px;margin:0;flex:none}.toast .down svg{width:18px;height:18px}
+.toast.show .down svg{animation:drop .6s .1s cubic-bezier(.16,1,.3,1) backwards}
+@keyframes drop{from{translate:0 -9px;opacity:0}}
+.toast strong{display:block;font-size:16.5px;font-weight:700;color:var(--ink)}
+.toast p{color:var(--muted);margin-top:3px}
+.toast a{color:var(--kg-detail);text-decoration:underline;text-underline-offset:3px}
+.toast-x{flex:none;display:grid;place-items:center;width:28px;height:28px;margin-left:auto;border-radius:6px;color:var(--muted)}
+.toast-x:hover{background:color-mix(in srgb,var(--kg-text) 7%,transparent);color:var(--ink)}
+.toast-x svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+
 /* ---------- responsive ---------- */
+@media (prefers-reduced-motion:reduce){.tg::after{transition:background-color .15s}
+  .toast,.toast.show{translate:none}.toast.show .down svg{animation:none}
+  .qa summary::after{transition:none}}
 @media (pointer:coarse){
   .status a,.status button,.status .theme button{height:40px;min-width:40px;justify-content:center}
   .lang-btn{height:32px!important}
@@ -405,6 +439,7 @@ footer{padding:8px 0 28px}
   .seg button{padding:0 14px;font-size:16px}
   .get-row{flex-direction:column;align-items:stretch}.get-row .pill.primary{justify-content:center}
   .cmd{font-size:13px}
+  .toast{right:16px;bottom:16px}
   .notes-body{font-size:17px;line-height:27px;padding:18px 18px 30px}
   .sig .hand{font-size:26px}
   .qa summary{font-size:17px;padding:10px 14px}.qa details p{padding:0 14px 16px}
@@ -465,25 +500,25 @@ footer{padding:8px 0 28px}
 <main id="top">
 <section class="hero">
   <div class="collage" aria-hidden="true">
-    <div class="c tag" style="--x:944;--y:40"><span>RU ↔ EN</span></div>
-    <div class="c keycap" style="--x:356;--y:204;transform:rotate(-7deg)"><b>G</b><i>П</i></div>
-    <div class="c keycap" style="--x:1040;--y:214;transform:rotate(6deg)"><b>H</b><i>Р</i></div>
+    <div class="c tag" style="--x:944;--y:40;--r:4deg;--d:22"><span>RU ↔ EN</span></div>
+    <div class="c keycap" style="--x:356;--y:204;--r:-7deg;--d:30"><b>G</b><i>П</i></div>
+    <div class="c keycap" style="--x:1040;--y:214;--r:6deg;--d:26"><b>H</b><i>Р</i></div>
 
-    <div class="c stk" style="--x:92;--y:58;width:196px;transform:rotate(-3deg)"><span class="stk-h" data-i18n="cap.toggles">layout switching</span>
+    <div class="c stk" style="--x:92;--y:58;width:196px;--r:-3deg;--d:14"><span class="stk-h" data-i18n="cap.toggles">layout switching</span>
       <div class="row"><span data-i18n="ui.fly">Fix as you type</span><i class="tg"></i></div>
       <div class="row"><span data-i18n="ui.typos">Fix typos</span><i class="tg"></i></div>
     </div>
-    <div class="c stk" style="--x:440;--y:30;transform:rotate(2deg)"><span class="stk-h" data-i18n="cap.trig">triggers</span>
+    <div class="c stk" style="--x:440;--y:30;--r:2deg;--d:10"><span class="stk-h" data-i18n="cap.trig">triggers</span>
       <span class="crop lay chips" style="--s:.3" role="img" aria-label="Fix on Space and Enter, not Tab" data-i18n-attr="aria-label:alt.chips"></span>
     </div>
-    <div class="c stk hist" style="--x:1150;--y:66;width:184px;transform:rotate(3deg)"><span class="stk-h" data-i18n="cap.hist">history</span>
+    <div class="c stk hist" style="--x:1150;--y:66;width:184px;--r:3deg;--d:16"><span class="stk-h" data-i18n="cap.hist">history</span>
       <div class="when" data-i18n="ui.when1">November 15, 10:20 AM</div><span class="from">ghbdtn</span><span class="arrow">→</span><span class="to">привет</span>
       <span class="never"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg><span data-i18n="ui.never">Never switch</span></span>
     </div>
-    <div class="c stk" style="--x:150;--y:318;transform:rotate(2deg)"><span class="stk-h" data-i18n="cap.hot">hotkey</span>
+    <div class="c stk" style="--x:150;--y:318;--r:2deg;--d:20"><span class="stk-h" data-i18n="cap.hot">hotkey</span>
       <span class="keys"><span class="kc">Shift</span><span class="kc">Shift</span></span>
     </div>
-    <div class="c stk" style="--x:1118;--y:326;transform:rotate(-2deg)"><span class="stk-h" data-i18n="cap.snip">snippets</span>
+    <div class="c stk" style="--x:1118;--y:326;--r:-2deg;--d:18"><span class="stk-h" data-i18n="cap.snip">snippets</span>
       <span data-i18n="ui.br">br</span><span class="arrow">→</span><span data-i18n="ui.regards">Best regards, Alex</span>
     </div>
   </div>
@@ -497,7 +532,7 @@ footer{padding:8px 0 28px}
 
   <div class="hero-core">
     <h1>keygloss</h1>
-    <p class="tagline" data-i18n="hero.tag">wrong layout? already fixed.</p>
+    <p class="tagline" data-i18n="hero.tag">wrong layout? <em>already fixed.</em></p>
     <div class="ctas">
       <a class="pill primary" id="ctaMain" href="https://github.com/xArchange1/keygloss/releases/latest"><svg class="ico" aria-hidden="true"><use id="ctaMainG" href="#i-win"/></svg><span id="ctaMainT">download for windows</span></a>
       <a class="pill" id="ctaOther" href="#install"><svg class="ico" aria-hidden="true"><use href="#i-desk"/></svg><span data-i18n="hero.other">other platforms</span></a>
@@ -664,6 +699,12 @@ footer{padding:8px 0 28px}
   </div>
 </footer>
 
+<div class="toast" id="dlToast" role="status">
+  <span class="down" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v15M5.5 12.5 12 19l6.5-6.5"/></svg></span>
+  <div><strong id="dlToastT"></strong><p id="dlToastRetry"></p><p id="dlToastTip"></p></div>
+  <button type="button" class="toast-x" id="dlToastX"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+</div>
+
 <script is:inline>
 (function(){
   var root=document.documentElement, qs=new URLSearchParams(location.search);
@@ -684,7 +725,7 @@ footer{padding:8px 0 28px}
     'ui.when1':'15 ноября, 10:20',
     'ui.pageLayout':'Переключение раскладки','ui.pageSnip':'Сниппеты','ui.short':'Минимальная длина слова',
     'cap.toggles':'раскладка','cap.trig':'срабатывание','cap.hot':'сочетание','cap.snip':'сниппеты','cap.hist':'история',
-    'hero.tag':'Больше никаких Ghbdtn','hero.other':'другие платформы','hero.under':'полностью локально, бесплатно, с открытым кодом. исправляет текст, пока вы печатаете.',
+    'hero.tag':'Больше никаких <em>Ghbdtn</em>','hero.other':'другие платформы','hero.under':'полностью локально, бесплатно, с открытым кодом. исправляет текст, пока вы печатаете.',
     'os.neutral':'keygloss — программа для компьютера: windows, macos и linux.','os.label':'Платформа',
     'demo.typed':'что вы набрали','demo.got':'что попало в сообщение','demo.status':'каждое слово исправляется, как только вы его закончили, и раскладка переключается следом.',
     'rows.h':'Что умеет Keygloss',
@@ -724,13 +765,17 @@ footer{padding:8px 0 28px}
         note:{windows:'the winget command does not work yet: download the installer instead.',macos:'the macos build is in beta and not notarized yet. on first launch, allow it in system settings > privacy &amp; security, then grant accessibility: macos asks for it before any app can read and fix your typing. <a href="https://boosty.to/xarchange1/donate">sponsor the project</a> to help fund an apple developer id.',linux:'the linux build is experimental: kde plasma 6 on wayland, x86_64 only. its udev rule gives the user at the computer access to the keyboards, so any program you run can read your keyboard input too. password fields are not detected. <a href="https://github.com/xArchange1/keygloss/blob/main/packaging/linux/install.sh">read the script</a> before you run it.'},
         hint:{windows:'',macos:'beta, not notarized yet: allow it in privacy &amp; security on first launch.',linux:'experimental: kde plasma 6 on wayland, x86_64.'},
         mainAny:'install on your computer',warn:'Warning:',
-        copy:'copy',copied:'copied',manual:'press ctrl+c to copy'},
+        copy:'copy',copied:'copied',manual:'press ctrl+c to copy',
+        toast:{title:'download started',retry:'didn’t start? <a>download again</a>',close:'close',
+          tip:{windows:'if windows shows “windows protected your pc”, click more info, then run anyway.',macos:'on first launch macos blocks the app: allow it in system settings &gt; privacy &amp; security.'}}},
     ru:{main:{windows:'скачать для windows',macos:'скачать для mac',linux:'скачать для linux'},
         dl:{windows:'скачать установщик (.exe)',macos:'скачать .dmg',linux:'скачать .deb / .rpm'},
         note:{windows:'команда winget пока не работает: скачайте установщик.',macos:'сборка для macos пока в стадии бета-тестирования и не нотаризована. при первом запуске разрешите её в системных настройках > конфиденциальность и безопасность, затем дайте разрешение в «универсальном доступе»: без него macos не даёт программам читать и исправлять набранное. <a href="https://boosty.to/xarchange1/donate">поддержите проект</a>, чтобы помочь оплатить apple developer id.',linux:'сборка для linux экспериментальная: kde plasma 6 на wayland, только x86_64. её правило udev даёт пользователю, вошедшему в систему, доступ к клавиатурам, поэтому любая запущенная вами программа тоже сможет читать ввод с клавиатуры. поля паролей не распознаются. <a href="https://github.com/xArchange1/keygloss/blob/main/packaging/linux/install.sh">прочитайте скрипт</a>, прежде чем запускать.'},
         hint:{windows:'',macos:'бета, пока без нотаризации: при первом запуске разрешите его в «конфиденциальности и безопасности».',linux:'экспериментально: kde plasma 6 на wayland, x86_64.'},
         mainAny:'установить на компьютер',warn:'Внимание:',
-        copy:'копировать',copied:'скопировано',manual:'нажмите ctrl+c'}
+        copy:'копировать',copied:'скопировано',manual:'нажмите ctrl+c',
+        toast:{title:'загрузка началась',retry:'не началась? <a>скачать ещё раз</a>',close:'закрыть',
+          tip:{windows:'если windows покажет «система windows защитила ваш компьютер», нажмите «подробнее», затем «выполнить в любом случае».',macos:'при первом запуске macos заблокирует программу: разрешите её в системных настройках &gt; конфиденциальность и безопасность.'}}}
   };
   var CMD={windows:'winget install xArchange1.keygloss',macos:'brew install --cask xArchange1/tap/keygloss',linux:'curl -fsSL https://raw.githubusercontent.com/xArchange1/keygloss/main/packaging/linux/install.sh | sh'};
   var GLYPH={windows:'#i-win',macos:'#i-mac',linux:'#i-linux'};
@@ -794,6 +839,22 @@ footer{padding:8px 0 28px}
       if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done,fallback); else fallback();
     });
   });
+
+  /* ---------- download toast ---------- */
+  /* browsers can't report whether a download began, so the toast always offers the direct link again */
+  var toast=$('#dlToast'), toastT;
+  function hideToast(){toast.classList.remove('show'); clearTimeout(toastT)}
+  [$('#ctaMain'),$('#dlLink')].forEach(function(a){a.addEventListener('click',function(){
+    if(!/\/releases\/download\//.test(a.href)) return; /* the releases page or #install: no download */
+    var T=OS[lang].toast;
+    $('#dlToastT').textContent=T.title;
+    $('#dlToastRetry').innerHTML=T.retry; $('a',$('#dlToastRetry')).href=a.href;
+    $('#dlToastTip').innerHTML=T.tip[os]||''; $('#dlToastTip').hidden=!T.tip[os];
+    $('#dlToastX').setAttribute('aria-label',T.close);
+    toast.classList.remove('show'); void toast.offsetWidth; toast.classList.add('show');
+    clearTimeout(toastT); toastT=setTimeout(hideToast,14000);
+  })});
+  $('#dlToastX').addEventListener('click',hideToast);
 
   /* ---------- theme ---------- */
   /* until a theme is picked, the system one applies and its button shows as pressed */
@@ -870,6 +931,94 @@ footer{padding:8px 0 28px}
     .then(function(d){if(d&&Array.isArray(d.assets)){d.assets.forEach(function(a){for(var k in ASSET)if(ASSET[k].test(a.name))assets[k]=a.browser_download_url}); render()}})
     .catch(function(){});
 })();
+</script>
+<script>
+import VanillaTilt from "vanilla-tilt";
+
+/* demo toggles: click the row (or Space/Enter on the switch) to flip it */
+document.querySelectorAll<HTMLElement>(".row > .tg").forEach((tg, i) => {
+  const row = tg.parentElement!;
+  if (!row.closest("[aria-hidden='true']")) {
+    const label = row.querySelector("span");
+    if (label) label.id ||= `tg-l${i}`;
+    tg.setAttribute("role", "switch");
+    tg.setAttribute("aria-checked", String(!tg.classList.contains("off")));
+    if (label) tg.setAttribute("aria-labelledby", label.id);
+    tg.tabIndex = 0;
+    tg.addEventListener("keydown", (e) => {
+      if (e.key === " " || e.key === "Enter") { e.preventDefault(); row.click(); }
+    });
+  }
+  row.addEventListener("click", () => {
+    const on = tg.classList.toggle("off") === false;
+    if (tg.hasAttribute("role")) tg.setAttribute("aria-checked", String(on));
+  });
+});
+
+/* FAQ answers slide open and shut (animates the <details> height, so it works without ::details-content) */
+document.querySelectorAll<HTMLDetailsElement>(".qa details").forEach((d) => {
+  const s = d.querySelector("summary")!;
+  let anim: Animation | null = null;
+  s.addEventListener("click", (e) => {
+    if (matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+    e.preventDefault();
+    const start = d.offsetHeight;
+    anim?.cancel();
+    const opening = !d.open || d.classList.contains("closing");
+    d.classList.toggle("closing", !opening);
+    d.open = true;
+    const end = opening ? d.offsetHeight : s.offsetHeight;
+    d.style.overflow = "hidden";
+    anim = d.animate({ height: [`${start}px`, `${end}px`] }, { duration: 320, easing: "cubic-bezier(.16,1,.3,1)" });
+    anim.onfinish = () => {
+      anim = null;
+      d.style.overflow = "";
+      if (!opening) { d.open = false; d.classList.remove("closing"); }
+    };
+  });
+});
+
+/* "Never switch" in the history sticker */
+document.querySelectorAll<HTMLElement>(".collage .never").forEach((b) => b.addEventListener("click", () => b.classList.toggle("on")));
+
+/* hero keycaps can be picked up and moved; the collage may be scaled, so divide by its scale */
+const collage = document.querySelector<HTMLElement>(".collage");
+document.querySelectorAll<HTMLElement>(".collage .keycap").forEach((k) => {
+  let sx = 0, sy = 0, dx = 0, dy = 0;
+  k.addEventListener("pointerdown", (e) => {
+    k.setPointerCapture(e.pointerId);
+    k.classList.add("held");
+    sx = e.clientX; sy = e.clientY;
+  });
+  k.addEventListener("pointermove", (e) => {
+    if (!k.hasPointerCapture(e.pointerId)) return;
+    const scale = collage!.getBoundingClientRect().width / collage!.offsetWidth || 1;
+    k.style.setProperty("--dx", `${dx + (e.clientX - sx) / scale}px`);
+    k.style.setProperty("--dy", `${dy + (e.clientY - sy) / scale}px`);
+  });
+  k.addEventListener("lostpointercapture", () => {
+    k.classList.remove("held");
+    dx = parseFloat(k.style.getPropertyValue("--dx")) || 0;
+    dy = parseFloat(k.style.getPropertyValue("--dy")) || 0;
+  });
+});
+
+/* feature windows lean toward the pointer */
+if (matchMedia("(hover:hover) and (prefers-reduced-motion:no-preference)").matches) {
+  VanillaTilt.init(Array.from(document.querySelectorAll<HTMLElement>(".fwin")), {
+    max: 5, speed: 700, perspective: 1400, scale: 1.015, easing: "cubic-bezier(.16,1,.3,1)", gyroscope: false,
+  });
+  const hero = document.querySelector<HTMLElement>(".hero")!;
+  hero.addEventListener("pointermove", (e) => {
+    const r = hero.getBoundingClientRect();
+    collage?.style.setProperty("--mx", (((e.clientX - r.left) / r.width) * 2 - 1).toFixed(3));
+    collage?.style.setProperty("--my", (((e.clientY - r.top) / r.height) * 2 - 1).toFixed(3));
+  });
+  hero.addEventListener("pointerleave", () => {
+    collage?.style.setProperty("--mx", "0");
+    collage?.style.setProperty("--my", "0");
+  });
+}
 </script>
 </body>
 </html>
