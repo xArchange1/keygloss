@@ -32,7 +32,7 @@ pub const EVENT_TOAST: &str = "toast";
 pub const EVENT_SNIPPET_PICKER_OPEN: &str = "snippet-picker-open";
 /// Payload: null.
 pub const EVENT_SNIPPET_PICKER_CLOSE: &str = "snippet-picker-close";
-/// Payload: `{ version }`. Startup found an update (and does not install it on its own).
+/// Payload: `{ version }`. The startup or tray check found an update (and does not install it on its own).
 pub const EVENT_UPDATE_BANNER: &str = "update-banner";
 /// Payload: null. Settings shows the pending update's notes and install button.
 pub const EVENT_SHOW_UPDATE: &str = "show-update";

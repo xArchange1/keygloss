@@ -85,6 +85,7 @@ pub async fn check(app: &AppHandle) -> Result<Option<String>, String> {
     });
     let version = update.as_ref().map(|u| u.version.clone());
     state.set_pending_update(update);
+    crate::on_main(app, crate::tray::refresh);
     Ok(version)
 }
 
@@ -124,6 +125,7 @@ pub async fn check(app: &AppHandle) -> Result<Option<String>, String> {
     };
     let version = update.as_ref().map(|u| u.version.clone());
     state.set_pending_update(update);
+    crate::on_main(app, crate::tray::refresh);
     Ok(version)
 }
 
@@ -132,6 +134,27 @@ pub async fn check(app: &AppHandle) -> Result<Option<String>, String> {
 pub async fn install(app: &AppHandle) -> Result<(), String> {
     let update = app.state::<AppState>().pending_update().ok_or("no update")?;
     update.download_and_install(|_, _| {}, || {}).await.map_err(|e| e.to_string())
+}
+
+/// The tray's "Check for updates": offers what it finds in the banner, or says there is none.
+pub fn check_from_tray(app: &AppHandle) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let toast = |key: &str| {
+            let _ = app.emit(ipc::EVENT_TOAST, json!({ "key": key, "params": {} }));
+        };
+        match check(&app).await {
+            Ok(Some(version)) => {
+                let _ = app.emit(ipc::EVENT_UPDATE_BANNER, json!({ "version": version }));
+            }
+            Ok(None) => toast("upd.latest"),
+            Err(e) => {
+                crate::log::write(&format!("error update check failed: {e}"));
+                toast("upd.failed");
+            }
+        }
+        crate::on_main(&app, windows::show_banner);
+    });
 }
 
 /// The startup check: installs what it finds, or offers it in the banner.
