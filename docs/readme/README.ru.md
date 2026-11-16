@@ -47,6 +47,8 @@
 | macOS | `brew install --cask xArchange1/tap/keygloss`<br><br>[Поддержите проект](https://github.com/xArchange1/keygloss#sponsor), чтобы помочь с покупкой Apple Developer ID. |
 | Linux | <code>curl -fsSL https://raw.githubusercontent.com/xArchange1/keygloss/main/packaging/linux/install.sh | sh</code> |
 
+Версии для macOS и Linux пока в стадии бета-тестирования. Команда winget пока не работает: скачайте установщик из [Releases](https://github.com/xArchange1/keygloss/releases/latest).
+
 ### Linux
 
 Скрипт устанавливает `.deb` (Debian, Ubuntu) или `.rpm` (Fedora, openSUSE) из последнего выпуска, для x86_64. Чтобы обновиться, запустите его снова: Keygloss сообщает о новых версиях, но сам их не устанавливает. Пакет можно установить и вручную из [Releases](https://github.com/xArchange1/keygloss/releases).

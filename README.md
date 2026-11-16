@@ -47,6 +47,8 @@ Type `ghbdtn`, get `привет`, and the layout switches to match. RU ↔ EN, 
 | macOS | `brew install --cask xArchange1/tap/keygloss`<br><br>[Sponsor](https://github.com/xArchange1/keygloss#sponsor) to get me an Apple Developer ID.  |
 | Linux | <code>curl -fsSL https://raw.githubusercontent.com/xArchange1/keygloss/main/packaging/linux/install.sh | sh</code> |
 
+The macOS and Linux versions are in beta. The winget command doesn't work yet: download the installer from [Releases](https://github.com/xArchange1/keygloss/releases/latest).
+
 On macOS, allow Keygloss in System Settings > Privacy & Security > Accessibility on first launch.
 
 ### Linux
