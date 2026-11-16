@@ -37,11 +37,11 @@ impl Lang {
 fn tr(lang: Lang, key: &str) -> &'static str {
     let ru = lang == Lang::Ru;
     match key {
-        "autoOff" => if ru { "авто выкл" } else { "auto off" },
+        "autoOff" => if ru { "автопереключение выкл." } else { "auto off" },
         "pausedUntil" => if ru { "Не мешаю до {}" } else { "Not disturbing you until {}" },
         "resumeNow" => if ru { "Продолжить сейчас" } else { "Resume now" },
-        "engineDown" => if ru { "Движок не запущен" } else { "Engine is not running" },
-        "auto" => if ru { "Авто-переключение" } else { "Auto-switch" },
+        "engineDown" => if ru { "Keygloss не работает" } else { "Engine is not running" },
+        "auto" => if ru { "Автопереключение" } else { "Auto-switch" },
         "dnd" => if ru { "Не мешать" } else { "Do not disturb" },
         "15" => if ru { "15 минут" } else { "15 minutes" },
         "60" => if ru { "1 час" } else { "1 hour" },
@@ -232,7 +232,7 @@ mod tests {
         let m = model(&status(true, Some(1.0), true), Lang::Ru, "0.1.0", |_| "14:30".into());
         assert_eq!(
             texts(&m)[..5],
-            ["[Keygloss 0.1.0]", "-", "[Не мешаю до 14:30]", "resume:Продолжить сейчас", "auto:Авто-переключение:true"]
+            ["[Keygloss 0.1.0]", "-", "[Не мешаю до 14:30]", "resume:Продолжить сейчас", "auto:Автопереключение:true"]
         );
         assert!(!texts(&m).iter().any(|t| t.contains("pause:")));
         assert_eq!(m.tooltip, "Keygloss · Не мешаю до 14:30");
