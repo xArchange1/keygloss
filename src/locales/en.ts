@@ -202,7 +202,7 @@ const en = {
     title: "History",
     local: "History is always local only: it stays on this computer and is never sent anywhere.",
     empty: "No fixes yet",
-    never: "Never translate",
+    never: "Never switch",
     clear: "Clear history",
     enabled: "Keep a history of automatic fixes",
     auto: "Clear automatically",
