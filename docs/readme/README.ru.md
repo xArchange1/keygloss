@@ -15,6 +15,8 @@
   <a href="https://keygloss.com/ru/"><img src="../media/banner-ru.webp" alt="Баннер Keygloss: Больше никаких Ghbdtn. Keygloss сам исправит текст и переключит раскладку, пока вы печатаете."></a>
 </p>
 
+<p align="center">▶ <a href="https://youtu.be/hCwC3H6UGZY">Посмотрите, как это работает</a> (видео на YouTube)</p>
+
 ---
 
 Набираете `ghbdtn`, получаете `привет`, и раскладка переключается сама. RU ↔ EN, на лету или по сочетанию клавиш.

@@ -15,6 +15,8 @@
   <a href="https://keygloss.com"><img src="docs/media/banner-en.webp" alt="Keygloss banner: Wrong layout? Already fixed. The free layout switcher that fixes your text as you type."></a>
 </p>
 
+<p align="center">▶ <a href="https://youtu.be/hCwC3H6UGZY">See it in action</a> (YouTube, in Russian)</p>
+
 ---
 
 Type `ghbdtn`, get `привет`, and the layout switches to match. RU ↔ EN, as you type or with a hotkey.
