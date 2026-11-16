@@ -1,0 +1,33 @@
+name: Downloads badge
+
+# Counts installer downloads only (.exe, .msi, .dmg, .deb, .rpm), skipping updater
+# signatures, latest.json and the macOS update archive, and publishes the total as a
+# shields.io endpoint JSON on the `badges` branch for the README badge.
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  push:
+    branches: [main]
+    paths: [".github/workflows/downloads-badge.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish the installer download count
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          count=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
+            --jq '.[].assets[] | select(.name | test("[.](exe|msi|dmg|deb|rpm)$")) | .download_count' \
+            | awk '{ s += $1 } END { print s + 0 }')
+          mkdir badges && cd badges
+          printf '{"schemaVersion":1,"label":"downloads","message":"%s","color":"brightgreen"}\n' "$count" > downloads.json
+          git init -q -b badges
+          git add downloads.json
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "Update the download count"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/$GITHUB_REPOSITORY.git" badges

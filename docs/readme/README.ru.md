@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/xArchange1/keygloss/releases"><img src="https://img.shields.io/github/downloads/xArchange1/keygloss/total?label=%D1%81%D0%BA%D0%B0%D1%87%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F" alt="Скачивания"></a>
+  <a href="https://github.com/xArchange1/keygloss/releases"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FxArchange1%2Fkeygloss%2Fbadges%2Fdownloads.json&label=%D1%81%D0%BA%D0%B0%D1%87%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F" alt="Скачивания"></a>
 </p>
 
 <p align="center">
