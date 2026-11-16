@@ -13,6 +13,8 @@ use crate::state::AppState;
 pub const ID_AUTO: &str = "auto";
 pub const ID_RESUME: &str = "resume";
 pub const ID_SETTINGS: &str = "settings";
+pub const ID_CHECK_UPDATE: &str = "check-update";
+pub const ID_UPDATE: &str = "update";
 pub const ID_QUIT: &str = "quit";
 pub const PAUSE_PREFIX: &str = "pause:";
 const PAUSE_MINUTES: [u32; 4] = [15, 60, 180, 300];
@@ -48,6 +50,8 @@ fn tr(lang: Lang, key: &str) -> &'static str {
         "180" => if ru { "3 часа" } else { "3 hours" },
         "300" => if ru { "5 часов" } else { "5 hours" },
         "settings" => if ru { "Настройки…" } else { "Settings…" },
+        "checkUpdate" => if ru { "Проверить обновления" } else { "Check for updates" },
+        "update" => if ru { "Доступно обновление: {}" } else { "Update available: {}" },
         "quit" => if ru { "Выйти" } else { "Quit" },
         _ => "",
     }
@@ -77,7 +81,8 @@ pub struct Model {
     pub dimmed: bool,
 }
 
-pub fn model(status: &EngineStatus, lang: Lang, version: &str, time: impl Fn(f64) -> String) -> Model {
+/// `update`: the version found by the last update check.
+pub fn model(status: &EngineStatus, lang: Lang, version: &str, update: Option<&str>, time: impl Fn(f64) -> String) -> Model {
     let t = |k: &str| tr(lang, k).to_string();
     let mut header = format!("Keygloss {version}");
     if !status.auto_enabled {
@@ -103,6 +108,10 @@ pub fn model(status: &EngineStatus, lang: Lang, version: &str, time: impl Fn(f64
     entries.extend([
         Entry::Separator,
         Entry::Action(ID_SETTINGS.into(), t("settings")),
+        match update {
+            Some(v) => Entry::Action(ID_UPDATE.into(), t("update").replace("{}", v)),
+            None => Entry::Action(ID_CHECK_UPDATE.into(), t("checkUpdate")),
+        },
         Entry::Separator,
         Entry::Action(ID_QUIT.into(), t("quit")),
     ]);
@@ -171,7 +180,8 @@ pub fn refresh(app: &AppHandle) {
     let (Some(tray), Some(icon)) = (app.tray_by_id(TRAY_ID), app.default_window_icon()) else { return };
     let status = state.status();
     let lang = Lang::resolve(state.settings().language);
-    let m = model(&status, lang, &app.package_info().version.to_string(), hh_mm);
+    let update = state.pending_update().map(|u| u.version);
+    let m = model(&status, lang, &app.package_info().version.to_string(), update.as_deref(), hh_mm);
     {
         let mut last = state.tray_model.lock().unwrap_or_else(|p| p.into_inner());
         if last.as_ref() == Some(&m) {
@@ -209,7 +219,7 @@ mod tests {
 
     #[test]
     fn running_and_active() {
-        let m = model(&status(true, None, true), Lang::En, "0.1.0", |_| unreachable!());
+        let m = model(&status(true, None, true), Lang::En, "0.1.0", None, |_| unreachable!());
         assert_eq!(
             texts(&m),
             [
@@ -219,6 +229,7 @@ mod tests {
                 "Do not disturb>pause:15,pause:60,pause:180,pause:300",
                 "-",
                 "settings:Settings…",
+                "check-update:Check for updates",
                 "-",
                 "quit:Quit",
             ]
@@ -229,7 +240,7 @@ mod tests {
 
     #[test]
     fn paused_hides_the_pause_submenu() {
-        let m = model(&status(true, Some(1.0), true), Lang::Ru, "0.1.0", |_| "14:30".into());
+        let m = model(&status(true, Some(1.0), true), Lang::Ru, "0.1.0", None, |_| "14:30".into());
         assert_eq!(
             texts(&m)[..5],
             ["[Keygloss 0.1.0]", "-", "[Не мешаю до 14:30]", "resume:Продолжить сейчас", "auto:Автопереключение:true"]
@@ -241,7 +252,7 @@ mod tests {
 
     #[test]
     fn auto_off_and_engine_down() {
-        let m = model(&status(false, None, false), Lang::En, "0.1.0", |_| unreachable!());
+        let m = model(&status(false, None, false), Lang::En, "0.1.0", None, |_| unreachable!());
         assert_eq!(
             texts(&m)[..4],
             ["[Keygloss 0.1.0 · auto off]", "-", "[Engine is not running]", "auto:Auto-switch:false"]
@@ -250,7 +261,14 @@ mod tests {
         assert_eq!(m.tooltip, "Keygloss · Engine is not running");
         assert!(m.dimmed);
         let unhealthy = EngineStatus { hook_healthy: false, ..status(true, None, true) };
-        assert!(texts(&model(&unhealthy, Lang::En, "1", |_| String::new())).contains(&"[Engine is not running]".into()));
+        assert!(texts(&model(&unhealthy, Lang::En, "1", None, |_| String::new())).contains(&"[Engine is not running]".into()));
+    }
+
+    #[test]
+    fn pending_update_replaces_the_check() {
+        let m = model(&status(true, None, true), Lang::Ru, "0.1.0", Some("0.2.0"), |_| unreachable!());
+        assert!(texts(&m).contains(&"update:Доступно обновление: 0.2.0".into()));
+        assert!(!texts(&m).iter().any(|t| t.starts_with("check-update:")));
     }
 
     #[test]

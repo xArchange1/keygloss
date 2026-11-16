@@ -109,6 +109,8 @@ pub(crate) fn on_tray_menu(app: &AppHandle, id: &str) {
     match id {
         tray::ID_SETTINGS => windows::open_settings(app),
         tray::ID_QUIT => quit(app),
+        tray::ID_CHECK_UPDATE => update::check_from_tray(app),
+        tray::ID_UPDATE => ipc::open_update(app.clone()),
         tray::ID_AUTO => {
             let on = !state.status().auto_enabled;
             match &state.engine {
