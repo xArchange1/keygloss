@@ -201,12 +201,16 @@ h1{font-size:100px;line-height:1.1;font-weight:700;letter-spacing:-.03em}
   box-shadow:inset 0 1px 0 color-mix(in srgb,var(--kg-on-accent) 35%,transparent),0 1px 2px color-mix(in srgb,var(--kg-text) 20%,transparent),0 8px 16px -8px color-mix(in srgb,var(--kg-accent) 70%,transparent)}
 .pill.primary:hover{background:var(--kg-accent)}
 .pill.sm{height:36px;font-size:16px;padding:0 18px}
-.watch{display:inline-flex;align-items:center;gap:10px;margin-top:22px;font-size:15px;color:var(--muted)}
-.watch:hover{color:var(--ink)}
-.play{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;border:1px solid var(--line-2);background:var(--kg-raised);color:var(--kg-detail);transition:background-color .15s,color .15s,border-color .15s}
+.watch{display:inline-flex;align-items:center;gap:14px;margin-top:22px;padding:6px 20px 6px 6px;border-radius:12px;text-align:left;font-size:15px;line-height:1.3;
+  background:color-mix(in srgb,var(--kg-raised) 70%,transparent);border:1px solid var(--line);box-shadow:0 6px 14px -10px color-mix(in srgb,var(--kg-text) 40%,transparent);transition:border-color .15s}
+.watch:hover{border-color:var(--line-2)}
+.watch small{display:block;font-size:12.5px;color:var(--faint)}
+.thumb{position:relative;display:block;flex:none;width:128px;height:72px;border-radius:7px;overflow:hidden}
+.thumb img{display:block;width:100%;height:100%;object-fit:cover}
+.play{position:absolute;inset:0;margin:auto;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--kg-raised);color:var(--kg-detail);
+  box-shadow:0 2px 8px color-mix(in srgb,#000 35%,transparent);transition:background-color .15s,color .15s}
 .play svg{width:12px;height:12px;fill:currentColor;margin-left:2px}
-.watch:hover .play{background:var(--kg-detail);border-color:var(--kg-detail);color:var(--kg-raised)}
-.watch small{font-size:12.5px;color:var(--faint)}
+.watch:hover .play{background:var(--kg-detail);color:var(--kg-raised)}
 .under{font-size:12.5px;color:var(--faint);margin-top:14px}
 .neutral{font-size:13.5px;color:var(--muted);margin-top:10px}
 
@@ -543,7 +547,7 @@ footer{padding:8px 0 28px}
       <a class="pill primary" id="ctaMain" href="https://github.com/xArchange1/keygloss/releases/latest"><svg class="ico" aria-hidden="true"><use id="ctaMainG" href="#i-win"/></svg><span id="ctaMainT">download for windows</span></a>
       <a class="pill" id="ctaOther" href="#install"><svg class="ico" aria-hidden="true"><use href="#i-desk"/></svg><span data-i18n="hero.other">other platforms</span></a>
     </div>
-    <a class="watch" href="https://youtu.be/hCwC3H6UGZY"><span class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4.5v15L19.5 12z"/></svg></span><span data-i18n="hero.video">see it in action <small>· video, in russian</small></span></a>
+    <a class="watch" href="https://youtu.be/hCwC3H6UGZY"><span class="thumb"><img src="/img/video.webp" alt="" width="160" height="90"><span class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4.5v15L19.5 12z"/></svg></span></span><span data-i18n="hero.video">see it in action<small>video on youtube</small></span></a>
     <p class="under" id="ctaHint" hidden></p>
     <p class="under" data-i18n="hero.under">100% local, free and open source. fixes your text as you type.</p>
     <p class="neutral" data-neutral hidden data-i18n="os.neutral">keygloss is a desktop app, for windows, macos and linux.</p>
@@ -732,7 +736,7 @@ footer{padding:8px 0 28px}
     'ui.when1':'15 ноября, 10:20',
     'ui.pageLayout':'Переключение раскладки','ui.pageSnip':'Сниппеты','ui.short':'Минимальная длина слова',
     'cap.toggles':'раскладка','cap.trig':'срабатывание','cap.hot':'сочетание','cap.snip':'сниппеты','cap.hist':'история',
-    'hero.tag':'Больше никаких <em>Ghbdtn</em>','hero.other':'другие платформы','hero.video':'посмотрите, как это работает <small>· видео на youtube</small>','hero.under':'полностью локально, бесплатно, с открытым кодом. исправляет текст, пока вы печатаете.',
+    'hero.tag':'Больше никаких <em>Ghbdtn</em>','hero.other':'другие платформы','hero.video':'посмотрите, как это работает<small>видео на youtube</small>','hero.under':'полностью локально, бесплатно, с открытым кодом. исправляет текст, пока вы печатаете.',
     'os.neutral':'keygloss — программа для компьютера: windows, macos и linux.','os.label':'Платформа',
     'demo.typed':'что вы набрали','demo.got':'что попало в сообщение','demo.status':'каждое слово исправляется, как только вы его закончили, и раскладка переключается следом.',
     'rows.h':'Что умеет Keygloss',
