@@ -50,7 +50,7 @@ In priority order:
 
 - Name: Keygloss. Icon: `site/public/img/keygloss.svg`, `site/public/img/icon.png`.
 - Never use Keyboop's name, icon, copy, endpoints or links. Keygloss is a rewrite of Keyboop (MIT), and the attribution stays in `LICENSE` and `THIRD_PARTY.md`.
-- Sponsorship goes through Boosty (`https://boosty.to/xarchange1/donate`) and helps fund an Apple Developer ID.
+- Sponsorship goes through Boosty (`https://boosty.to/xarchange1/donate`) or a T-Bank transfer (`https://t.tb.ru/pm_short/2Jf29Z7cIgW`) and helps fund an Apple Developer ID.
 
 ## Evidence on Hand
 
