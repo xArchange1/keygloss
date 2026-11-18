@@ -216,7 +216,12 @@ pub fn run() {
         // SAFETY: no other thread exists yet.
         unsafe { std::env::set_var("GDK_BACKEND", "x11") };
     }
-    let builder = tauri::Builder::default();
+    let mut builder = tauri::Builder::default();
+    // Tells the pages to offer updates as downloads (`MANUAL_UPDATES` in ipc.ts).
+    if update::portable() {
+        let script = "window.__KG_PORTABLE__ = true;";
+        builder = builder.plugin(tauri::plugin::Builder::<_, ()>::new("portable").js_init_script(script).build());
+    }
     #[cfg(target_os = "macos")]
     let builder = builder.plugin(tauri_nspanel::init());
     builder

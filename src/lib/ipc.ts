@@ -303,8 +303,10 @@ export const openSponsor = () => invoke<void>("open_sponsor");
 export const openAccessibilitySettings = () => invoke<void>("open_accessibility_settings");
 /** Running on macOS (the hook there needs the Accessibility permission; shortcuts use Command). */
 export const IS_MAC = navigator.userAgent.includes("Mac");
-/** Running on Linux (the hook needs access to the input devices; updates are downloaded by hand). */
+/** Running on Linux (the hook needs access to the input devices). */
 export const IS_LINUX = navigator.userAgent.includes("Linux");
+/** Updates are downloaded by hand from the release page: Linux and the portable Windows copy. */
+export const MANUAL_UPDATES = IS_LINUX || "__KG_PORTABLE__" in window;
 /** Automatic fixes, newest first. Stored on this computer only. */
 export const getHistory = () => invoke<HistoryEntry[]>("get_history");
 export const clearHistory = () => invoke<void>("clear_history");

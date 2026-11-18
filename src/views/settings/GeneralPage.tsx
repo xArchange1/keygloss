@@ -34,8 +34,8 @@ export function GeneralPage() {
     });
   };
   const install = () => {
-    // Linux: opens the release page, the app keeps running.
-    if (!ipc.IS_LINUX) setUpd("installing");
+    // Linux and portable: opens the release page, the app keeps running.
+    if (!ipc.MANUAL_UPDATES) setUpd("installing");
     ipc.installUpdate().catch((e) => {
       console.error(e);
       setUpd("failed");
@@ -71,7 +71,7 @@ export function GeneralPage() {
         <Row title={t(`upd.${upd}`, { version: newVersion })} sub={t("upd.current", { version })} control={
           upd === "available" || upd === "installing"
             ? <Button variant="primary" disabled={upd === "installing"} onClick={install}>
-              {t(ipc.IS_LINUX ? "upd.download" : "upd.install")}
+              {t(ipc.MANUAL_UPDATES ? "upd.download" : "upd.install")}
             </Button>
             : <Button disabled={upd === "checking"} onClick={check}>{t("upd.check")}</Button>
         } />
@@ -85,7 +85,7 @@ export function GeneralPage() {
         } />
         <SwitchRow title={t("upd.startup")} checked={s.updateCheckOnStartup}
           onChange={(updateCheckOnStartup) => update({ updateCheckOnStartup })} />
-        {!ipc.IS_LINUX && (
+        {!ipc.MANUAL_UPDATES && (
           <SwitchRow title={t("upd.auto")} help={t("upd.autoSub")} disabled={!s.updateCheckOnStartup}
             checked={s.autoUpdate} onChange={(autoUpdate) => update({ autoUpdate })} />
         )}
