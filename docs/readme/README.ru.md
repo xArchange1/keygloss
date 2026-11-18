@@ -50,7 +50,7 @@
 | Система | Команда |
 | --- | --- |
 | Windows | `winget install xArchange1.keygloss` |
-| macOS | `brew install --cask xArchange1/tap/keygloss`<br><br>[Поддержите проект](https://github.com/xArchange1/keygloss#sponsor), чтобы помочь с покупкой Apple Developer ID. |
+| macOS | `brew install --cask xArchange1/tap/keygloss`<br><br>[Поддержите проект](#поддержать-проект), чтобы помочь с покупкой Apple Developer ID. |
 | Linux | <code>curl -fsSL https://raw.githubusercontent.com/xArchange1/keygloss/main/packaging/linux/install.sh | sh</code> |
 
 Версии для macOS и Linux пока в стадии бета-тестирования. Команда winget пока не работает: скачайте установщик из [Releases](https://github.com/xArchange1/keygloss/releases/latest).
@@ -78,6 +78,13 @@ Keygloss обрабатывает ввод только на этом компь
 
 - чтобы при запуске проверить на GitHub, нет ли новой версии, и скачать её. Это отключается в разделе «Настройки → Общие» («Проверять обновления при запуске»).
 - когда вы нажимаете на ссылку: она открывается в браузере.
+
+## Поддержать проект
+
+Если Keygloss избавляет вас от перепечатывания, вы можете поддержать его разработку:
+
+- [Boosty](https://boosty.to/xarchange1/donate)
+- [Перевод через Т-Банк (подойдёт карта любого банка)](https://t.tb.ru/pm_short/2Jf29Z7cIgW)
 
 ## Благодарности
 

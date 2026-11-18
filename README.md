@@ -93,7 +93,10 @@ Keygloss processes your typing only on this computer and collects no usage data 
 
 ## Sponsor
 
-If Keygloss saves you some retyping, you can support its development on [Boosty](https://boosty.to/xarchange1/donate).
+If Keygloss saves you some retyping, you can support its development:
+
+- [Boosty](https://boosty.to/xarchange1/donate)
+- [Перевод через Т-Банк (подойдёт карта любого банка)](https://t.tb.ru/pm_short/2Jf29Z7cIgW)
 
 ## Credits
 
