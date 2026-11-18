@@ -1,8 +1,8 @@
 name: Release
 
-# Pushing a tag v<version> publishes that version: NSIS and MSI installers, a universal macOS .dmg,
-# their updater artifacts and signatures (.sig) and the updater manifest (latest.json) the app reads,
-# and Linux .deb and .rpm packages. A version with a suffix (v0.2.0-beta.1) is a pre-release, built
+# Pushing a tag v<version> publishes that version: NSIS and MSI installers, a portable Windows .zip,
+# a universal macOS .dmg, their updater artifacts and the updater manifest (latest.json) the app
+# reads, which holds their signatures, and Linux .deb and .rpm packages. A version with a suffix (v0.2.0-beta.1) is a pre-release, built
 # as NSIS only on Windows (WiX rejects non-numeric pre-release versions) and .deb only on Linux.
 on:
   push:
@@ -48,6 +48,18 @@ jobs:
           # Installed copies update through the NSIS installer, not the MSI.
           updaterJsonPreferNsis: true
           args: --config src-tauri/tauri.release.conf.json${{ contains(github.ref_name, '-') && ' --bundles nsis' || '' }}
+      # The portable copy: the app's exe with portable.txt, which makes it offer updates as downloads.
+      - name: Upload the portable zip
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $dir = New-Item -ItemType Directory "$env:RUNNER_TEMP/portable"
+          Copy-Item target/release/keygloss.exe "$dir/Keygloss.exe"
+          Copy-Item packaging/windows/portable.txt $dir
+          $zip = "$env:RUNNER_TEMP/Keygloss_$($env:GITHUB_REF_NAME.TrimStart('v'))_x64-portable.zip"
+          Compress-Archive -Path "$dir/*" -DestinationPath $zip
+          gh release upload $env:GITHUB_REF_NAME $zip --clobber
 
   # A universal (Apple Silicon + Intel) .app and .dmg, plus the updater's .app.tar.gz, added to the
   # same release and manifest. After the Windows job: both jobs edit latest.json.
@@ -131,6 +143,15 @@ jobs:
           releaseBody: ${{ steps.notes.outputs.body }}
           prerelease: ${{ contains(github.ref_name, '-') }}
           args: --target universal-apple-darwin --config src-tauri/tauri.release.macos.conf.json
+      # The updater reads the signatures from latest.json: the separate .sig files only clutter the
+      # release. After the Windows job, so its files are there too.
+      - name: Remove the .sig files
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" --json assets -q '.assets[].name | select(endswith(".sig"))' |
+            xargs -r -n1 gh release delete-asset "$GITHUB_REF_NAME" -y
       # Stable releases publish packaging/homebrew/keygloss.rb, with this version and the .dmg's
       # sha256, to the tap (xArchange1/homebrew-tap). HOMEBREW_TAP_DEPLOY_KEY is the private half of
       # a write deploy key on that repository.

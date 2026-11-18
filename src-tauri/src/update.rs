@@ -1,6 +1,9 @@
 //! Updates from GitHub releases, installed by `tauri-plugin-updater` (signed NSIS installers).
 //! Linux packages do not update themselves: a check reads the release from the GitHub API and
-//! "install" opens its page. These are the only network requests the app makes.
+//! "install" opens its page, as it does for the portable Windows copy. These are the only network
+//! requests the app makes.
+
+use std::sync::LazyLock;
 
 use keygloss_core::settings::UpdateChannel;
 use serde::Deserialize;
@@ -15,6 +18,20 @@ use crate::state::AppState;
 use crate::{ipc, windows};
 
 const REPO: &str = "xArchange1/keygloss";
+
+/// The portable Windows copy: the release's zip puts `portable.txt` next to the exe.
+pub fn portable() -> bool {
+    static PORTABLE: LazyLock<bool> = LazyLock::new(|| {
+        cfg!(windows) && std::env::current_exe().is_ok_and(|exe| exe.with_file_name("portable.txt").exists())
+    });
+    *PORTABLE
+}
+
+/// Opens the page of release `version`, with its downloads.
+fn open_release(version: &str) -> Result<(), String> {
+    let url = format!("https://github.com/{REPO}/releases/tag/v{version}");
+    crate::os::shell::open(&url).then_some(()).ok_or("could not open the browser".into())
+}
 
 #[derive(Deserialize)]
 struct Release {
@@ -93,8 +110,7 @@ pub async fn check(app: &AppHandle) -> Result<Option<String>, String> {
 #[cfg(target_os = "linux")]
 pub async fn install(app: &AppHandle) -> Result<(), String> {
     let update = app.state::<AppState>().pending_update().ok_or("no update")?;
-    let url = format!("https://github.com/{REPO}/releases/tag/v{}", update.version);
-    crate::os::shell::open(&url).then_some(()).ok_or("could not open the browser".into())
+    open_release(&update.version)
 }
 
 /// Looks for a release newer than this build and remembers it. `Some(version)`: found one.
@@ -130,9 +146,13 @@ pub async fn check(app: &AppHandle) -> Result<Option<String>, String> {
 }
 
 /// Downloads the update found by the last check and runs its installer, which restarts the app.
+/// The portable copy opens the release page instead.
 #[cfg(not(target_os = "linux"))]
 pub async fn install(app: &AppHandle) -> Result<(), String> {
     let update = app.state::<AppState>().pending_update().ok_or("no update")?;
+    if portable() {
+        return open_release(&update.version);
+    }
     update.download_and_install(|_, _| {}, || {}).await.map_err(|e| e.to_string())
 }
 
@@ -167,8 +187,8 @@ pub fn on_startup(app: &AppHandle) {
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
         match check(&app).await {
-            // Linux packages do not update themselves: always the banner.
-            Ok(Some(_)) if settings.auto_update && cfg!(not(target_os = "linux")) => {
+            // Linux packages and the portable copy do not update themselves: always the banner.
+            Ok(Some(_)) if settings.auto_update && cfg!(not(target_os = "linux")) && !portable() => {
                 if let Err(e) = install(&app).await {
                     crate::log::write(&format!("error update install failed: {e}"));
                 }

@@ -53,9 +53,19 @@ Type `ghbdtn`, get `привет`, and the layout switches to match. RU ↔ EN, 
 | macOS | `brew install --cask xArchange1/tap/keygloss`<br><br>[Sponsor](https://github.com/xArchange1/keygloss#sponsor) to get me an Apple Developer ID.  |
 | Linux | <code>curl -fsSL https://raw.githubusercontent.com/xArchange1/keygloss/main/packaging/linux/install.sh | sh</code> |
 
-The macOS and Linux versions are in beta. The winget command doesn't work yet: download the installer from [Releases](https://github.com/xArchange1/keygloss/releases/latest).
+The macOS and Linux versions are in beta. The winget command doesn't work yet: download the installer from [Releases](https://github.com/xArchange1/keygloss/releases/latest), or the portable `.zip`, which runs without installing and reports new versions instead of installing them.
 
-On macOS, allow Keygloss in System Settings > Privacy & Security > Accessibility on first launch.
+On macOS, allow Keygloss in System Settings > Privacy & Security > Accessibility on first launch. The app is self-signed: if you downloaded the `.dmg` instead of using Homebrew, macOS blocks its first launch until you click Open Anyway in System Settings > Privacy & Security.
+
+### Verify a download
+
+Each file on the [Releases](https://github.com/xArchange1/keygloss/releases) page lists its SHA-256 digest. Compare it with your download's:
+
+- Windows (PowerShell): `Get-FileHash <file>`
+- macOS: `shasum -a 256 <file>`
+- Linux: `sha256sum <file>`
+
+A mismatch means the file is damaged or altered: download it again and don't open it.
 
 ### Linux
 

@@ -1,6 +1,6 @@
 name: Downloads badge
 
-# Counts installer downloads only (.exe, .msi, .dmg, .deb, .rpm), skipping updater
+# Counts installer downloads only (.exe, .msi, .zip, .dmg, .deb, .rpm), skipping updater
 # signatures, latest.json and the macOS update archive, and publishes the total as a
 # shields.io endpoint JSON on the `badges` branch for the README badge.
 on:
@@ -23,7 +23,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           count=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
-            --jq '.[].assets[] | select(.name | test("[.](exe|msi|dmg|deb|rpm)$")) | .download_count' \
+            --jq '.[].assets[] | select(.name | test("[.](exe|msi|zip|dmg|deb|rpm)$")) | .download_count' \
             | awk '{ s += $1 } END { print s + 0 }')
           mkdir badges && cd badges
           printf '{"schemaVersion":1,"label":"downloads","message":"%s","color":"brightgreen"}\n' "$count" > downloads.json

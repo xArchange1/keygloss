@@ -1,0 +1,2 @@
+Keygloss runs as a portable app while this file is next to Keygloss.exe: it reports new versions
+instead of installing them. Settings are still kept in %APPDATA%\com.keygloss.app.
