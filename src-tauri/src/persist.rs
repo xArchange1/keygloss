@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use keygloss_core::settings::{Settings, UiLanguage};
 use serde_json::Value;
-use tauri::{AppHandle, Manager, Wry};
+use tauri::{AppHandle, Wry};
 use tauri_plugin_store::{Store, StoreExt};
 
 pub const FILE: &str = "settings.json";
@@ -15,10 +15,9 @@ const OLD_LEARNED: &str = "learnedWords";
 /// Changes within this window are written to disk once.
 const SAVE_DEBOUNCE: Duration = Duration::from_millis(500);
 
-/// Opens the store in the app config dir. A missing or corrupt file yields an empty store.
+/// Opens the store in the config dir. A missing or corrupt file yields an empty store.
 pub fn open(app: &AppHandle) -> Result<Arc<Store<Wry>>, String> {
-    let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
-    app.store_builder(dir.join(FILE)).auto_save(SAVE_DEBOUNCE).build().map_err(|e| e.to_string())
+    app.store_builder(crate::paths::dirs().config.join(FILE)).auto_save(SAVE_DEBOUNCE).build().map_err(|e| e.to_string())
 }
 
 /// Defaults overlaid with every stored key that is valid on its own; unknown and malformed

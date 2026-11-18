@@ -243,8 +243,8 @@ pub fn set_launch_at_login(app: AppHandle, enabled: bool) -> Result<bool, String
 
 /// Plays a sound at a volume: the settings page previews a choice with it.
 #[tauri::command]
-pub fn preview_sound(app: AppHandle, sound: Sound, volume: f64) {
-    sound::play(&app, sound, volume);
+pub fn preview_sound(sound: Sound, volume: f64) {
+    sound::play(sound, volume);
 }
 
 /// Asks for an audio file, keeps a copy of it as the custom sound, then selects and plays it.
@@ -254,11 +254,12 @@ pub async fn choose_sound_file(app: AppHandle, window: WebviewWindow) -> Result<
     let dialog = rfd::FileDialog::new().add_filter("WAV, MP3", &["wav", "mp3"]).set_parent(&window);
     let Some(picked) = dialog.pick_file() else { return Ok(false) };
     sound::decode(&picked).ok_or("not audio")?;
-    let copy = sound::custom_file(&app).ok_or("no config dir")?;
+    let copy = sound::custom_file();
+    let _ = std::fs::create_dir_all(crate::paths::dirs().data.as_path());
     std::fs::copy(&picked, copy).map_err(|e| e.to_string())?;
     let name = picked.file_name().unwrap_or_default().to_string_lossy();
     let s = update_settings(app.clone(), app.state(), json!({ "sound": "custom", "soundFile": name }))?;
-    sound::play(&app, s.sound, s.sound_volume);
+    sound::play(s.sound, s.sound_volume);
     Ok(true)
 }
 
@@ -329,6 +330,14 @@ pub fn open_accessibility_settings() -> Result<(), String> {
     return crate::os::shell::open_accessibility_settings().then_some(()).ok_or("could not open System Settings".into());
     #[cfg(not(target_os = "macos"))]
     Err("macOS only".into())
+}
+
+/// Shows the folder with `settings.json` in Explorer (Finder on macOS).
+#[tauri::command]
+pub fn open_settings_folder() -> Result<(), String> {
+    let dir = &crate::paths::dirs().config;
+    let _ = std::fs::create_dir_all(dir);
+    crate::os::shell::open(&dir.to_string_lossy()).then_some(()).ok_or("could not open the folder".into())
 }
 
 /// Shows the folder with the log files in Explorer (Finder on macOS).
