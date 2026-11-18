@@ -25,7 +25,11 @@ const PICKER_CHROME: f64 = 60.0;
 const PICKER_MAX_ROWS: usize = 12;
 
 fn builder<'a>(app: &'a AppHandle, label: &'a str) -> WebviewWindowBuilder<'a, tauri::Wry, AppHandle> {
-    WebviewWindowBuilder::new(app, label, WebviewUrl::default()).title("Keygloss")
+    let b = WebviewWindowBuilder::new(app, label, WebviewUrl::default()).title("Keygloss");
+    match &crate::paths::dirs().cache {
+        Some(dir) => b.data_directory(dir.clone()),
+        None => b,
+    }
 }
 
 /// Turns off WebView2's browser shortcuts (reload, print, find, back/forward, ...), its zoom

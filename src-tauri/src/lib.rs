@@ -2,6 +2,7 @@ mod history;
 mod ipc;
 mod log;
 mod os;
+mod paths;
 mod persist;
 mod report;
 mod sound;
@@ -59,7 +60,7 @@ fn on_engine_event(app: &AppHandle, store: &Store<Wry>, history: &Store<Wry>, ev
         }
         EngineEvent::SnippetPickerClose => on_main(app, windows::hide_picker),
         EngineEvent::HotkeyCaptured(_) => {}
-        EngineEvent::PlaySound { sound, volume } => sound::play(app, sound, volume),
+        EngineEvent::PlaySound { sound, volume } => sound::play(sound, volume),
         EngineEvent::Log(line) => log::write(&line),
         EngineEvent::Converted { from, to } => {
             let Some(s) = app.try_state::<AppState>().map(|s| s.settings()).filter(|s| s.history_enabled) else {
@@ -149,9 +150,8 @@ fn quit(app: &AppHandle) {
 }
 
 fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-    if let Ok(dir) = app.path().app_log_dir() {
-        log::init(dir);
-    }
+    paths::init(app)?;
+    log::init(paths::dirs().logs.clone());
     log::write(&format!("start version={} os={}", app.package_info().version, os::shell::os_version()));
     let store = persist::open(app)?;
     let history = history::open(app)?;
@@ -271,6 +271,7 @@ pub fn run() {
             ipc::open_update,
             ipc::take_whats_new,
             ipc::report_issue,
+            ipc::open_settings_folder,
             ipc::open_logs,
             ipc::open_sponsor,
             ipc::open_accessibility_settings,

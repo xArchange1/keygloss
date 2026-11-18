@@ -59,6 +59,7 @@ export function AboutPage() {
       <div className="flex flex-wrap gap-2">
         <Button onClick={() => ipc.reportIssue(true).catch(console.error)}><Bug size={14} />{t("about.reportBug")}</Button>
         <Button onClick={() => ipc.reportIssue(false).catch(console.error)}><Lightbulb size={14} />{t("about.requestFeature")}</Button>
+        <Button variant="ghost" onClick={() => ipc.openSettingsFolder().catch(console.error)}><FolderOpen size={14} />{t("about.openSettingsFolder")}</Button>
         <Button variant="ghost" onClick={() => ipc.openLogs().catch(console.error)}><FolderOpen size={14} />{t("about.openLogs")}</Button>
       </div>
       <Hint>{t("about.feedbackHint")}</Hint>

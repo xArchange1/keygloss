@@ -235,6 +235,7 @@ const en = {
     feedback: "Feedback",
     reportBug: "Report a problem",
     requestFeature: "Suggest a feature",
+    openSettingsFolder: "Open the settings folder",
     openLogs: "Open the log folder",
     feedbackHint: "Opens a GitHub form in your browser with the app version, the system version and the latest log lines filled in. Nothing is sent until you submit it. The log has no typed text: only lengths, app names and layouts.",
   },

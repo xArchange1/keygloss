@@ -10,11 +10,10 @@ use std::time::Duration;
 use keygloss_core::cue;
 use keygloss_core::settings::Sound;
 use rodio::{Decoder, DeviceSinkBuilder, Player, Source};
-use tauri::{AppHandle, Manager};
 
-/// The app's copy of the custom sound, in the config dir. No extension: the format is read
+/// The app's copy of the custom sound, in the data dir. No extension: the format is read
 /// from the content.
-const CUSTOM_FILE: &str = "custom-sound";
+pub const CUSTOM_FILE: &str = "custom-sound";
 /// A custom sound is cut off after this long.
 const CUSTOM_LIMIT: Duration = Duration::from_secs(5);
 /// The output gain at 100% volume: full gain was far too loud, so the slider spans 0..=20% of it.
@@ -26,8 +25,8 @@ struct Cue {
     custom: PathBuf,
 }
 
-pub fn custom_file(app: &AppHandle) -> Option<PathBuf> {
-    app.path().app_config_dir().ok().map(|dir| dir.join(CUSTOM_FILE))
+pub fn custom_file() -> PathBuf {
+    crate::paths::dirs().data.join(CUSTOM_FILE)
 }
 
 /// The file as audio; `None` if it is missing or not WAV or MP3.
@@ -75,9 +74,9 @@ fn run(cue: &Cue, next: &Receiver<Cue>) -> Result<Cue, RecvError> {
 
 /// Plays `sound` without blocking the caller; a newer sound cuts an older one off. A missing
 /// or unreadable custom file plays nothing.
-pub fn play(app: &AppHandle, sound: Sound, volume: f64) {
+pub fn play(sound: Sound, volume: f64) {
     static CUES: OnceLock<Sender<Cue>> = OnceLock::new();
-    let Some(custom) = custom_file(app) else { return };
+    let custom = custom_file();
     if sound == Sound::Off || volume <= 0.0 {
         return;
     }

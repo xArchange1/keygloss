@@ -1,4 +1,4 @@
-//! History of automatic fixes, newest first, in `history.json` next to the settings. It holds
+//! History of automatic fixes, newest first, in `history.json` in the state dir. It holds
 //! typed words, so it never leaves this computer: not in the log, not in issue reports.
 
 use std::sync::Arc;
@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tauri::{AppHandle, Manager, Wry};
+use tauri::{AppHandle, Wry};
 use tauri_plugin_store::{Store, StoreExt};
 
 use crate::state::unix_now;
@@ -27,8 +27,7 @@ pub struct Entry {
 }
 
 pub fn open(app: &AppHandle) -> Result<Arc<Store<Wry>>, String> {
-    let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
-    app.store_builder(dir.join(FILE)).auto_save(SAVE_DEBOUNCE).build().map_err(|e| e.to_string())
+    app.store_builder(crate::paths::dirs().state.join(FILE)).auto_save(SAVE_DEBOUNCE).build().map_err(|e| e.to_string())
 }
 
 /// The list, without (and removing from the store) entries older than `keep_days`; 0 keeps all.

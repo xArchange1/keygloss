@@ -295,6 +295,8 @@ export const installUpdate = () => invoke<void>("install_update");
 export const openUpdate = () => invoke<void>("open_update");
 /** Opens the GitHub bug form (`bug`) or feature form in the browser, prefilled with the app version, the OS version and (bug form) the newest log lines. */
 export const reportIssue = (bug: boolean) => invoke<void>("report_issue", { bug });
+/** Shows the folder with `settings.json` in Explorer (Finder on macOS). */
+export const openSettingsFolder = () => invoke<void>("open_settings_folder");
 /** Shows the folder with the log files in Explorer (Finder on macOS). */
 export const openLogs = () => invoke<void>("open_logs");
 /** Opens the Sponsor section of the README in the browser. */

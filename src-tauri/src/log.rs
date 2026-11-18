@@ -1,6 +1,6 @@
-//! The log file: one timestamped line per event, in the app log dir
-//! (`%LOCALAPPDATA%\com.keygloss.app\logs\keygloss.log`). Lines never contain typed text, only
-//! lengths.
+//! The log file: one timestamped line per event, in the log dir
+//! (`%LOCALAPPDATA%\Keygloss\logs\keygloss.log`, see `paths.rs`). Lines never contain typed
+//! text, only lengths.
 
 use std::fs::{self, File, OpenOptions};
 use std::io::Write;
