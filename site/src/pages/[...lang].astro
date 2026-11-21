@@ -6,10 +6,10 @@ export function getStaticPaths() {
 }
 const ru = Astro.params.lang === "ru";
 const url = ru ? "https://keygloss.com/ru/" : "https://keygloss.com/";
-const title = ru ? "keygloss: набрали ghbdtn, получили привет" : "keygloss: type ghbdtn, get привет";
+const title = ru ? "keygloss: лучшая бесплатная альтернатива Punto Switcher" : "keygloss: the best free Punto Switcher alternative";
 const description = ru
-  ? "Keygloss исправляет текст, набранный не в той раскладке, RU ↔ EN. Бесплатно, с открытым кодом и только на вашем компьютере."
-  : "Keygloss fixes text typed in the wrong keyboard layout, RU ↔ EN. Free, open source, and it works on your computer only.";
+  ? "Исправляет текст, набранный не в той раскладке (ghbdtn → привет), прямо при наборе. Бесплатно, с открытым кодом, без интернета. Альтернатива Punto Switcher для Windows, macOS и Linux и Keyboop для Windows."
+  : "Fixes text typed in the wrong layout (ghbdtn → привет) as you type. Free, open source, works offline. A Punto Switcher alternative for Windows, macOS and Linux, and a Keyboop alternative for Windows.";
 const imageAlt = ru
   ? "Баннер Keygloss: Больше никаких Ghbdtn. Keygloss сам исправит текст и переключит раскладку, пока вы печатаете."
   : "Keygloss banner: Wrong layout? Already fixed. The free layout switcher that fixes your text as you type.";
